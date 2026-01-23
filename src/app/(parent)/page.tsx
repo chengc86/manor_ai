@@ -14,7 +14,7 @@ import {
   getDisplayDate,
   formatDisplayDate,
   formatDateForDB,
-  getCurrentWeekMonday,
+  calculateWeekStartDate,
   formatWeekRange,
 } from '@/lib/utils/dates';
 import type { YearGroupDisplay, ReminderDisplay, WeeklyOverviewDisplay } from '@/types';
@@ -34,7 +34,7 @@ export default function ParentView() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const displayDate = useMemo(() => getDisplayDate(currentTime), [currentTime]);
-  const weekStart = useMemo(() => getCurrentWeekMonday(), []);
+  const weekStart = useMemo(() => calculateWeekStartDate(), []);
   const weekRange = useMemo(() => formatWeekRange(weekStart), [weekStart]);
 
   useEffect(() => {
