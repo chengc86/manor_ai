@@ -13,7 +13,8 @@
     "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
     "seed": "dotenv -e .env.local -- tsx src/lib/db/seed.ts",
     "video:studio": "remotion studio src/remotion/index.ts",
-    "video:render": "remotion render src/remotion/index.ts ManorAIPromo out/promo.mp4"
+    "video:render": "remotion render src/remotion/index.ts ManorAIPromo out/promo.mp4",
+    "video:capture": "tsx src/remotion/scripts/capture-screenshots.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.712.0",
