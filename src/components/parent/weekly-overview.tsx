@@ -8,8 +8,6 @@ import {
   Lightbulb,
   TrendingUp,
   Bell,
-  FileText,
-  ExternalLink,
 } from 'lucide-react';
 import { GlassCard } from '@/components/ui';
 import type { WeeklyOverviewDisplay } from '@/types';
@@ -194,47 +192,6 @@ export function WeeklyOverview({ overview, weekRange }: WeeklyOverviewProps) {
                   </ul>
                 </div>
               )}
-            </div>
-          </GlassCard>
-        </motion.div>
-      )}
-
-      {/* Source Documents (PDFs) */}
-      {overview.pdfDocuments && overview.pdfDocuments.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <GlassCard>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-blue-500/20">
-                <FileText className="w-5 h-5 text-blue-400" />
-              </div>
-              <h4 className="font-semibold text-lg">Source Documents</h4>
-            </div>
-            <p className="text-sm text-white/60 mb-4">
-              Click to view the original weekly mailings used to generate this summary.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {overview.pdfDocuments.map((doc, index) => (
-                <motion.a
-                  key={doc.id}
-                  href={doc.s3Url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5 + index * 0.1 }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/10 hover:border-accent-primary/50 transition-all group"
-                >
-                  <FileText className="w-4 h-4 text-accent-primary" />
-                  <span className="text-sm text-white/80 group-hover:text-white">
-                    {doc.filename}
-                  </span>
-                  <ExternalLink className="w-3 h-3 text-white/40 group-hover:text-accent-primary transition-colors" />
-                </motion.a>
-              ))}
             </div>
           </GlassCard>
         </motion.div>

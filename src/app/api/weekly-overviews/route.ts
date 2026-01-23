@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db, weeklyOverviews, documents } from '@/lib/db';
+import { db, weeklyOverviews } from '@/lib/db';
 import { eq, and } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
@@ -26,31 +26,7 @@ export async function GET(request: NextRequest) {
       )
       .limit(1);
 
-    // Fetch the PDF documents for this week
-    const weeklyMailings = await db
-      .select({
-        id: documents.id,
-        filename: documents.filename,
-        s3Url: documents.s3Url,
-      })
-      .from(documents)
-      .where(
-        and(
-          eq(documents.type, 'weekly_mailing'),
-          eq(documents.weekStartDate, weekStartDate),
-          eq(documents.isActive, true)
-        )
-      );
-
-    // Return overview with PDF URLs
-    if (overview) {
-      return NextResponse.json({
-        ...overview,
-        pdfDocuments: weeklyMailings,
-      });
-    }
-
-    return NextResponse.json(null);
+    return NextResponse.json(overview || null);
   } catch (error) {
     console.error('Failed to fetch weekly overview:', error);
     return NextResponse.json(
