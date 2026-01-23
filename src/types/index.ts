@@ -21,6 +21,7 @@ export interface WeeklyOverviewDisplay {
     additions: string[];
     removals: string[];
   } | null;
+  pdfDocuments?: { id: string; filename: string; s3Url: string }[];
 }
 
 export interface YearGroupDisplay {
