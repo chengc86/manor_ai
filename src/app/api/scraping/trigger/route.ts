@@ -5,7 +5,7 @@ import { eq, and } from 'drizzle-orm';
 import { generateReminders, generateMockResponse } from '@/lib/llm/gemini';
 import { calculateWeekStartDate, formatDateForDB } from '@/lib/utils/dates';
 
-async function generateRemindersForYearGroup(yearGroupId: number, yearGroupName: string, weekStartDate: string) {
+async function generateRemindersForYearGroup(yearGroupId: string, yearGroupName: string, weekStartDate: string) {
   try {
     // Get weekly mailing documents for this week (school-wide)
     const weeklyMailings = await db

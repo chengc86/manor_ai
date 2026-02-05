@@ -11,18 +11,13 @@
     "db:migrate": "dotenv -e .env.local -- drizzle-kit migrate",
     "db:push": "dotenv -e .env.local -- drizzle-kit push",
     "db:studio": "dotenv -e .env.local -- drizzle-kit studio",
-    "seed": "dotenv -e .env.local -- tsx src/lib/db/seed.ts",
-    "video:studio": "remotion studio src/remotion/index.ts",
-    "video:render": "remotion render src/remotion/index.ts ManorAIPromo out/promo.mp4",
-    "video:capture": "tsx src/remotion/scripts/capture-screenshots.ts"
+    "seed": "dotenv -e .env.local -- tsx src/lib/db/seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.712.0",
     "@google/generative-ai": "^0.21.0",
     "@react-three/drei": "^9.120.3",
     "@react-three/fiber": "^8.17.10",
-    "@remotion/cli": "^4.0.409",
-    "@remotion/player": "^4.0.409",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.38.3",
@@ -34,7 +29,6 @@
     "puppeteer": "^23.11.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "remotion": "^4.0.409",
     "sonner": "^1.7.1",
     "tailwind-merge": "^2.6.0",
     "three": "^0.171.0",
