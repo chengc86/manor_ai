@@ -10,7 +10,7 @@ let scheduledTask: cron.ScheduledTask | null = null;
 /**
  * Generate reminders for a specific year group
  */
-async function generateRemindersForYearGroup(yearGroupId: number, yearGroupName: string, weekStartDate: string) {
+async function generateRemindersForYearGroup(yearGroupId: string, yearGroupName: string, weekStartDate: string) {
   try {
     // Get weekly mailing documents for this week (school-wide)
     const weeklyMailings = await db
