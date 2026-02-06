@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db, scrapingLogs } from '@/lib/db';
 import { desc } from 'drizzle-orm';
 
+// Force dynamic rendering - don't cache this route
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

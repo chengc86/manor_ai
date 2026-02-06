@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { db, yearGroups } from '@/lib/db';
 import { asc } from 'drizzle-orm';
 
+// Force dynamic rendering - don't cache this route
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   console.log('=== YEAR GROUPS API DEBUG ===');
   console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL);
