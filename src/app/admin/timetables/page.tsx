@@ -165,6 +165,13 @@ export default function TimetablesPage() {
                         [yg.id]: e.target.value,
                       }))
                     }
+                    onPaste={(e) => {
+                      const pastedText = e.clipboardData.getData('text');
+                      setTimetables((prev) => ({
+                        ...prev,
+                        [yg.id]: pastedText,
+                      }));
+                    }}
                     placeholder={`Paste JSON timetable for ${yg.name}...`}
                     className="font-mono text-sm min-h-[200px]"
                     error={!isValid && timetables[yg.id] ? 'Invalid JSON format' : undefined}
