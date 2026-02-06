@@ -76,6 +76,20 @@ export default function YearGroupsPage() {
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-8 h-8 animate-spin text-accent-primary" />
         </div>
+      ) : yearGroups.length === 0 ? (
+        <GlassCard className="text-center py-12">
+          <Users className="w-12 h-12 text-white/30 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold mb-2">No Year Groups Found</h3>
+          <p className="text-white/60 mb-4">
+            The database may not be connected or seeded properly.
+          </p>
+          <GlassButton
+            variant="primary"
+            onClick={() => window.location.reload()}
+          >
+            Refresh Page
+          </GlassButton>
+        </GlassCard>
       ) : (
         <StaggerContainer className="space-y-4">
           {yearGroups.map((yg) => (
