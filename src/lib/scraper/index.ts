@@ -1,5 +1,4 @@
 import puppeteer, { Browser } from 'puppeteer';
-import pdfParse from 'pdf-parse';
 import { db, scrapingLogs, documents, agentSettings } from '@/lib/db';
 import { eq } from 'drizzle-orm';
 import { calculateWeekStartDate, formatDateForDB } from '@/lib/utils/dates';
@@ -194,18 +193,9 @@ export async function scrapeWeeklyMailings(): Promise<ScrapingResult> {
 
         const buffer = Buffer.from(pdfBuffer);
 
-        // Parse PDF to extract text
-        let extractedText = '';
-        try {
-          const pdfData = await pdfParse(buffer);
-          extractedText = pdfData.text;
-          addLog(10, `Parsed ${filename}: ${extractedText.length} characters`);
-        } catch (parseError) {
-          addLog(10, `Could not parse ${filename}, storing without text`);
-        }
-
-        // Convert PDF to base64 for LLM processing
+        // Convert PDF to base64 for LLM processing (Gemini reads PDFs natively)
         const pdfBase64 = buffer.toString('base64');
+        addLog(10, `Downloaded ${filename}: ${buffer.length} bytes`);
 
         await db.insert(documents).values({
           type: 'weekly_mailing',
@@ -216,7 +206,6 @@ export async function scrapeWeeklyMailings(): Promise<ScrapingResult> {
           s3Url: pdfLink.href,
           mimeType: 'application/pdf',
           fileSize: buffer.length,
-          timetableJson: extractedText, // Store extracted text as backup
           pdfBase64: pdfBase64, // Store PDF for direct LLM processing
           isActive: true,
           version: 1,
