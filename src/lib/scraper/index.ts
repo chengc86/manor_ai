@@ -204,6 +204,9 @@ export async function scrapeWeeklyMailings(): Promise<ScrapingResult> {
           addLog(10, `Could not parse ${filename}, storing without text`);
         }
 
+        // Convert PDF to base64 for LLM processing
+        const pdfBase64 = buffer.toString('base64');
+
         await db.insert(documents).values({
           type: 'weekly_mailing',
           yearGroupId: null, // School-wide
@@ -213,7 +216,8 @@ export async function scrapeWeeklyMailings(): Promise<ScrapingResult> {
           s3Url: pdfLink.href,
           mimeType: 'application/pdf',
           fileSize: buffer.length,
-          timetableJson: extractedText, // Store extracted text
+          timetableJson: extractedText, // Store extracted text as backup
+          pdfBase64: pdfBase64, // Store PDF for direct LLM processing
           isActive: true,
           version: 1,
         });

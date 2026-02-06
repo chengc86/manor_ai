@@ -84,6 +84,7 @@ export const documents = pgTable('documents', {
   mimeType: varchar('mime_type', { length: 100 }).notNull(),
   fileSize: integer('file_size'),
   timetableJson: text('timetable_json'),
+  pdfBase64: text('pdf_base64'), // Store PDF as base64 for LLM processing
   isActive: boolean('is_active').notNull().default(true),
   version: integer('version').notNull().default(1),
   createdAt: timestamp('created_at').defaultNow().notNull(),

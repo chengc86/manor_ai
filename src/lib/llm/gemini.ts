@@ -3,8 +3,15 @@ import type { LLMResponse } from '@/types';
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '');
 
+interface PdfDocument {
+  filename: string;
+  base64: string;
+  extractedText?: string;
+}
+
 interface GenerateRemindersInput {
   weeklyMailingUrls: string[];
+  pdfDocuments?: PdfDocument[]; // PDFs with base64 data
   timetableJson: string | null;
   factSheetContent: string | null;
   promptTemplate: string;
@@ -16,18 +23,20 @@ interface GenerateRemindersInput {
  * Generate reminders and weekly overview using Gemini
  */
 export async function generateReminders(input: GenerateRemindersInput): Promise<LLMResponse> {
-  // Using Gemini 3 Pro Preview - Google's most advanced reasoning model
-  const model = genAI.getGenerativeModel({ model: 'gemini-3-pro-preview' });
+  // Using Gemini 2.0 Flash - fast and capable multimodal model
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-  const prompt = `${input.promptTemplate}
+  const textPrompt = `${input.promptTemplate}
 
 ---
 
 Week Starting: ${input.weekStartDate}
 Year Group: ${input.yearGroupName}
 
-Weekly Mailing PDF URLs:
-${input.weeklyMailingUrls.length > 0 ? input.weeklyMailingUrls.join('\n') : 'No mailings available for this week'}
+${input.pdfDocuments && input.pdfDocuments.length > 0
+  ? `I have attached ${input.pdfDocuments.length} PDF document(s) from the weekly mailing. Please analyze them carefully.`
+  : `Weekly Mailing Content:
+${input.weeklyMailingUrls.length > 0 ? input.weeklyMailingUrls.join('\n') : 'No mailings available for this week'}`}
 
 Year Group Timetable (JSON):
 ${input.timetableJson || 'No timetable data available'}
@@ -37,12 +46,12 @@ ${input.factSheetContent || 'No fact sheet content available'}
 
 ---
 
-Please analyze the above information and generate the JSON response with daily reminders, weekly overview, fact sheet suggestions, AND an updated fact sheet for ${input.yearGroupName} for the week of ${input.weekStartDate}.
+Please analyze the PDF documents and other information to generate a JSON response with daily reminders, weekly overview, fact sheet suggestions, AND an updated fact sheet for ${input.yearGroupName} for the week of ${input.weekStartDate}.
 
 Remember to:
 1. Create daily reminders for each school day (Monday-Friday)
 2. Consider the timetable when suggesting what to bring/prepare
-3. Extract key dates and events from the mailing
+3. Extract key dates and events from the mailing PDFs
 4. Suggest updates to the fact sheet based on new information
 
 IMPORTANT - Fact Sheet Update Rules:
@@ -61,7 +70,24 @@ The JSON response MUST include:
 Return ONLY valid JSON.`;
 
   try {
-    const result = await model.generateContent(prompt);
+    // Build content parts - text + PDFs
+    const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
+      { text: textPrompt }
+    ];
+
+    // Add PDFs as inline data if available
+    if (input.pdfDocuments && input.pdfDocuments.length > 0) {
+      for (const pdf of input.pdfDocuments) {
+        parts.push({
+          inlineData: {
+            mimeType: 'application/pdf',
+            data: pdf.base64,
+          },
+        });
+      }
+    }
+
+    const result = await model.generateContent(parts);
     const response = await result.response;
     const text = response.text();
 
