@@ -1,4 +1,5 @@
 import puppeteer, { Browser } from 'puppeteer';
+import pdfParse from 'pdf-parse';
 import { db, scrapingLogs, documents, agentSettings } from '@/lib/db';
 import { eq } from 'drizzle-orm';
 import { calculateWeekStartDate, formatDateForDB } from '@/lib/utils/dates';
@@ -178,21 +179,41 @@ export async function scrapeWeeklyMailings(): Promise<ScrapingResult> {
     const weekStartDateStr = formatDateForDB(weekStartDate);
     addLog(9, `Week start date calculated: ${weekStartDateStr}`);
 
-    addLog(8, 'Storing PDF URLs (no download needed)');
-    // Step 8 - Store PDF URLs directly (no S3 needed)
+    addLog(8, 'Downloading and parsing PDFs');
+    // Step 8 - Download PDFs while authenticated and extract text
     for (const pdfLink of pdfLinks) {
       try {
         const filename = pdfLink.href.split('/').pop() || 'document.pdf';
+
+        // Download PDF using authenticated browser context
+        const pdfBuffer = await page.evaluate(async (url: string) => {
+          const response = await fetch(url);
+          const arrayBuffer = await response.arrayBuffer();
+          return Array.from(new Uint8Array(arrayBuffer));
+        }, pdfLink.href);
+
+        const buffer = Buffer.from(pdfBuffer);
+
+        // Parse PDF to extract text
+        let extractedText = '';
+        try {
+          const pdfData = await pdfParse(buffer);
+          extractedText = pdfData.text;
+          addLog(10, `Parsed ${filename}: ${extractedText.length} characters`);
+        } catch (parseError) {
+          addLog(10, `Could not parse ${filename}, storing without text`);
+        }
 
         await db.insert(documents).values({
           type: 'weekly_mailing',
           yearGroupId: null, // School-wide
           weekStartDate: weekStartDateStr,
           filename,
-          s3Key: pdfLink.href, // Store URL as key
-          s3Url: pdfLink.href, // Store direct URL
+          s3Key: pdfLink.href,
+          s3Url: pdfLink.href,
           mimeType: 'application/pdf',
-          fileSize: 0,
+          fileSize: buffer.length,
+          timetableJson: extractedText, // Store extracted text
           isActive: true,
           version: 1,
         });
@@ -200,7 +221,7 @@ export async function scrapeWeeklyMailings(): Promise<ScrapingResult> {
         documentsProcessed++;
         addLog(10, `Stored: ${filename}`);
       } catch (error) {
-        addLog(10, `Failed to store ${pdfLink.href}: ${error}`);
+        addLog(10, `Failed to process ${pdfLink.href}: ${error}`);
       }
     }
 
