@@ -1,5 +1,4 @@
-import puppeteer, { Browser, Page } from 'puppeteer';
-import { uploadFile } from '@/lib/s3';
+import puppeteer, { Browser } from 'puppeteer';
 import { db, scrapingLogs, documents, agentSettings } from '@/lib/db';
 import { eq } from 'drizzle-orm';
 import { calculateWeekStartDate, formatDateForDB } from '@/lib/utils/dates';
@@ -179,39 +178,29 @@ export async function scrapeWeeklyMailings(): Promise<ScrapingResult> {
     const weekStartDateStr = formatDateForDB(weekStartDate);
     addLog(9, `Week start date calculated: ${weekStartDateStr}`);
 
-    addLog(8, 'Downloading PDFs using authenticated page context');
-    // Step 8 - Authenticated PDF Downloads
+    addLog(8, 'Storing PDF URLs (no download needed)');
+    // Step 8 - Store PDF URLs directly (no S3 needed)
     for (const pdfLink of pdfLinks) {
       try {
-        const pdfBuffer = await page.evaluate(async (url: string) => {
-          const response = await fetch(url);
-          const arrayBuffer = await response.arrayBuffer();
-          return Array.from(new Uint8Array(arrayBuffer));
-        }, pdfLink.href);
-
-        const buffer = Buffer.from(pdfBuffer);
         const filename = pdfLink.href.split('/').pop() || 'document.pdf';
-
-        // Step 10 - Upload to S3 and store in database
-        const { key, url } = await uploadFile(buffer, filename, 'application/pdf');
 
         await db.insert(documents).values({
           type: 'weekly_mailing',
           yearGroupId: null, // School-wide
           weekStartDate: weekStartDateStr,
           filename,
-          s3Key: key,
-          s3Url: url,
+          s3Key: pdfLink.href, // Store URL as key
+          s3Url: pdfLink.href, // Store direct URL
           mimeType: 'application/pdf',
-          fileSize: buffer.length,
+          fileSize: 0,
           isActive: true,
           version: 1,
         });
 
         documentsProcessed++;
-        addLog(10, `Uploaded and stored: ${filename}`);
+        addLog(10, `Stored: ${filename}`);
       } catch (error) {
-        addLog(10, `Failed to process ${pdfLink.href}: ${error}`);
+        addLog(10, `Failed to store ${pdfLink.href}: ${error}`);
       }
     }
 
