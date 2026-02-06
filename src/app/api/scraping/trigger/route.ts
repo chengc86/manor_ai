@@ -162,8 +162,9 @@ export async function POST() {
     }
   } catch (error) {
     console.error('Failed to trigger scraping:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to trigger scraping' },
+      { error: 'Failed to trigger scraping', details: errorMessage },
       { status: 500 }
     );
   }
