@@ -46,6 +46,14 @@ export async function POST(request: NextRequest) {
 
     const mailingUrls = weeklyMailings.map((doc) => doc.s3Url);
 
+    // Prepare PDF documents for LLM (with base64 data)
+    const pdfDocuments = weeklyMailings
+      .filter((doc) => doc.pdfBase64)
+      .map((doc) => ({
+        filename: doc.filename,
+        base64: doc.pdfBase64!,
+      }));
+
     // Get timetable for this year group
     const [timetableDoc] = await db
       .select()
@@ -70,6 +78,7 @@ export async function POST(request: NextRequest) {
     if (process.env.GOOGLE_GEMINI_API_KEY && process.env.GOOGLE_GEMINI_API_KEY !== 'your-gemini-api-key-here') {
       llmResponse = await generateReminders({
         weeklyMailingUrls: mailingUrls,
+        pdfDocuments: pdfDocuments.length > 0 ? pdfDocuments : undefined,
         timetableJson: timetableDoc?.timetableJson || null,
         factSheetContent,
         promptTemplate,
