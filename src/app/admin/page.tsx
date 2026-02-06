@@ -99,6 +99,13 @@ export default function AdminDashboard() {
   const generateAllReminders = async () => {
     setIsGenerating(true);
     try {
+      if (yearGroups.length === 0) {
+        toast.error('No year groups found. Please check the database connection.');
+        return;
+      }
+
+      toast.info(`Generating reminders for ${yearGroups.length} year groups...`);
+
       for (const yg of yearGroups) {
         const res = await fetch('/api/generate-reminders', {
           method: 'POST',
@@ -114,6 +121,7 @@ export default function AdminDashboard() {
         }
       }
     } catch (error) {
+      console.error('Generate reminders error:', error);
       toast.error('Failed to generate reminders');
     } finally {
       setIsGenerating(false);
