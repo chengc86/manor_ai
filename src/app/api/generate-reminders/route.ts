@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
     const promptTemplate = settings.find((s) => s.key === 'llm_prompt_template')?.value || '';
     const factSheetContent = settings.find((s) => s.key === 'fact_sheet_content')?.value || '';
 
-    // Generate reminders using LLM (tries Gemini -> Claude -> Mock)
+    // Generate reminders using LLM fallback chain
     const llmResponse = await generateReminders({
       weeklyMailingUrls: mailingUrls,
       pdfDocuments: pdfDocuments.length > 0 ? pdfDocuments : undefined,
