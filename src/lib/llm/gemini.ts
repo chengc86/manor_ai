@@ -134,7 +134,7 @@ function parseAndValidateResponse(text: string, factSheetContent: string | null)
  */
 async function generateWithGemini(input: GenerateRemindersInput): Promise<LLMResponse> {
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '');
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
 
   const textPrompt = buildTextPrompt(input);
 
@@ -289,7 +289,7 @@ async function generateWithOpenRouter(input: GenerateRemindersInput): Promise<LL
 
 /**
  * Generate reminders with fallback chain:
- * Gemini (native PDF) -> Claude (native PDF) -> Kimi K2.5 (extracted text) -> OpenRouter (extracted text) -> Mock
+ * Gemini 3 Flash (native PDF) -> Claude (native PDF) -> Kimi K2.5 (extracted text) -> OpenRouter (extracted text) -> Mock
  */
 export async function generateReminders(input: GenerateRemindersInput): Promise<LLMResponse> {
   // Log PDF availability
@@ -315,10 +315,10 @@ export async function generateReminders(input: GenerateRemindersInput): Promise<
     console.log(`Text extraction: ${successCount}/${pdfDocsWithText.length} PDFs extracted successfully`);
   }
 
-  // 1. Try Gemini first (sends native PDFs)
+  // 1. Try Gemini 3 Flash first (sends native PDFs)
   if (process.env.GOOGLE_GEMINI_API_KEY && process.env.GOOGLE_GEMINI_API_KEY !== 'your-gemini-api-key-here') {
     try {
-      console.log('Trying Gemini 2.0 Flash (native PDF)...');
+      console.log('Trying Gemini 3 Flash (native PDF)...');
       const result = await generateWithGemini(inputWithText);
       console.log('Gemini succeeded');
       return result;

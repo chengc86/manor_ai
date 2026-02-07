@@ -40,18 +40,23 @@ interface StoredData {
 function calculateWeekStartDate(): string {
   const now = new Date();
   const day = now.getDay();
+  let targetDate: Date;
   // Friday (5), Saturday (6), Sunday (0): use next Monday
   if (day === 5 || day === 6 || day === 0) {
     const daysUntilMonday = day === 0 ? 1 : 8 - day;
-    const next = new Date(now);
-    next.setDate(now.getDate() + daysUntilMonday);
-    return next.toISOString().split('T')[0];
+    targetDate = new Date(now);
+    targetDate.setDate(now.getDate() + daysUntilMonday);
+  } else {
+    // Mon-Thu: get this week's Monday
+    const diff = 1 - day;
+    targetDate = new Date(now);
+    targetDate.setDate(now.getDate() + diff);
   }
-  // Mon-Thu: get this week's Monday
-  const diff = 1 - day;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() + diff);
-  return monday.toISOString().split('T')[0];
+  // Format as YYYY-MM-DD using local timezone (not UTC) to match server behavior
+  const year = targetDate.getFullYear();
+  const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+  const date = String(targetDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${date}`;
 }
 
 export default function YearGroupsPage() {
@@ -68,7 +73,7 @@ export default function YearGroupsPage() {
 
   const fetchYearGroups = async () => {
     try {
-      const res = await fetch('/api/year-groups');
+      const res = await fetch('/api/year-groups', { cache: 'no-store' });
       const data = await res.json();
       setYearGroups(data);
 
@@ -88,8 +93,8 @@ export default function YearGroupsPage() {
   const loadStoredData = async (yearGroupId: string, weekStartDate: string) => {
     try {
       const [remindersRes, overviewRes] = await Promise.all([
-        fetch(`/api/reminders?yearGroupId=${yearGroupId}&weekStartDate=${weekStartDate}`),
-        fetch(`/api/weekly-overviews?yearGroupId=${yearGroupId}&weekStartDate=${weekStartDate}`),
+        fetch(`/api/reminders?yearGroupId=${yearGroupId}&weekStartDate=${weekStartDate}`, { cache: 'no-store' }),
+        fetch(`/api/weekly-overviews?yearGroupId=${yearGroupId}&weekStartDate=${weekStartDate}`, { cache: 'no-store' }),
       ]);
 
       const reminders = await remindersRes.json();
@@ -119,11 +124,12 @@ export default function YearGroupsPage() {
 
   const generateReminders = async (yearGroupId: string, yearGroupName: string) => {
     setGeneratingId(yearGroupId);
+    const weekStartDate = calculateWeekStartDate();
     try {
       const res = await fetch('/api/generate-reminders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ yearGroupId }),
+        body: JSON.stringify({ yearGroupId, weekStartDate }),
       });
       const data = await res.json();
 
@@ -133,8 +139,7 @@ export default function YearGroupsPage() {
           ...prev,
           [yearGroupId]: data.llmResponse,
         }));
-        // Also refresh stored data
-        const weekStartDate = calculateWeekStartDate();
+        // Refresh stored data using the same weekStartDate sent to server
         loadStoredData(yearGroupId, weekStartDate);
         setExpandedId(yearGroupId);
       } else {
