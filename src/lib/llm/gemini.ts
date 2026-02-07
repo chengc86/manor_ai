@@ -172,10 +172,128 @@ async function generateWithClaude(input: GenerateRemindersInput): Promise<LLMRes
 }
 
 /**
- * Generate reminders with fallback: Gemini -> Claude -> Mock
+ * Generate reminders using Kimi K2.5 (OpenAI-compatible API)
+ */
+async function generateWithKimi(input: GenerateRemindersInput): Promise<LLMResponse> {
+  const textPrompt = buildTextPrompt(input);
+
+  // Build messages with PDF support via base64 image content
+  const contentParts: Array<{ type: string; text?: string; image_url?: { url: string } }> = [];
+
+  // Add PDFs as base64 data URLs (Kimi supports multimodal)
+  if (input.pdfDocuments && input.pdfDocuments.length > 0) {
+    for (const pdf of input.pdfDocuments) {
+      contentParts.push({
+        type: 'image_url',
+        image_url: {
+          url: `data:application/pdf;base64,${pdf.base64}`,
+        },
+      });
+    }
+  }
+
+  contentParts.push({ type: 'text', text: textPrompt });
+
+  const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.KIMI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'kimi-k2-0711',
+      messages: [
+        {
+          role: 'user',
+          content: contentParts,
+        },
+      ],
+      max_tokens: 4096,
+      temperature: 0.7,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Kimi API error ${response.status}: ${errorBody}`);
+  }
+
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content;
+
+  if (!text) {
+    throw new Error('No text response from Kimi');
+  }
+
+  return parseAndValidateResponse(text, input.factSheetContent);
+}
+
+/**
+ * Generate reminders using OpenRouter (OpenAI-compatible API)
+ */
+async function generateWithOpenRouter(input: GenerateRemindersInput): Promise<LLMResponse> {
+  const textPrompt = buildTextPrompt(input);
+
+  // Use a capable model via OpenRouter
+  const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
+
+  const contentParts: Array<{ type: string; text?: string; image_url?: { url: string } }> = [];
+
+  // Add PDFs as base64 data URLs
+  if (input.pdfDocuments && input.pdfDocuments.length > 0) {
+    for (const pdf of input.pdfDocuments) {
+      contentParts.push({
+        type: 'image_url',
+        image_url: {
+          url: `data:application/pdf;base64,${pdf.base64}`,
+        },
+      });
+    }
+  }
+
+  contentParts.push({ type: 'text', text: textPrompt });
+
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+      'X-Title': 'Manor AI',
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        {
+          role: 'user',
+          content: contentParts,
+        },
+      ],
+      max_tokens: 4096,
+      temperature: 0.7,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`OpenRouter API error ${response.status}: ${errorBody}`);
+  }
+
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content;
+
+  if (!text) {
+    throw new Error('No text response from OpenRouter');
+  }
+
+  return parseAndValidateResponse(text, input.factSheetContent);
+}
+
+/**
+ * Generate reminders with fallback chain:
+ * Gemini -> Claude -> Kimi K2.5 -> OpenRouter -> Mock
  */
 export async function generateReminders(input: GenerateRemindersInput): Promise<LLMResponse> {
-  // Try Gemini first
+  // 1. Try Gemini first
   if (process.env.GOOGLE_GEMINI_API_KEY && process.env.GOOGLE_GEMINI_API_KEY !== 'your-gemini-api-key-here') {
     try {
       console.log('Trying Gemini 2.0 Flash...');
@@ -187,7 +305,7 @@ export async function generateReminders(input: GenerateRemindersInput): Promise<
     }
   }
 
-  // Fallback to Claude
+  // 2. Fallback to Claude
   if (process.env.ANTHROPIC_API_KEY) {
     try {
       console.log('Falling back to Claude...');
@@ -199,7 +317,31 @@ export async function generateReminders(input: GenerateRemindersInput): Promise<
     }
   }
 
-  // Final fallback: mock response
+  // 3. Fallback to Kimi K2.5
+  if (process.env.KIMI_API_KEY) {
+    try {
+      console.log('Falling back to Kimi K2.5...');
+      const result = await generateWithKimi(input);
+      console.log('Kimi succeeded');
+      return result;
+    } catch (error) {
+      console.error('Kimi failed:', error instanceof Error ? error.message : error);
+    }
+  }
+
+  // 4. Fallback to OpenRouter
+  if (process.env.OPENROUTER_API_KEY) {
+    try {
+      console.log('Falling back to OpenRouter...');
+      const result = await generateWithOpenRouter(input);
+      console.log('OpenRouter succeeded');
+      return result;
+    } catch (error) {
+      console.error('OpenRouter failed:', error instanceof Error ? error.message : error);
+    }
+  }
+
+  // 5. Final fallback: mock response
   console.log('All LLMs failed, using mock response');
   return generateMockResponse(input.weekStartDate, input.yearGroupName);
 }
