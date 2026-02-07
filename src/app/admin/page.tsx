@@ -13,16 +13,10 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  ChevronDown,
-  ChevronUp,
-  Calendar,
-  Star,
-  BookOpen,
 } from 'lucide-react';
 import { GlassCard, GlassButton } from '@/components/ui';
 import { PageTransition, FadeIn, StaggerContainer, StaggerItem } from '@/components/animations/page-transition';
 import { toast } from 'sonner';
-import type { LLMResponse } from '@/types';
 
 interface Stats {
   totalReminders: number;
@@ -43,8 +37,6 @@ export default function AdminDashboard() {
   const [isScrapingLoading, setIsScrapingLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [yearGroups, setYearGroups] = useState<{ id: string; name: string }[]>([]);
-  const [llmResults, setLlmResults] = useState<{ yearGroup: string; response: LLMResponse }[]>([]);
-  const [expandedResult, setExpandedResult] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStats();
@@ -106,7 +98,6 @@ export default function AdminDashboard() {
 
   const generateAllReminders = async () => {
     setIsGenerating(true);
-    setLlmResults([]);
     try {
       if (yearGroups.length === 0) {
         toast.error('No year groups found. Please check the database connection.');
@@ -114,7 +105,6 @@ export default function AdminDashboard() {
       }
 
       toast.info(`Generating reminders for ${yearGroups.length} year groups...`);
-      const results: { yearGroup: string; response: LLMResponse }[] = [];
 
       for (const yg of yearGroups) {
         const res = await fetch('/api/generate-reminders', {
@@ -124,18 +114,14 @@ export default function AdminDashboard() {
         });
         const data = await res.json();
 
-        if (data.success && data.llmResponse) {
+        if (data.success) {
           toast.success(`Generated reminders for ${yg.name}`);
-          results.push({ yearGroup: yg.name, response: data.llmResponse });
         } else {
           toast.error(`Failed for ${yg.name}: ${data.error}`);
         }
       }
 
-      setLlmResults(results);
-      if (results.length > 0) {
-        setExpandedResult(results[0].yearGroup);
-      }
+      toast.info('View results in the Year Groups tab');
     } catch (error) {
       console.error('Generate reminders error:', error);
       toast.error('Failed to generate reminders');
@@ -291,188 +277,6 @@ export default function AdminDashboard() {
           </div>
         </GlassCard>
       </FadeIn>
-
-      {/* LLM Response Results */}
-      {llmResults.length > 0 && (
-        <FadeIn delay={0.35}>
-          <GlassCard className="mb-8">
-            <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-accent-gold" />
-              LLM Response Results
-            </h2>
-            <div className="space-y-4">
-              {llmResults.map((result) => {
-                const isExpanded = expandedResult === result.yearGroup;
-                const r = result.response;
-
-                return (
-                  <div key={result.yearGroup} className="rounded-xl border border-white/10 overflow-hidden">
-                    <button
-                      onClick={() => setExpandedResult(isExpanded ? null : result.yearGroup)}
-                      className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 transition-colors text-left"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-accent-primary/30 to-accent-emerald/30">
-                          <Users className="w-4 h-4 text-accent-primary" />
-                        </div>
-                        <span className="font-semibold">{result.yearGroup}</span>
-                        <span className="text-xs text-white/50 bg-white/10 px-2 py-0.5 rounded-full">
-                          {r.dailyReminders.length} reminders
-                        </span>
-                      </div>
-                      {isExpanded ? (
-                        <ChevronUp className="w-5 h-5 text-white/40" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-white/40" />
-                      )}
-                    </button>
-
-                    {isExpanded && (
-                      <div className="p-4 space-y-6">
-                        {/* Weekly Overview */}
-                        <div>
-                          <h4 className="text-sm font-semibold text-accent-primary mb-2 flex items-center gap-2">
-                            <Star className="w-4 h-4" />
-                            Weekly Overview
-                          </h4>
-                          <p className="text-sm text-white/70 mb-3">{r.weeklyOverview.summary}</p>
-
-                          {r.weeklyOverview.keyHighlights.length > 0 && (
-                            <div className="mb-3">
-                              <p className="text-xs font-medium text-white/50 mb-1">Key Highlights</p>
-                              <ul className="space-y-1">
-                                {r.weeklyOverview.keyHighlights.map((h, i) => (
-                                  <li key={i} className="text-sm text-white/70 flex items-start gap-2">
-                                    <span className="text-accent-emerald mt-1">•</span>
-                                    {h}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-
-                          {r.weeklyOverview.importantDates.length > 0 && (
-                            <div className="mb-3">
-                              <p className="text-xs font-medium text-white/50 mb-1">Important Dates</p>
-                              <div className="space-y-1">
-                                {r.weeklyOverview.importantDates.map((d, i) => (
-                                  <div key={i} className="text-sm flex items-center gap-2">
-                                    <Calendar className="w-3 h-3 text-accent-gold" />
-                                    <span className="text-white/50">{d.date}</span>
-                                    <span className="text-white/70">{d.event}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {r.weeklyOverview.weeklyMailingSummary && (
-                            <div className="p-3 rounded-lg bg-white/5">
-                              <p className="text-xs font-medium text-white/50 mb-2">Mailing Summary</p>
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                                <div>
-                                  <p className="text-xs text-accent-primary mb-1">Main Topics</p>
-                                  {r.weeklyOverview.weeklyMailingSummary.mainTopics.map((t, i) => (
-                                    <p key={i} className="text-white/60 text-xs">• {t}</p>
-                                  ))}
-                                </div>
-                                <div>
-                                  <p className="text-xs text-accent-emerald mb-1">Action Items</p>
-                                  {r.weeklyOverview.weeklyMailingSummary.actionItems.map((a, i) => (
-                                    <p key={i} className="text-white/60 text-xs">• {a}</p>
-                                  ))}
-                                </div>
-                                <div>
-                                  <p className="text-xs text-accent-gold mb-1">Upcoming Events</p>
-                                  {r.weeklyOverview.weeklyMailingSummary.upcomingEvents.map((e, i) => (
-                                    <p key={i} className="text-white/60 text-xs">• {e}</p>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Daily Reminders */}
-                        <div>
-                          <h4 className="text-sm font-semibold text-accent-emerald mb-2 flex items-center gap-2">
-                            <Bell className="w-4 h-4" />
-                            Daily Reminders
-                          </h4>
-                          <div className="space-y-2">
-                            {r.dailyReminders.map((rem, i) => (
-                              <div
-                                key={i}
-                                className="flex items-start gap-3 p-3 rounded-lg bg-white/5"
-                              >
-                                <span
-                                  className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${
-                                    rem.priority === 'high'
-                                      ? 'bg-red-400'
-                                      : rem.priority === 'medium'
-                                      ? 'bg-amber-400'
-                                      : 'bg-green-400'
-                                  }`}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-0.5">
-                                    <span className="text-xs text-white/40">{rem.date}</span>
-                                    <span className="text-xs text-white/30 bg-white/10 px-1.5 py-0.5 rounded">
-                                      {rem.category}
-                                    </span>
-                                  </div>
-                                  <p className="text-sm font-medium text-white/90">{rem.title}</p>
-                                  <p className="text-xs text-white/50">{rem.description}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Fact Sheet Suggestions */}
-                        <div>
-                          <h4 className="text-sm font-semibold text-accent-gold mb-2 flex items-center gap-2">
-                            <BookOpen className="w-4 h-4" />
-                            Fact Sheet Suggestions
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {r.factSheetSuggestions.additions.length > 0 && (
-                              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                                <p className="text-xs font-medium text-green-400 mb-1">Additions</p>
-                                {r.factSheetSuggestions.additions.map((a, i) => (
-                                  <p key={i} className="text-xs text-white/60">+ {a}</p>
-                                ))}
-                              </div>
-                            )}
-                            {r.factSheetSuggestions.removals.length > 0 && (
-                              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                                <p className="text-xs font-medium text-red-400 mb-1">Removals</p>
-                                {r.factSheetSuggestions.removals.map((rm, i) => (
-                                  <p key={i} className="text-xs text-white/60">- {rm}</p>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Updated Fact Sheet */}
-                        {r.updatedFactSheet && (
-                          <div>
-                            <h4 className="text-sm font-semibold text-white/70 mb-2">Updated Fact Sheet</h4>
-                            <pre className="text-xs text-white/50 bg-black/30 p-3 rounded-lg whitespace-pre-wrap max-h-48 overflow-y-auto">
-                              {r.updatedFactSheet}
-                            </pre>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </GlassCard>
-        </FadeIn>
-      )}
 
       {/* Recent Activity */}
       <FadeIn delay={0.4}>

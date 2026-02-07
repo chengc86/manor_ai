@@ -28,7 +28,11 @@ async function extractPdfTexts(pdfDocuments: PdfDocument[]): Promise<PdfDocument
     if (!pdf.extractedText) {
       console.log(`Extracting text from ${pdf.filename}...`);
       const text = await extractTextFromPdf(pdf.base64);
-      console.log(`Extracted ${text.length} chars from ${pdf.filename}`);
+      if (text) {
+        console.log(`Extracted ${text.length} chars from ${pdf.filename}`);
+      } else {
+        console.warn(`WARNING: Failed to extract text from ${pdf.filename} - pdfjs-dist returned empty`);
+      }
       results.push({ ...pdf, extractedText: text });
     } else {
       results.push(pdf);
@@ -42,14 +46,17 @@ function buildTextPrompt(input: GenerateRemindersInput, includeExtractedText = f
 
   if (input.pdfDocuments && input.pdfDocuments.length > 0) {
     if (includeExtractedText) {
-      // Include extracted text directly in prompt (for LLMs that can't read PDFs)
+      // Include extracted text directly in prompt (for LLMs that can't read PDFs natively)
       const pdfTexts = input.pdfDocuments
         .filter(pdf => pdf.extractedText)
         .map(pdf => `=== ${pdf.filename} ===\n${pdf.extractedText}`)
         .join('\n\n');
-      pdfSection = pdfTexts
-        ? `Here are the contents extracted from ${input.pdfDocuments.length} PDF document(s) from the weekly mailing:\n\n${pdfTexts}`
-        : `I have ${input.pdfDocuments.length} PDF document(s) from the weekly mailing attached.`;
+      if (pdfTexts) {
+        pdfSection = `Here are the contents extracted from ${input.pdfDocuments.length} PDF document(s) from the weekly mailing:\n\n${pdfTexts}`;
+      } else {
+        console.warn('WARNING: No extracted text available from any PDFs - LLM will have no PDF content');
+        pdfSection = `${input.pdfDocuments.length} PDF document(s) were found but text extraction failed. No mailing content is available.`;
+      }
     } else {
       pdfSection = `I have attached ${input.pdfDocuments.length} PDF document(s) from the weekly mailing. Please analyze them carefully.`;
     }
@@ -123,7 +130,7 @@ function parseAndValidateResponse(text: string, factSheetContent: string | null)
 }
 
 /**
- * Generate reminders using Gemini
+ * Generate reminders using Gemini (sends native PDFs via inlineData)
  */
 async function generateWithGemini(input: GenerateRemindersInput): Promise<LLMResponse> {
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '');
@@ -136,7 +143,9 @@ async function generateWithGemini(input: GenerateRemindersInput): Promise<LLMRes
   ];
 
   if (input.pdfDocuments && input.pdfDocuments.length > 0) {
+    console.log(`Gemini: attaching ${input.pdfDocuments.length} native PDFs`);
     for (const pdf of input.pdfDocuments) {
+      console.log(`  - ${pdf.filename} (${Math.round(pdf.base64.length / 1024)}KB base64)`);
       parts.push({
         inlineData: {
           mimeType: 'application/pdf',
@@ -154,15 +163,37 @@ async function generateWithGemini(input: GenerateRemindersInput): Promise<LLMRes
 }
 
 /**
- * Generate reminders using Claude with extracted text
+ * Generate reminders using Claude (sends native PDFs via document content blocks)
  */
 async function generateWithClaude(input: GenerateRemindersInput): Promise<LLMResponse> {
   const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
   });
 
-  // Use extracted text in prompt instead of raw PDFs
-  const textPrompt = buildTextPrompt(input, true);
+  // Build prompt without PDF text (Claude reads PDFs natively)
+  const textPrompt = buildTextPrompt(input);
+
+  // Build content blocks: text prompt + native PDF documents
+  const content: Anthropic.MessageCreateParams['messages'][0]['content'] = [];
+
+  // Add PDF documents as native document blocks
+  if (input.pdfDocuments && input.pdfDocuments.length > 0) {
+    console.log(`Claude: attaching ${input.pdfDocuments.length} native PDFs`);
+    for (const pdf of input.pdfDocuments) {
+      console.log(`  - ${pdf.filename} (${Math.round(pdf.base64.length / 1024)}KB base64)`);
+      content.push({
+        type: 'document' as const,
+        source: {
+          type: 'base64' as const,
+          media_type: 'application/pdf' as const,
+          data: pdf.base64,
+        },
+      });
+    }
+  }
+
+  // Add the text prompt
+  content.push({ type: 'text' as const, text: textPrompt });
 
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-5-20250929',
@@ -170,7 +201,7 @@ async function generateWithClaude(input: GenerateRemindersInput): Promise<LLMRes
     messages: [
       {
         role: 'user',
-        content: textPrompt,
+        content,
       },
     ],
   });
@@ -258,15 +289,30 @@ async function generateWithOpenRouter(input: GenerateRemindersInput): Promise<LL
 
 /**
  * Generate reminders with fallback chain:
- * Gemini (native PDF) -> Claude (extracted text) -> Kimi K2.5 -> OpenRouter -> Mock
+ * Gemini (native PDF) -> Claude (native PDF) -> Kimi K2.5 (extracted text) -> OpenRouter (extracted text) -> Mock
  */
 export async function generateReminders(input: GenerateRemindersInput): Promise<LLMResponse> {
-  // Extract text from PDFs upfront for non-Gemini LLMs
+  // Log PDF availability
+  if (input.pdfDocuments && input.pdfDocuments.length > 0) {
+    console.log(`=== PDF DATA CHECK ===`);
+    console.log(`Total PDFs: ${input.pdfDocuments.length}`);
+    for (const pdf of input.pdfDocuments) {
+      console.log(`  - ${pdf.filename}: base64 length=${pdf.base64.length}, hasExtractedText=${!!pdf.extractedText}`);
+    }
+  } else {
+    console.log('No PDF documents provided to generateReminders');
+  }
+
+  // Extract text from PDFs upfront for Kimi/OpenRouter fallbacks
   let inputWithText = input;
   if (input.pdfDocuments && input.pdfDocuments.length > 0) {
-    console.log(`Extracting text from ${input.pdfDocuments.length} PDFs...`);
+    console.log(`Extracting text from ${input.pdfDocuments.length} PDFs for text-only fallbacks...`);
     const pdfDocsWithText = await extractPdfTexts(input.pdfDocuments);
     inputWithText = { ...input, pdfDocuments: pdfDocsWithText };
+
+    // Log extraction results
+    const successCount = pdfDocsWithText.filter(p => p.extractedText && p.extractedText.length > 0).length;
+    console.log(`Text extraction: ${successCount}/${pdfDocsWithText.length} PDFs extracted successfully`);
   }
 
   // 1. Try Gemini first (sends native PDFs)
@@ -281,10 +327,10 @@ export async function generateReminders(input: GenerateRemindersInput): Promise<
     }
   }
 
-  // 2. Fallback to Claude (uses extracted text)
+  // 2. Fallback to Claude (sends native PDFs)
   if (process.env.ANTHROPIC_API_KEY) {
     try {
-      console.log('Falling back to Claude (extracted text)...');
+      console.log('Falling back to Claude (native PDF)...');
       const result = await generateWithClaude(inputWithText);
       console.log('Claude succeeded');
       return result;
