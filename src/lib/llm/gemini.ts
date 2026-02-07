@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Anthropic from '@anthropic-ai/sdk';
+import { extractTextFromPdf } from '@/lib/pdf/extract';
 import type { LLMResponse } from '@/types';
 
 interface PdfDocument {
@@ -18,7 +19,44 @@ export interface GenerateRemindersInput {
   yearGroupName: string;
 }
 
-function buildTextPrompt(input: GenerateRemindersInput): string {
+/**
+ * Extract text from all PDFs and attach to documents
+ */
+async function extractPdfTexts(pdfDocuments: PdfDocument[]): Promise<PdfDocument[]> {
+  const results: PdfDocument[] = [];
+  for (const pdf of pdfDocuments) {
+    if (!pdf.extractedText) {
+      console.log(`Extracting text from ${pdf.filename}...`);
+      const text = await extractTextFromPdf(pdf.base64);
+      console.log(`Extracted ${text.length} chars from ${pdf.filename}`);
+      results.push({ ...pdf, extractedText: text });
+    } else {
+      results.push(pdf);
+    }
+  }
+  return results;
+}
+
+function buildTextPrompt(input: GenerateRemindersInput, includeExtractedText = false): string {
+  let pdfSection: string;
+
+  if (input.pdfDocuments && input.pdfDocuments.length > 0) {
+    if (includeExtractedText) {
+      // Include extracted text directly in prompt (for LLMs that can't read PDFs)
+      const pdfTexts = input.pdfDocuments
+        .filter(pdf => pdf.extractedText)
+        .map(pdf => `=== ${pdf.filename} ===\n${pdf.extractedText}`)
+        .join('\n\n');
+      pdfSection = pdfTexts
+        ? `Here are the contents extracted from ${input.pdfDocuments.length} PDF document(s) from the weekly mailing:\n\n${pdfTexts}`
+        : `I have ${input.pdfDocuments.length} PDF document(s) from the weekly mailing attached.`;
+    } else {
+      pdfSection = `I have attached ${input.pdfDocuments.length} PDF document(s) from the weekly mailing. Please analyze them carefully.`;
+    }
+  } else {
+    pdfSection = `Weekly Mailing Content:\n${input.weeklyMailingUrls.length > 0 ? input.weeklyMailingUrls.join('\n') : 'No mailings available for this week'}`;
+  }
+
   return `${input.promptTemplate}
 
 ---
@@ -26,10 +64,7 @@ function buildTextPrompt(input: GenerateRemindersInput): string {
 Week Starting: ${input.weekStartDate}
 Year Group: ${input.yearGroupName}
 
-${input.pdfDocuments && input.pdfDocuments.length > 0
-  ? `I have attached ${input.pdfDocuments.length} PDF document(s) from the weekly mailing. Please analyze them carefully.`
-  : `Weekly Mailing Content:
-${input.weeklyMailingUrls.length > 0 ? input.weeklyMailingUrls.join('\n') : 'No mailings available for this week'}`}
+${pdfSection}
 
 Year Group Timetable (JSON):
 ${input.timetableJson || 'No timetable data available'}
@@ -119,37 +154,15 @@ async function generateWithGemini(input: GenerateRemindersInput): Promise<LLMRes
 }
 
 /**
- * Generate reminders using Claude (fallback)
+ * Generate reminders using Claude with extracted text
  */
 async function generateWithClaude(input: GenerateRemindersInput): Promise<LLMResponse> {
   const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY,
   });
 
-  const textPrompt = buildTextPrompt(input);
-
-  // Build content blocks for Claude
-  const content: Anthropic.MessageCreateParams['messages'][0]['content'] = [];
-
-  // Add PDFs as document blocks
-  if (input.pdfDocuments && input.pdfDocuments.length > 0) {
-    for (const pdf of input.pdfDocuments) {
-      content.push({
-        type: 'document',
-        source: {
-          type: 'base64',
-          media_type: 'application/pdf',
-          data: pdf.base64,
-        },
-      } as never);
-    }
-  }
-
-  // Add text prompt
-  content.push({
-    type: 'text',
-    text: textPrompt,
-  });
+  // Use extracted text in prompt instead of raw PDFs
+  const textPrompt = buildTextPrompt(input, true);
 
   const message = await anthropic.messages.create({
     model: 'claude-sonnet-4-5-20250929',
@@ -157,12 +170,11 @@ async function generateWithClaude(input: GenerateRemindersInput): Promise<LLMRes
     messages: [
       {
         role: 'user',
-        content,
+        content: textPrompt,
       },
     ],
   });
 
-  // Extract text from response
   const textBlock = message.content.find((block) => block.type === 'text');
   if (!textBlock || textBlock.type !== 'text') {
     throw new Error('No text response from Claude');
@@ -172,42 +184,26 @@ async function generateWithClaude(input: GenerateRemindersInput): Promise<LLMRes
 }
 
 /**
- * Generate reminders using Kimi K2.5 (OpenAI-compatible API)
+ * Helper: call OpenAI-compatible API with extracted text
  */
-async function generateWithKimi(input: GenerateRemindersInput): Promise<LLMResponse> {
-  const textPrompt = buildTextPrompt(input);
-
-  // Build messages with PDF support via base64 image content
-  const contentParts: Array<{ type: string; text?: string; image_url?: { url: string } }> = [];
-
-  // Add PDFs as base64 data URLs (Kimi supports multimodal)
-  if (input.pdfDocuments && input.pdfDocuments.length > 0) {
-    for (const pdf of input.pdfDocuments) {
-      contentParts.push({
-        type: 'image_url',
-        image_url: {
-          url: `data:application/pdf;base64,${pdf.base64}`,
-        },
-      });
-    }
-  }
-
-  contentParts.push({ type: 'text', text: textPrompt });
-
-  const response = await fetch('https://api.moonshot.cn/v1/chat/completions', {
+async function callOpenAICompatible(
+  apiUrl: string,
+  apiKey: string,
+  model: string,
+  prompt: string,
+  providerName: string,
+  extraHeaders?: Record<string, string>,
+): Promise<string> {
+  const response = await fetch(apiUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.KIMI_API_KEY}`,
+      'Authorization': `Bearer ${apiKey}`,
+      ...extraHeaders,
     },
     body: JSON.stringify({
-      model: 'kimi-k2-0711',
-      messages: [
-        {
-          role: 'user',
-          content: contentParts,
-        },
-      ],
+      model,
+      messages: [{ role: 'user', content: prompt }],
       max_tokens: 4096,
       temperature: 0.7,
     }),
@@ -215,89 +211,69 @@ async function generateWithKimi(input: GenerateRemindersInput): Promise<LLMRespo
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(`Kimi API error ${response.status}: ${errorBody}`);
+    throw new Error(`${providerName} API error ${response.status}: ${errorBody}`);
   }
 
   const data = await response.json();
   const text = data.choices?.[0]?.message?.content;
 
   if (!text) {
-    throw new Error('No text response from Kimi');
+    throw new Error(`No text response from ${providerName}`);
   }
 
+  return text;
+}
+
+/**
+ * Generate reminders using Kimi K2.5 with extracted text
+ */
+async function generateWithKimi(input: GenerateRemindersInput): Promise<LLMResponse> {
+  const textPrompt = buildTextPrompt(input, true);
+  const text = await callOpenAICompatible(
+    'https://api.moonshot.cn/v1/chat/completions',
+    process.env.KIMI_API_KEY!,
+    'kimi-k2-0711',
+    textPrompt,
+    'Kimi',
+  );
   return parseAndValidateResponse(text, input.factSheetContent);
 }
 
 /**
- * Generate reminders using OpenRouter (OpenAI-compatible API)
+ * Generate reminders using OpenRouter with extracted text
  */
 async function generateWithOpenRouter(input: GenerateRemindersInput): Promise<LLMResponse> {
-  const textPrompt = buildTextPrompt(input);
-
-  // Use a capable model via OpenRouter
+  const textPrompt = buildTextPrompt(input, true);
   const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
-
-  const contentParts: Array<{ type: string; text?: string; image_url?: { url: string } }> = [];
-
-  // Add PDFs as base64 data URLs
-  if (input.pdfDocuments && input.pdfDocuments.length > 0) {
-    for (const pdf of input.pdfDocuments) {
-      contentParts.push({
-        type: 'image_url',
-        image_url: {
-          url: `data:application/pdf;base64,${pdf.base64}`,
-        },
-      });
-    }
-  }
-
-  contentParts.push({ type: 'text', text: textPrompt });
-
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
-      'X-Title': 'Manor AI',
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        {
-          role: 'user',
-          content: contentParts,
-        },
-      ],
-      max_tokens: 4096,
-      temperature: 0.7,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`OpenRouter API error ${response.status}: ${errorBody}`);
-  }
-
-  const data = await response.json();
-  const text = data.choices?.[0]?.message?.content;
-
-  if (!text) {
-    throw new Error('No text response from OpenRouter');
-  }
-
+  const text = await callOpenAICompatible(
+    'https://openrouter.ai/api/v1/chat/completions',
+    process.env.OPENROUTER_API_KEY!,
+    model,
+    textPrompt,
+    'OpenRouter',
+    { 'X-Title': 'Manor AI' },
+  );
   return parseAndValidateResponse(text, input.factSheetContent);
 }
 
 /**
  * Generate reminders with fallback chain:
- * Gemini -> Claude -> Kimi K2.5 -> OpenRouter -> Mock
+ * Gemini (native PDF) -> Claude (extracted text) -> Kimi K2.5 -> OpenRouter -> Mock
  */
 export async function generateReminders(input: GenerateRemindersInput): Promise<LLMResponse> {
-  // 1. Try Gemini first
+  // Extract text from PDFs upfront for non-Gemini LLMs
+  let inputWithText = input;
+  if (input.pdfDocuments && input.pdfDocuments.length > 0) {
+    console.log(`Extracting text from ${input.pdfDocuments.length} PDFs...`);
+    const pdfDocsWithText = await extractPdfTexts(input.pdfDocuments);
+    inputWithText = { ...input, pdfDocuments: pdfDocsWithText };
+  }
+
+  // 1. Try Gemini first (sends native PDFs)
   if (process.env.GOOGLE_GEMINI_API_KEY && process.env.GOOGLE_GEMINI_API_KEY !== 'your-gemini-api-key-here') {
     try {
-      console.log('Trying Gemini 2.0 Flash...');
-      const result = await generateWithGemini(input);
+      console.log('Trying Gemini 2.0 Flash (native PDF)...');
+      const result = await generateWithGemini(inputWithText);
       console.log('Gemini succeeded');
       return result;
     } catch (error) {
@@ -305,11 +281,11 @@ export async function generateReminders(input: GenerateRemindersInput): Promise<
     }
   }
 
-  // 2. Fallback to Claude
+  // 2. Fallback to Claude (uses extracted text)
   if (process.env.ANTHROPIC_API_KEY) {
     try {
-      console.log('Falling back to Claude...');
-      const result = await generateWithClaude(input);
+      console.log('Falling back to Claude (extracted text)...');
+      const result = await generateWithClaude(inputWithText);
       console.log('Claude succeeded');
       return result;
     } catch (error) {
@@ -317,11 +293,11 @@ export async function generateReminders(input: GenerateRemindersInput): Promise<
     }
   }
 
-  // 3. Fallback to Kimi K2.5
+  // 3. Fallback to Kimi K2.5 (uses extracted text)
   if (process.env.KIMI_API_KEY) {
     try {
-      console.log('Falling back to Kimi K2.5...');
-      const result = await generateWithKimi(input);
+      console.log('Falling back to Kimi K2.5 (extracted text)...');
+      const result = await generateWithKimi(inputWithText);
       console.log('Kimi succeeded');
       return result;
     } catch (error) {
@@ -329,11 +305,11 @@ export async function generateReminders(input: GenerateRemindersInput): Promise<
     }
   }
 
-  // 4. Fallback to OpenRouter
+  // 4. Fallback to OpenRouter (uses extracted text)
   if (process.env.OPENROUTER_API_KEY) {
     try {
-      console.log('Falling back to OpenRouter...');
-      const result = await generateWithOpenRouter(input);
+      console.log('Falling back to OpenRouter (extracted text)...');
+      const result = await generateWithOpenRouter(inputWithText);
       console.log('OpenRouter succeeded');
       return result;
     } catch (error) {
