@@ -166,6 +166,7 @@ export default function TimetablesPage() {
                       }))
                     }
                     onPaste={(e) => {
+                      e.preventDefault();
                       const pastedText = e.clipboardData.getData('text');
                       setTimetables((prev) => ({
                         ...prev,
