@@ -16,8 +16,8 @@ export async function extractTextFromPdf(base64Data: string): Promise<string> {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
       const pageText = textContent.items
-        .filter((item): item is { str: string } => 'str' in item)
-        .map((item) => item.str)
+        .filter((item) => 'str' in item)
+        .map((item) => (item as { str: string }).str)
         .join(' ');
       if (pageText.trim()) {
         textParts.push(`--- Page ${i} ---\n${pageText.trim()}`);
