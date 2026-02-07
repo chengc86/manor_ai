@@ -47,11 +47,12 @@ export function getDisplayDate(now: Date = new Date()): Date {
 }
 
 /**
- * Calculate the week start date (Monday) for a given date
- * If today is Friday, the week start is next Monday (for next week's mailings)
+ * Calculate the week start date (Monday) for mailings.
+ * Friday onwards (Fri/Sat/Sun): next Monday (newsletter is for the coming week)
+ * Monday-Thursday: this week's Monday
  */
 export function calculateWeekStartDate(date: Date = new Date()): Date {
-  if (isFriday(date)) {
+  if (isFriday(date) || isWeekend(date)) {
     return nextMonday(date);
   }
   return startOfWeek(date, { weekStartsOn: 1 });

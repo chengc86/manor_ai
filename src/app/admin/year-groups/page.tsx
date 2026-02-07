@@ -40,14 +40,15 @@ interface StoredData {
 function calculateWeekStartDate(): string {
   const now = new Date();
   const day = now.getDay();
-  // If Friday, use next Monday
-  if (day === 5) {
+  // Friday (5), Saturday (6), Sunday (0): use next Monday
+  if (day === 5 || day === 6 || day === 0) {
+    const daysUntilMonday = day === 0 ? 1 : 8 - day;
     const next = new Date(now);
-    next.setDate(now.getDate() + 3);
+    next.setDate(now.getDate() + daysUntilMonday);
     return next.toISOString().split('T')[0];
   }
-  // Get this week's Monday
-  const diff = (day === 0 ? -6 : 1) - day;
+  // Mon-Thu: get this week's Monday
+  const diff = 1 - day;
   const monday = new Date(now);
   monday.setDate(now.getDate() + diff);
   return monday.toISOString().split('T')[0];
