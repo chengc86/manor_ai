@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, yearGroups, documents, agentSettings, dailyReminders, weeklyOverviews } from '@/lib/db';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 import { generateReminders } from '@/lib/llm/gemini';
 import { calculateWeekStartDate, formatDateForDB } from '@/lib/utils/dates';
 
@@ -31,9 +31,10 @@ export async function POST(request: NextRequest) {
 
     // Calculate week start date
     const weekStartDate = providedWeekStart || formatDateForDB(calculateWeekStartDate());
+    console.log(`Generate reminders: weekStartDate=${weekStartDate}, yearGroup=${yearGroup.name}`);
 
     // Get weekly mailing documents for this week (school-wide)
-    const weeklyMailings = await db
+    let weeklyMailings = await db
       .select()
       .from(documents)
       .where(
@@ -44,6 +45,30 @@ export async function POST(request: NextRequest) {
         )
       );
 
+    console.log(`Found ${weeklyMailings.length} weekly mailings for weekStartDate=${weekStartDate}`);
+
+    // If no documents found for calculated week, try finding the most recent ones
+    if (weeklyMailings.length === 0) {
+      console.log('No documents for this week, looking for most recent weekly mailings...');
+      weeklyMailings = await db
+        .select()
+        .from(documents)
+        .where(
+          and(
+            eq(documents.type, 'weekly_mailing'),
+            eq(documents.isActive, true)
+          )
+        )
+        .orderBy(desc(documents.createdAt))
+        .limit(20);
+
+      if (weeklyMailings.length > 0) {
+        console.log(`Found ${weeklyMailings.length} recent mailings (weekStartDate=${weeklyMailings[0].weekStartDate})`);
+      } else {
+        console.log('No weekly mailing documents found in database at all');
+      }
+    }
+
     const mailingUrls = weeklyMailings.map((doc) => doc.s3Url);
 
     // Prepare PDF documents for LLM (with base64 data)
@@ -53,6 +78,8 @@ export async function POST(request: NextRequest) {
         filename: doc.filename,
         base64: doc.pdfBase64!,
       }));
+
+    console.log(`PDF documents with base64 data: ${pdfDocuments.length} of ${weeklyMailings.length} mailings`);
 
     // Get timetable for this year group
     const [timetableDoc] = await db
