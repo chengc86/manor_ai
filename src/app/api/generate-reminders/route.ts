@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, yearGroups, documents, agentSettings, dailyReminders, weeklyOverviews } from '@/lib/db';
 import { eq, and } from 'drizzle-orm';
-import { generateReminders, generateMockResponse } from '@/lib/llm/gemini';
+import { generateReminders } from '@/lib/llm/gemini';
 import { calculateWeekStartDate, formatDateForDB } from '@/lib/utils/dates';
 
 export async function POST(request: NextRequest) {
@@ -72,23 +72,16 @@ export async function POST(request: NextRequest) {
     const promptTemplate = settings.find((s) => s.key === 'llm_prompt_template')?.value || '';
     const factSheetContent = settings.find((s) => s.key === 'fact_sheet_content')?.value || '';
 
-    // Generate reminders using LLM
-    let llmResponse;
-
-    if (process.env.GOOGLE_GEMINI_API_KEY && process.env.GOOGLE_GEMINI_API_KEY !== 'your-gemini-api-key-here') {
-      llmResponse = await generateReminders({
-        weeklyMailingUrls: mailingUrls,
-        pdfDocuments: pdfDocuments.length > 0 ? pdfDocuments : undefined,
-        timetableJson: timetableDoc?.timetableJson || null,
-        factSheetContent,
-        promptTemplate,
-        weekStartDate,
-        yearGroupName: yearGroup.name,
-      });
-    } else {
-      // Use mock response for development
-      llmResponse = generateMockResponse(weekStartDate, yearGroup.name);
-    }
+    // Generate reminders using LLM (tries Gemini -> Claude -> Mock)
+    const llmResponse = await generateReminders({
+      weeklyMailingUrls: mailingUrls,
+      pdfDocuments: pdfDocuments.length > 0 ? pdfDocuments : undefined,
+      timetableJson: timetableDoc?.timetableJson || null,
+      factSheetContent,
+      promptTemplate,
+      weekStartDate,
+      yearGroupName: yearGroup.name,
+    });
 
     // Delete existing reminders for this year group and week
     await db

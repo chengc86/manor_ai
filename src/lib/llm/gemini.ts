@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import Anthropic from '@anthropic-ai/sdk';
 import type { LLMResponse } from '@/types';
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '');
 
 interface PdfDocument {
   filename: string;
@@ -9,9 +8,9 @@ interface PdfDocument {
   extractedText?: string;
 }
 
-interface GenerateRemindersInput {
+export interface GenerateRemindersInput {
   weeklyMailingUrls: string[];
-  pdfDocuments?: PdfDocument[]; // PDFs with base64 data
+  pdfDocuments?: PdfDocument[];
   timetableJson: string | null;
   factSheetContent: string | null;
   promptTemplate: string;
@@ -19,14 +18,8 @@ interface GenerateRemindersInput {
   yearGroupName: string;
 }
 
-/**
- * Generate reminders and weekly overview using Gemini
- */
-export async function generateReminders(input: GenerateRemindersInput): Promise<LLMResponse> {
-  // Using Gemini 2.0 Flash - fast and capable multimodal model
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-  const textPrompt = `${input.promptTemplate}
+function buildTextPrompt(input: GenerateRemindersInput): string {
+  return `${input.promptTemplate}
 
 ---
 
@@ -68,61 +61,147 @@ The JSON response MUST include:
 - updatedFactSheet: string containing the full updated fact sheet content
 
 Return ONLY valid JSON.`;
+}
 
-  try {
-    // Build content parts - text + PDFs
-    const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
-      { text: textPrompt }
-    ];
+function parseAndValidateResponse(text: string, factSheetContent: string | null): LLMResponse {
+  let cleanedText = text
+    .replace(/```json\n?/g, '')
+    .replace(/```\n?/g, '')
+    .trim();
 
-    // Add PDFs as inline data if available
-    if (input.pdfDocuments && input.pdfDocuments.length > 0) {
-      for (const pdf of input.pdfDocuments) {
-        parts.push({
-          inlineData: {
-            mimeType: 'application/pdf',
-            data: pdf.base64,
-          },
-        });
-      }
-    }
+  const parsed = JSON.parse(cleanedText) as LLMResponse;
 
-    const result = await model.generateContent(parts);
-    const response = await result.response;
-    const text = response.text();
-
-    // Clean the response - remove markdown code blocks if present
-    let cleanedText = text
-      .replace(/```json\n?/g, '')
-      .replace(/```\n?/g, '')
-      .trim();
-
-    // Parse JSON
-    const parsed = JSON.parse(cleanedText) as LLMResponse;
-
-    // Validate structure
-    if (!parsed.dailyReminders || !Array.isArray(parsed.dailyReminders)) {
-      throw new Error('Invalid response: missing dailyReminders array');
-    }
-
-    if (!parsed.weeklyOverview) {
-      throw new Error('Invalid response: missing weeklyOverview');
-    }
-
-    if (!parsed.factSheetSuggestions) {
-      throw new Error('Invalid response: missing factSheetSuggestions');
-    }
-
-    // Ensure updatedFactSheet exists, default to original if not provided
-    if (!parsed.updatedFactSheet) {
-      parsed.updatedFactSheet = input.factSheetContent || '';
-    }
-
-    return parsed;
-  } catch (error) {
-    console.error('Error generating reminders with Gemini:', error);
-    throw error;
+  if (!parsed.dailyReminders || !Array.isArray(parsed.dailyReminders)) {
+    throw new Error('Invalid response: missing dailyReminders array');
   }
+  if (!parsed.weeklyOverview) {
+    throw new Error('Invalid response: missing weeklyOverview');
+  }
+  if (!parsed.factSheetSuggestions) {
+    throw new Error('Invalid response: missing factSheetSuggestions');
+  }
+  if (!parsed.updatedFactSheet) {
+    parsed.updatedFactSheet = factSheetContent || '';
+  }
+
+  return parsed;
+}
+
+/**
+ * Generate reminders using Gemini
+ */
+async function generateWithGemini(input: GenerateRemindersInput): Promise<LLMResponse> {
+  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '');
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+  const textPrompt = buildTextPrompt(input);
+
+  const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
+    { text: textPrompt }
+  ];
+
+  if (input.pdfDocuments && input.pdfDocuments.length > 0) {
+    for (const pdf of input.pdfDocuments) {
+      parts.push({
+        inlineData: {
+          mimeType: 'application/pdf',
+          data: pdf.base64,
+        },
+      });
+    }
+  }
+
+  const result = await model.generateContent(parts);
+  const response = await result.response;
+  const text = response.text();
+
+  return parseAndValidateResponse(text, input.factSheetContent);
+}
+
+/**
+ * Generate reminders using Claude (fallback)
+ */
+async function generateWithClaude(input: GenerateRemindersInput): Promise<LLMResponse> {
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY,
+  });
+
+  const textPrompt = buildTextPrompt(input);
+
+  // Build content blocks for Claude
+  const content: Anthropic.MessageCreateParams['messages'][0]['content'] = [];
+
+  // Add PDFs as document blocks
+  if (input.pdfDocuments && input.pdfDocuments.length > 0) {
+    for (const pdf of input.pdfDocuments) {
+      content.push({
+        type: 'document',
+        source: {
+          type: 'base64',
+          media_type: 'application/pdf',
+          data: pdf.base64,
+        },
+      } as never);
+    }
+  }
+
+  // Add text prompt
+  content.push({
+    type: 'text',
+    text: textPrompt,
+  });
+
+  const message = await anthropic.messages.create({
+    model: 'claude-sonnet-4-5-20250929',
+    max_tokens: 4096,
+    messages: [
+      {
+        role: 'user',
+        content,
+      },
+    ],
+  });
+
+  // Extract text from response
+  const textBlock = message.content.find((block) => block.type === 'text');
+  if (!textBlock || textBlock.type !== 'text') {
+    throw new Error('No text response from Claude');
+  }
+
+  return parseAndValidateResponse(textBlock.text, input.factSheetContent);
+}
+
+/**
+ * Generate reminders with fallback: Gemini -> Claude -> Mock
+ */
+export async function generateReminders(input: GenerateRemindersInput): Promise<LLMResponse> {
+  // Try Gemini first
+  if (process.env.GOOGLE_GEMINI_API_KEY && process.env.GOOGLE_GEMINI_API_KEY !== 'your-gemini-api-key-here') {
+    try {
+      console.log('Trying Gemini 2.0 Flash...');
+      const result = await generateWithGemini(input);
+      console.log('Gemini succeeded');
+      return result;
+    } catch (error) {
+      console.error('Gemini failed:', error instanceof Error ? error.message : error);
+    }
+  }
+
+  // Fallback to Claude
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      console.log('Falling back to Claude...');
+      const result = await generateWithClaude(input);
+      console.log('Claude succeeded');
+      return result;
+    } catch (error) {
+      console.error('Claude failed:', error instanceof Error ? error.message : error);
+    }
+  }
+
+  // Final fallback: mock response
+  console.log('All LLMs failed, using mock response');
+  return generateMockResponse(input.weekStartDate, input.yearGroupName);
 }
 
 /**
