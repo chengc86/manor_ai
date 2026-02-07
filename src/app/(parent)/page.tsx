@@ -1,15 +1,10 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
 import { School, Calendar, Clock } from 'lucide-react';
-import dynamic from 'next/dynamic';
 import { YearGroupTabs } from '@/components/parent/year-group-tabs';
 import { DayReminderGroup } from '@/components/parent/reminder-card';
 import { WeeklyOverview } from '@/components/parent/weekly-overview';
-import { GlassCardSkeleton } from '@/components/ui';
-import { GlassTabs, GlassTabPanels, GlassTabPanel } from '@/components/ui/glass-tabs';
-import { PageTransition, FadeIn } from '@/components/animations/page-transition';
 import {
   getDisplayDate,
   formatDisplayDate,
@@ -18,11 +13,6 @@ import {
   formatWeekRange,
 } from '@/lib/utils/dates';
 import type { YearGroupDisplay, ReminderDisplay, WeeklyOverviewDisplay } from '@/types';
-
-const AnimatedBackground = dynamic(
-  () => import('@/components/three/animated-background').then((mod) => mod.AnimatedBackground),
-  { ssr: false }
-);
 
 export default function ParentView() {
   const [yearGroups, setYearGroups] = useState<YearGroupDisplay[]>([]);
@@ -57,7 +47,6 @@ export default function ParentView() {
     try {
       const res = await fetch('/api/year-groups');
       const data = await res.json();
-      // Ensure data is an array
       const groups = Array.isArray(data) ? data : [];
       setYearGroups(groups);
       if (groups.length > 0) {
@@ -77,7 +66,6 @@ export default function ParentView() {
         `/api/reminders?yearGroupId=${activeYearGroup}&weekStartDate=${weekStartDate}`
       );
       const data = await res.json();
-      // Ensure data is an array
       setReminders(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch reminders:', error);
@@ -115,113 +103,119 @@ export default function ParentView() {
   const todayStr = formatDateForDB(displayDate);
 
   return (
-    <>
-      <AnimatedBackground />
+    <main className="min-h-screen bg-gray-950 py-8 px-4">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/30">
+              <School className="w-8 h-8 text-emerald-400" />
+            </div>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">
+            Manor AI Reminders
+          </h1>
+          <p className="text-gray-400 text-lg">
+            Personalized daily reminders for your child
+          </p>
 
-      <main className="min-h-screen py-8 px-4">
-        <div className="max-w-5xl mx-auto">
-          <PageTransition>
-            {/* Header */}
-            <FadeIn className="text-center mb-10">
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-3 mb-4"
-              >
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-accent-primary/30 to-accent-emerald/30 border border-accent-primary/30">
-                  <School className="w-8 h-8 text-accent-primary" />
-                </div>
-              </motion.div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-3">
-                <span className="typewriter-text">Manor AI Reminders</span>
-              </h1>
-              <p className="text-white/60 text-lg">
-                Personalized daily reminders for your child
-              </p>
-
-              {/* Current display info */}
-              <div className="flex items-center justify-center gap-6 mt-6 text-sm text-white/50">
-                <span className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  Showing: {formatDisplayDate(displayDate)}
-                </span>
-                <span className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
-                  {currentTime.toLocaleTimeString('en-GB', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
-              </div>
-            </FadeIn>
-
-            {/* Year Group Selector */}
-            <FadeIn delay={0.2} className="mb-10">
-              <YearGroupTabs
-                yearGroups={yearGroups}
-                activeYearGroup={activeYearGroup}
-                onChange={setActiveYearGroup}
-              />
-            </FadeIn>
-
-            {/* Content Tabs */}
-            <FadeIn delay={0.3}>
-              <div className="flex justify-center mb-8">
-                <GlassTabs
-                  tabs={[
-                    { id: 'reminders', label: 'Daily Reminders', icon: <Calendar className="w-4 h-4" /> },
-                    { id: 'overview', label: 'Weekly Overview', icon: <Clock className="w-4 h-4" /> },
-                  ]}
-                  activeTab={activeTab}
-                  onChange={setActiveTab}
-                />
-              </div>
-
-              <GlassTabPanels>
-                <GlassTabPanel tabId="reminders" activeTab={activeTab}>
-                  {isLoading ? (
-                    <div className="space-y-4">
-                      {[1, 2, 3].map((i) => (
-                        <GlassCardSkeleton key={i} />
-                      ))}
-                    </div>
-                  ) : remindersByDate.length === 0 ? (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="glass p-12 text-center"
-                    >
-                      <Calendar className="w-16 h-16 mx-auto mb-4 text-white/30" />
-                      <h3 className="text-xl font-semibold text-white/70 mb-2">
-                        No Reminders Yet
-                      </h3>
-                      <p className="text-white/50">
-                        Reminders will appear here once the weekly mailings are processed.
-                      </p>
-                    </motion.div>
-                  ) : (
-                    <div className="space-y-6">
-                      {remindersByDate.map(([date, dayReminders]) => (
-                        <DayReminderGroup
-                          key={date}
-                          date={date}
-                          reminders={dayReminders}
-                          isToday={date === todayStr}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </GlassTabPanel>
-
-                <GlassTabPanel tabId="overview" activeTab={activeTab}>
-                  <WeeklyOverview overview={weeklyOverview} weekRange={weekRange} />
-                </GlassTabPanel>
-              </GlassTabPanels>
-            </FadeIn>
-          </PageTransition>
+          {/* Current display info */}
+          <div className="flex items-center justify-center gap-6 mt-6 text-sm text-gray-500">
+            <span className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Showing: {formatDisplayDate(displayDate)}
+            </span>
+            <span className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              {currentTime.toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+          </div>
         </div>
-      </main>
-    </>
+
+        {/* Year Group Selector */}
+        <div className="mb-10">
+          <YearGroupTabs
+            yearGroups={yearGroups}
+            activeYearGroup={activeYearGroup}
+            onChange={setActiveYearGroup}
+          />
+        </div>
+
+        {/* Content Tabs */}
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex gap-1 p-1 rounded-xl bg-gray-900 border border-gray-800">
+            <button
+              onClick={() => setActiveTab('reminders')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'reminders'
+                  ? 'bg-emerald-500/20 text-white border border-emerald-500/30'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              <Calendar className="w-4 h-4" />
+              Daily Reminders
+            </button>
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'overview'
+                  ? 'bg-emerald-500/20 text-white border border-emerald-500/30'
+                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+              }`}
+            >
+              <Clock className="w-4 h-4" />
+              Weekly Overview
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'reminders' && (
+          <>
+            {isLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="rounded-xl bg-gray-900 border border-gray-800 p-6">
+                    <div className="space-y-4 animate-pulse">
+                      <div className="h-6 w-3/4 bg-gray-800 rounded" />
+                      <div className="h-4 w-full bg-gray-800 rounded" />
+                      <div className="h-4 w-5/6 bg-gray-800 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : remindersByDate.length === 0 ? (
+              <div className="rounded-xl bg-gray-900 border border-gray-800 p-12 text-center">
+                <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-700" />
+                <h3 className="text-xl font-semibold text-gray-300 mb-2">
+                  No Reminders Yet
+                </h3>
+                <p className="text-gray-500">
+                  Reminders will appear here once the weekly mailings are processed.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {remindersByDate.map(([date, dayReminders]) => (
+                  <DayReminderGroup
+                    key={date}
+                    date={date}
+                    reminders={dayReminders}
+                    isToday={date === todayStr}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === 'overview' && (
+          <WeeklyOverview overview={weeklyOverview} weekRange={weekRange} />
+        )}
+      </div>
+    </main>
   );
 }
