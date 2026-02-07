@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Users,
   Sparkles,
@@ -12,10 +11,8 @@ import {
   Bell,
   Star,
   BookOpen,
-  FileText,
+  Clock,
 } from 'lucide-react';
-import { GlassCard, GlassButton } from '@/components/ui';
-import { PageTransition, FadeIn, StaggerContainer, StaggerItem } from '@/components/animations/page-transition';
 import { toast } from 'sonner';
 import type { YearGroupDisplay } from '@/types';
 
@@ -51,23 +48,73 @@ function calculateWeekStartDate(): string {
   const now = new Date();
   const day = now.getDay();
   let targetDate: Date;
-  // Friday (5), Saturday (6), Sunday (0): use next Monday
   if (day === 5 || day === 6 || day === 0) {
     const daysUntilMonday = day === 0 ? 1 : 8 - day;
     targetDate = new Date(now);
     targetDate.setDate(now.getDate() + daysUntilMonday);
   } else {
-    // Mon-Thu: get this week's Monday
     const diff = 1 - day;
     targetDate = new Date(now);
     targetDate.setDate(now.getDate() + diff);
   }
-  // Format as YYYY-MM-DD using local timezone (not UTC) to match server behavior
   const year = targetDate.getFullYear();
   const month = String(targetDate.getMonth() + 1).padStart(2, '0');
   const date = String(targetDate.getDate()).padStart(2, '0');
   return `${year}-${month}-${date}`;
 }
+
+/**
+ * Get the display date for the upcoming reminder card.
+ * Before 10am: show today's reminders
+ * After 10am: show tomorrow's reminders
+ * Friday after 10am / weekends: show Monday's reminders
+ */
+function getDisplayDate(): { date: string; label: string } {
+  const now = new Date();
+  const hour = now.getHours();
+  const day = now.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri, 6=Sat
+  const isBeforeTen = hour < 10;
+
+  const formatDate = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+  };
+
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  // Weekend: always show Monday
+  if (day === 0 || day === 6) {
+    const daysUntilMonday = day === 0 ? 1 : 2;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + daysUntilMonday);
+    return { date: formatDate(monday), label: 'Monday' };
+  }
+
+  // Before 10am: show today
+  if (isBeforeTen) {
+    return { date: formatDate(now), label: 'Today' };
+  }
+
+  // Friday after 10am: show Monday
+  if (day === 5) {
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + 3);
+    return { date: formatDate(monday), label: 'Monday' };
+  }
+
+  // Mon-Thu after 10am: show tomorrow
+  const tomorrow = new Date(now);
+  tomorrow.setDate(now.getDate() + 1);
+  return { date: formatDate(tomorrow), label: 'Tomorrow' };
+}
+
+const priorityColors = {
+  high: { dot: 'bg-red-400', badge: 'bg-red-500/30 text-red-200', border: 'border-red-500/20' },
+  medium: { dot: 'bg-amber-400', badge: 'bg-amber-500/30 text-amber-200', border: 'border-amber-500/20' },
+  low: { dot: 'bg-emerald-400', badge: 'bg-emerald-500/30 text-emerald-200', border: 'border-emerald-500/20' },
+};
 
 export default function YearGroupsPage() {
   const [yearGroups, setYearGroups] = useState<YearGroupDisplay[]>([]);
@@ -75,6 +122,8 @@ export default function YearGroupsPage() {
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [data, setData] = useState<Record<string, YearGroupData>>({});
+
+  const displayDate = useMemo(() => getDisplayDate(), []);
 
   useEffect(() => {
     fetchYearGroups();
@@ -86,7 +135,6 @@ export default function YearGroupsPage() {
       const groups = await res.json();
       setYearGroups(groups);
 
-      // Load stored data for each year group
       const weekStartDate = calculateWeekStartDate();
       for (const yg of groups) {
         loadData(yg.id, weekStartDate);
@@ -119,7 +167,6 @@ export default function YearGroupsPage() {
           }))
         : [];
 
-      // overview can be null (no data) or an object with error (API error)
       const overview: StoredOverview | null =
         overviewJson && !overviewJson.error ? overviewJson : null;
 
@@ -145,7 +192,6 @@ export default function YearGroupsPage() {
 
       if (result.success) {
         toast.success(`Generated reminders for ${yearGroupName}`);
-        // Reload from DB to show the saved data
         await loadData(yearGroupId, weekStartDate);
         setExpandedId(yearGroupId);
       } else {
@@ -158,277 +204,317 @@ export default function YearGroupsPage() {
     }
   };
 
-  const hasData = (yearGroupId: string) => {
-    const d = data[yearGroupId];
-    return d && (d.reminders.length > 0 || d.overview !== null);
-  };
+  // Collect upcoming reminders for the display date across all year groups
+  const upcomingReminders = useMemo(() => {
+    const items: { yearGroupName: string; reminder: StoredReminder }[] = [];
+    for (const yg of yearGroups) {
+      const d = data[yg.id];
+      if (!d) continue;
+      for (const r of d.reminders) {
+        if (r.date === displayDate.date) {
+          items.push({ yearGroupName: yg.name, reminder: r });
+        }
+      }
+    }
+    // Sort: high first, then medium, then low
+    const order = { high: 0, medium: 1, low: 2 };
+    items.sort((a, b) => order[a.reminder.priority] - order[b.reminder.priority]);
+    return items;
+  }, [yearGroups, data, displayDate.date]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
+      </div>
+    );
+  }
 
   return (
-    <PageTransition>
-      <FadeIn>
-        <div className="flex items-center justify-between mb-8">
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-white mb-1">Year Groups</h1>
+        <p className="text-gray-400 text-sm">
+          Manage year groups and view generated reminders
+        </p>
+      </div>
+
+      {/* Upcoming Reminders Card */}
+      <div className="rounded-xl bg-gray-900 border border-gray-700/50 p-5">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-2 rounded-lg bg-emerald-500/20">
+            <Clock className="w-5 h-5 text-emerald-400" />
+          </div>
           <div>
-            <h1 className="text-3xl font-bold gradient-text mb-2">Year Groups</h1>
-            <p className="text-white/60">
-              Manage year groups and view generated reminders
-            </p>
+            <h2 className="text-lg font-semibold text-white">
+              {displayDate.label}&apos;s Reminders
+            </h2>
+            <p className="text-xs text-gray-500">{displayDate.date}</p>
           </div>
         </div>
-      </FadeIn>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-8 h-8 animate-spin text-accent-primary" />
-        </div>
-      ) : yearGroups.length === 0 ? (
-        <GlassCard className="text-center py-12">
-          <Users className="w-12 h-12 text-white/30 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-2">No Year Groups Found</h3>
-          <p className="text-white/60 mb-4">
+        {upcomingReminders.length === 0 ? (
+          <p className="text-gray-500 text-sm py-3">
+            No reminders for this day yet. Generate reminders below.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {upcomingReminders.map((item, idx) => {
+              const colors = priorityColors[item.reminder.priority];
+              return (
+                <div
+                  key={idx}
+                  className={`flex items-start gap-3 p-3 rounded-lg bg-gray-800/80 border ${colors.border}`}
+                >
+                  <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${colors.dot}`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-medium text-white text-sm">{item.reminder.title}</span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${colors.badge}`}>
+                        {item.reminder.priority}
+                      </span>
+                    </div>
+                    <p className="text-gray-400 text-sm">{item.reminder.description}</p>
+                    <p className="text-gray-600 text-xs mt-1">
+                      {item.yearGroupName} &middot; {item.reminder.category}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Year Groups */}
+      {yearGroups.length === 0 ? (
+        <div className="rounded-xl bg-gray-900 border border-gray-700/50 text-center py-12 px-6">
+          <Users className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-white mb-1">No Year Groups Found</h3>
+          <p className="text-gray-500 text-sm mb-4">
             The database may not be connected or seeded properly.
           </p>
-          <GlassButton
-            variant="primary"
+          <button
             onClick={() => window.location.reload()}
+            className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium transition-colors"
           >
             Refresh Page
-          </GlassButton>
-        </GlassCard>
+          </button>
+        </div>
       ) : (
-        <StaggerContainer className="space-y-4">
+        <div className="space-y-3">
           {yearGroups.map((yg) => {
             const d = data[yg.id];
             const reminders = d?.reminders || [];
             const overview = d?.overview;
             const hasContent = reminders.length > 0 || overview !== null;
+            const isExpanded = expandedId === yg.id;
 
             return (
-              <StaggerItem key={yg.id}>
-                <GlassCard className="overflow-hidden">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-xl bg-gradient-to-br from-accent-primary/30 to-accent-emerald/30">
-                        <Users className="w-6 h-6 text-accent-primary" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-semibold">{yg.name}</h3>
-                        <p className="text-sm text-white/60">
-                          {hasContent ? (
-                            <span className="flex items-center gap-2">
-                              <CheckCircle2 className="w-3 h-3 text-green-400" />
-                              {reminders.length} reminders
-                            </span>
-                          ) : (
-                            'No reminders generated yet'
-                          )}
-                        </p>
-                      </div>
+              <div key={yg.id} className="rounded-xl bg-gray-900 border border-gray-700/50 overflow-hidden">
+                {/* Year group header */}
+                <div className="flex items-center justify-between p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-emerald-500/15">
+                      <Users className="w-5 h-5 text-emerald-400" />
                     </div>
-                    <div className="flex items-center gap-3">
-                      <GlassButton
-                        variant="primary"
-                        size="sm"
-                        onClick={() => generateReminders(yg.id, yg.name)}
-                        isLoading={generatingId === yg.id}
-                        leftIcon={<Sparkles className="w-4 h-4" />}
-                      >
-                        Generate Reminders
-                      </GlassButton>
-                      {hasContent && (
-                        <button
-                          onClick={() =>
-                            setExpandedId(expandedId === yg.id ? null : yg.id)
-                          }
-                          className="p-2 rounded-xl hover:bg-white/10 transition-colors"
-                        >
-                          <motion.div
-                            animate={{ rotate: expandedId === yg.id ? 180 : 0 }}
-                          >
-                            <ChevronDown className="w-5 h-5" />
-                          </motion.div>
-                        </button>
-                      )}
+                    <div>
+                      <h3 className="text-base font-semibold text-white">{yg.name}</h3>
+                      <p className="text-xs text-gray-500">
+                        {hasContent ? (
+                          <span className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                            {reminders.length} reminders
+                          </span>
+                        ) : (
+                          'No reminders generated yet'
+                        )}
+                      </p>
                     </div>
                   </div>
-
-                  {/* Data from database */}
-                  <AnimatePresence>
-                    {expandedId === yg.id && hasContent && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="overflow-hidden"
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => generateReminders(yg.id, yg.name)}
+                      disabled={generatingId === yg.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors"
+                    >
+                      {generatingId === yg.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="w-3.5 h-3.5" />
+                      )}
+                      Generate
+                    </button>
+                    {hasContent && (
+                      <button
+                        onClick={() => setExpandedId(isExpanded ? null : yg.id)}
+                        className="p-1.5 rounded-lg hover:bg-gray-800 transition-colors"
                       >
-                        <div className="mt-6 pt-6 border-t border-white/10 space-y-6">
-                          {/* Weekly Overview */}
-                          {overview?.summary && (
-                            <div>
-                              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                                <Star className="w-4 h-4 text-accent-gold" />
-                                Weekly Overview
-                              </h4>
-                              <p className="text-sm text-white/70 mb-4">{overview.summary}</p>
+                        <ChevronDown
+                          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+                            isExpanded ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </button>
+                    )}
+                  </div>
+                </div>
 
-                              {overview.keyHighlights && overview.keyHighlights.length > 0 && (
-                                <div className="mb-4">
-                                  <p className="text-xs font-medium text-white/50 mb-2">Key Highlights</p>
-                                  <ul className="space-y-1">
-                                    {overview.keyHighlights.map((h, i) => (
-                                      <li key={i} className="text-sm text-white/70 flex items-start gap-2">
-                                        <span className="text-accent-emerald mt-0.5">•</span>
-                                        {h}
-                                      </li>
-                                    ))}
-                                  </ul>
+                {/* Expanded content */}
+                {isExpanded && hasContent && (
+                  <div className="px-4 pb-4 border-t border-gray-800 pt-4 space-y-5">
+                    {/* Weekly Overview */}
+                    {overview?.summary && (
+                      <div>
+                        <h4 className="font-semibold text-white text-sm mb-2 flex items-center gap-2">
+                          <Star className="w-4 h-4 text-amber-400" />
+                          Weekly Overview
+                        </h4>
+                        <p className="text-gray-300 text-sm mb-3">{overview.summary}</p>
+
+                        {overview.keyHighlights && overview.keyHighlights.length > 0 && (
+                          <div className="mb-3">
+                            <p className="text-xs font-medium text-gray-500 mb-1.5">Key Highlights</p>
+                            <ul className="space-y-1">
+                              {overview.keyHighlights.map((h, i) => (
+                                <li key={i} className="text-sm text-gray-300 flex items-start gap-2">
+                                  <span className="text-emerald-400 mt-0.5">&bull;</span>
+                                  {h}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {overview.importantDates && overview.importantDates.length > 0 && (
+                          <div className="mb-3">
+                            <p className="text-xs font-medium text-gray-500 mb-1.5">Important Dates</p>
+                            <div className="space-y-1">
+                              {overview.importantDates.map((d, i) => (
+                                <div key={i} className="text-sm flex items-center gap-2">
+                                  <Calendar className="w-3 h-3 text-amber-400" />
+                                  <span className="text-gray-500">{d.date}</span>
+                                  <span className="text-gray-300">{d.event}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {overview.weeklyMailingSummary && (
+                          overview.weeklyMailingSummary.mainTopics.length > 0 ||
+                          overview.weeklyMailingSummary.actionItems.length > 0 ||
+                          overview.weeklyMailingSummary.upcomingEvents.length > 0
+                        ) && (
+                          <div className="p-3 rounded-lg bg-gray-800/60 border border-gray-700/30">
+                            <p className="text-xs font-medium text-gray-500 mb-2">Weekly Mailing Summary</p>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                              {overview.weeklyMailingSummary.mainTopics.length > 0 && (
+                                <div>
+                                  <p className="text-xs text-emerald-400 font-medium mb-1">Main Topics</p>
+                                  {overview.weeklyMailingSummary.mainTopics.map((t, i) => (
+                                    <p key={i} className="text-gray-400 text-xs">&bull; {t}</p>
+                                  ))}
                                 </div>
                               )}
-
-                              {overview.importantDates && overview.importantDates.length > 0 && (
-                                <div className="mb-4">
-                                  <p className="text-xs font-medium text-white/50 mb-2">Important Dates</p>
-                                  <div className="space-y-1">
-                                    {overview.importantDates.map((d, i) => (
-                                      <div key={i} className="text-sm flex items-center gap-2">
-                                        <Calendar className="w-3 h-3 text-accent-gold" />
-                                        <span className="text-white/50">{d.date}</span>
-                                        <span className="text-white/70">{d.event}</span>
-                                      </div>
-                                    ))}
-                                  </div>
+                              {overview.weeklyMailingSummary.actionItems.length > 0 && (
+                                <div>
+                                  <p className="text-xs text-cyan-400 font-medium mb-1">Action Items</p>
+                                  {overview.weeklyMailingSummary.actionItems.map((a, i) => (
+                                    <p key={i} className="text-gray-400 text-xs">&bull; {a}</p>
+                                  ))}
                                 </div>
                               )}
-
-                              {overview.weeklyMailingSummary && (
-                                overview.weeklyMailingSummary.mainTopics.length > 0 ||
-                                overview.weeklyMailingSummary.actionItems.length > 0 ||
-                                overview.weeklyMailingSummary.upcomingEvents.length > 0
-                              ) && (
-                                <div className="p-4 rounded-xl bg-white/5">
-                                  <p className="text-xs font-medium text-white/50 mb-3">Weekly Mailing Summary</p>
-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                                    {overview.weeklyMailingSummary.mainTopics.length > 0 && (
-                                      <div>
-                                        <p className="text-xs text-accent-primary font-medium mb-1">Main Topics</p>
-                                        {overview.weeklyMailingSummary.mainTopics.map((t, i) => (
-                                          <p key={i} className="text-white/60 text-xs">• {t}</p>
-                                        ))}
-                                      </div>
-                                    )}
-                                    {overview.weeklyMailingSummary.actionItems.length > 0 && (
-                                      <div>
-                                        <p className="text-xs text-accent-emerald font-medium mb-1">Action Items</p>
-                                        {overview.weeklyMailingSummary.actionItems.map((a, i) => (
-                                          <p key={i} className="text-white/60 text-xs">• {a}</p>
-                                        ))}
-                                      </div>
-                                    )}
-                                    {overview.weeklyMailingSummary.upcomingEvents.length > 0 && (
-                                      <div>
-                                        <p className="text-xs text-accent-gold font-medium mb-1">Upcoming Events</p>
-                                        {overview.weeklyMailingSummary.upcomingEvents.map((e, i) => (
-                                          <p key={i} className="text-white/60 text-xs">• {e}</p>
-                                        ))}
-                                      </div>
-                                    )}
-                                  </div>
+                              {overview.weeklyMailingSummary.upcomingEvents.length > 0 && (
+                                <div>
+                                  <p className="text-xs text-amber-400 font-medium mb-1">Upcoming Events</p>
+                                  {overview.weeklyMailingSummary.upcomingEvents.map((e, i) => (
+                                    <p key={i} className="text-gray-400 text-xs">&bull; {e}</p>
+                                  ))}
                                 </div>
                               )}
                             </div>
-                          )}
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                          {/* Daily Reminders */}
-                          {reminders.length > 0 && (
-                            <div>
-                              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                                <Bell className="w-4 h-4 text-accent-primary" />
-                                Daily Reminders ({reminders.length})
-                              </h4>
-                              <div className="space-y-2">
-                                {reminders.map((reminder, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="p-3 rounded-xl bg-white/5 flex items-start gap-3"
-                                  >
-                                    <span
-                                      className={`mt-1 w-2 h-2 rounded-full shrink-0 ${
-                                        reminder.priority === 'high'
-                                          ? 'bg-red-400'
-                                          : reminder.priority === 'medium'
-                                          ? 'bg-amber-400'
-                                          : 'bg-green-400'
-                                      }`}
-                                    />
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-medium text-white/90">{reminder.title}</span>
-                                        <span
-                                          className={`text-xs px-2 py-0.5 rounded-full ${
-                                            reminder.priority === 'high'
-                                              ? 'bg-red-500/20 text-red-300'
-                                              : reminder.priority === 'medium'
-                                              ? 'bg-amber-500/20 text-amber-300'
-                                              : 'bg-green-500/20 text-green-300'
-                                          }`}
-                                        >
-                                          {reminder.priority}
-                                        </span>
-                                      </div>
-                                      <p className="text-sm text-white/60">{reminder.description}</p>
-                                      <p className="text-xs text-white/40 mt-1">
-                                        {reminder.date} • {reminder.category}
-                                      </p>
-                                    </div>
+                    {/* Daily Reminders */}
+                    {reminders.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-white text-sm mb-2 flex items-center gap-2">
+                          <Bell className="w-4 h-4 text-emerald-400" />
+                          Daily Reminders ({reminders.length})
+                        </h4>
+                        <div className="space-y-1.5">
+                          {reminders.map((reminder, idx) => {
+                            const colors = priorityColors[reminder.priority];
+                            return (
+                              <div
+                                key={idx}
+                                className="p-2.5 rounded-lg bg-gray-800/60 flex items-start gap-2.5"
+                              >
+                                <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${colors.dot}`} />
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-0.5">
+                                    <span className="font-medium text-white text-sm">{reminder.title}</span>
+                                    <span className={`text-xs px-1.5 py-0.5 rounded ${colors.badge}`}>
+                                      {reminder.priority}
+                                    </span>
                                   </div>
+                                  <p className="text-gray-400 text-sm">{reminder.description}</p>
+                                  <p className="text-gray-600 text-xs mt-0.5">
+                                    {reminder.date} &middot; {reminder.category}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Fact Sheet Suggestions */}
+                    {overview?.factSheetSuggestions && (
+                      overview.factSheetSuggestions.additions.length > 0 || overview.factSheetSuggestions.removals.length > 0
+                    ) && (
+                      <div>
+                        <h4 className="font-semibold text-white text-sm mb-2 flex items-center gap-2">
+                          <BookOpen className="w-4 h-4 text-amber-400" />
+                          Fact Sheet Suggestions
+                        </h4>
+                        <div className="grid md:grid-cols-2 gap-3">
+                          {overview.factSheetSuggestions.additions.length > 0 && (
+                            <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-800/30">
+                              <p className="text-sm font-medium text-emerald-400 mb-1.5">Additions</p>
+                              <ul className="space-y-0.5">
+                                {overview.factSheetSuggestions.additions.map((a, i) => (
+                                  <li key={i} className="text-sm text-gray-300">+ {a}</li>
                                 ))}
-                              </div>
+                              </ul>
                             </div>
                           )}
-
-                          {/* Fact Sheet Suggestions */}
-                          {overview?.factSheetSuggestions && (
-                            (overview.factSheetSuggestions.additions.length > 0 || overview.factSheetSuggestions.removals.length > 0)
-                          ) && (
-                            <div>
-                              <h4 className="font-semibold mb-3 flex items-center gap-2">
-                                <BookOpen className="w-4 h-4 text-accent-gold" />
-                                Fact Sheet Suggestions
-                              </h4>
-                              <div className="grid md:grid-cols-2 gap-4">
-                                {overview.factSheetSuggestions.additions.length > 0 && (
-                                  <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20">
-                                    <p className="text-sm font-medium text-green-400 mb-2">Additions</p>
-                                    <ul className="space-y-1">
-                                      {overview.factSheetSuggestions.additions.map((a, i) => (
-                                        <li key={i} className="text-sm text-white/70">+ {a}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                                {overview.factSheetSuggestions.removals.length > 0 && (
-                                  <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
-                                    <p className="text-sm font-medium text-red-400 mb-2">Removals</p>
-                                    <ul className="space-y-1">
-                                      {overview.factSheetSuggestions.removals.map((rm, i) => (
-                                        <li key={i} className="text-sm text-white/70">- {rm}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
+                          {overview.factSheetSuggestions.removals.length > 0 && (
+                            <div className="p-3 rounded-lg bg-red-950/40 border border-red-800/30">
+                              <p className="text-sm font-medium text-red-400 mb-1.5">Removals</p>
+                              <ul className="space-y-0.5">
+                                {overview.factSheetSuggestions.removals.map((rm, i) => (
+                                  <li key={i} className="text-sm text-gray-300">- {rm}</li>
+                                ))}
+                              </ul>
                             </div>
                           )}
                         </div>
-                      </motion.div>
+                      </div>
                     )}
-                  </AnimatePresence>
-                </GlassCard>
-              </StaggerItem>
+                  </div>
+                )}
+              </div>
             );
           })}
-        </StaggerContainer>
+        </div>
       )}
-    </PageTransition>
+    </div>
   );
 }
