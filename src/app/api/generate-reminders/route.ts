@@ -4,6 +4,9 @@ import { eq, and, desc } from 'drizzle-orm';
 import { generateReminders } from '@/lib/llm/gemini';
 import { calculateWeekStartDate, formatDateForDB } from '@/lib/utils/dates';
 
+// Force dynamic rendering - don't cache this route
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { yearGroupId, weekStartDate: providedWeekStart } = await request.json();
@@ -110,6 +113,9 @@ export async function POST(request: NextRequest) {
       yearGroupName: yearGroup.name,
     });
 
+    // Save to database
+    console.log(`Saving ${llmResponse.dailyReminders.length} reminders to DB for yearGroupId=${yearGroupId}, weekStartDate=${weekStartDate}`);
+
     // Delete existing reminders for this year group and week
     await db
       .delete(dailyReminders)
@@ -133,6 +139,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    console.log(`Saved ${llmResponse.dailyReminders.length} reminders to DB`);
+
     // Delete existing weekly overview
     await db
       .delete(weeklyOverviews)
@@ -153,6 +161,8 @@ export async function POST(request: NextRequest) {
       weeklyMailingSummary: llmResponse.weeklyOverview.weeklyMailingSummary,
       factSheetSuggestions: llmResponse.factSheetSuggestions,
     });
+
+    console.log(`Saved weekly overview to DB for yearGroupId=${yearGroupId}`);
 
     // Update the fact sheet content with the LLM's cleaned/updated version
     if (llmResponse.updatedFactSheet) {
