@@ -3,6 +3,7 @@ const nextConfig = {
   output: 'standalone', // Required for Docker deployment
   experimental: {
     serverComponentsExternalPackages: ['puppeteer'],
+    instrumentationHook: true,
   },
   webpack: (config) => {
     config.externals.push({
