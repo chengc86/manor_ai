@@ -88,6 +88,8 @@ export default function ParentView() {
     }
   };
 
+  const todayStr = formatDateForDB(displayDate);
+
   const remindersByDate = useMemo(() => {
     const grouped: Record<string, ReminderDisplay[]> = {};
     reminders.forEach((reminder) => {
@@ -97,10 +99,13 @@ export default function ParentView() {
       }
       grouped[date].push(reminder);
     });
-    return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b));
-  }, [reminders]);
-
-  const todayStr = formatDateForDB(displayDate);
+    // Sort with the display date (today/tomorrow) first, then chronologically
+    return Object.entries(grouped).sort(([a], [b]) => {
+      if (a === todayStr) return -1;
+      if (b === todayStr) return 1;
+      return a.localeCompare(b);
+    });
+  }, [reminders, todayStr]);
 
   return (
     <main className="min-h-screen bg-gray-950 py-8 px-4">
