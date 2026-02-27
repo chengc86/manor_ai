@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db, scrapingSchedules } from '@/lib/db';
 import { eq } from 'drizzle-orm';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const schedules = await db.select().from(scrapingSchedules);
