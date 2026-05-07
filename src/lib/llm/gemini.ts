@@ -134,13 +134,13 @@ function parseAndValidateResponse(text: string, factSheetContent: string | null)
  */
 async function generateWithGemini(input: GenerateRemindersInput): Promise<LLMResponse> {
   const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '');
-  const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   const textPrompt = buildTextPrompt(input);
 
-  const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [
-    { text: textPrompt }
-  ];
+  // Per Google guidance: place media/files BEFORE the text instruction so the
+  // model attends to attached PDFs rather than treating them as appendix.
+  const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
 
   if (input.pdfDocuments && input.pdfDocuments.length > 0) {
     console.log(`Gemini: attaching ${input.pdfDocuments.length} native PDFs`);
@@ -154,6 +154,8 @@ async function generateWithGemini(input: GenerateRemindersInput): Promise<LLMRes
       });
     }
   }
+
+  parts.push({ text: textPrompt });
 
   const result = await model.generateContent(parts);
   const response = await result.response;
