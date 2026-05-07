@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import Anthropic from '@anthropic-ai/sdk';
 import { extractTextFromPdf } from '@/lib/pdf/extract';
 import type { LLMResponse } from '@/types';
@@ -130,36 +129,59 @@ function parseAndValidateResponse(text: string, factSheetContent: string | null)
 }
 
 /**
- * Generate reminders using Gemini (sends native PDFs via inlineData)
+ * Generate reminders using GLM-5V-Turbo (sends native PDFs via OpenAI-compatible
+ * multimodal content blocks, base64 data URI).
  */
-async function generateWithGemini(input: GenerateRemindersInput): Promise<LLMResponse> {
-  const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || '');
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+async function generateWithGLM5V(input: GenerateRemindersInput): Promise<LLMResponse> {
   const textPrompt = buildTextPrompt(input);
 
-  // Per Google guidance: place media/files BEFORE the text instruction so the
-  // model attends to attached PDFs rather than treating them as appendix.
-  const parts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
+  // Multimodal content array. PDFs first so the model attends to them as
+  // primary context, then the text instruction.
+  const content: Array<
+    | { type: 'text'; text: string }
+    | { type: 'file_url'; file_url: { url: string } }
+  > = [];
 
   if (input.pdfDocuments && input.pdfDocuments.length > 0) {
-    console.log(`Gemini: attaching ${input.pdfDocuments.length} native PDFs`);
+    console.log(`GLM-5V: attaching ${input.pdfDocuments.length} native PDFs`);
     for (const pdf of input.pdfDocuments) {
       console.log(`  - ${pdf.filename} (${Math.round(pdf.base64.length / 1024)}KB base64)`);
-      parts.push({
-        inlineData: {
-          mimeType: 'application/pdf',
-          data: pdf.base64,
+      content.push({
+        type: 'file_url',
+        file_url: {
+          url: `data:application/pdf;base64,${pdf.base64}`,
         },
       });
     }
   }
 
-  parts.push({ text: textPrompt });
+  content.push({ type: 'text', text: textPrompt });
 
-  const result = await model.generateContent(parts);
-  const response = await result.response;
-  const text = response.text();
+  const response = await fetch('https://api.z.ai/api/paas/v4/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.Z_AI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'glm-5v-turbo',
+      messages: [{ role: 'user', content }],
+      max_tokens: 4096,
+      temperature: 0.7,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`GLM-5V API error ${response.status}: ${errorBody}`);
+  }
+
+  const data = await response.json();
+  const text = data.choices?.[0]?.message?.content;
+
+  if (!text) {
+    throw new Error('No text response from GLM-5V');
+  }
 
   return parseAndValidateResponse(text, input.factSheetContent);
 }
@@ -291,7 +313,7 @@ async function generateWithOpenRouter(input: GenerateRemindersInput): Promise<LL
 
 /**
  * Generate reminders with fallback chain:
- * Gemini 3 Flash (native PDF) -> Claude (native PDF) -> Kimi K2.5 (extracted text) -> OpenRouter (extracted text) -> Mock
+ * GLM-5V-Turbo (native PDF) -> Claude (native PDF) -> Kimi K2.5 (extracted text) -> OpenRouter (extracted text)
  */
 export async function generateReminders(input: GenerateRemindersInput): Promise<LLMResponse> {
   // Log PDF availability
@@ -317,15 +339,15 @@ export async function generateReminders(input: GenerateRemindersInput): Promise<
     console.log(`Text extraction: ${successCount}/${pdfDocsWithText.length} PDFs extracted successfully`);
   }
 
-  // 1. Try Gemini 3 Flash first (sends native PDFs)
-  if (process.env.GOOGLE_GEMINI_API_KEY && process.env.GOOGLE_GEMINI_API_KEY !== 'your-gemini-api-key-here') {
+  // 1. Try GLM-5V-Turbo first (sends native PDFs via Z.ai)
+  if (process.env.Z_AI_API_KEY) {
     try {
-      console.log('Trying Gemini 3 Flash (native PDF)...');
-      const result = await generateWithGemini(inputWithText);
-      console.log('Gemini succeeded');
+      console.log('Trying GLM-5V-Turbo (native PDF)...');
+      const result = await generateWithGLM5V(inputWithText);
+      console.log('GLM-5V-Turbo succeeded');
       return result;
     } catch (error) {
-      console.error('Gemini failed:', error instanceof Error ? error.message : error);
+      console.error('GLM-5V-Turbo failed:', error instanceof Error ? error.message : error);
     }
   }
 

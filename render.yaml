@@ -12,8 +12,8 @@ services:
         fromDatabase:
           name: manor-ai-db
           property: connectionString
-      - key: GOOGLE_GEMINI_API_KEY
-        sync: false  # Set manually in Render dashboard
+      - key: Z_AI_API_KEY
+        sync: false  # Set manually in Render dashboard (z.ai GLM-5V-Turbo)
       - key: AWS_ACCESS_KEY_ID
         sync: false
       - key: AWS_SECRET_ACCESS_KEY
