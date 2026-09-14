@@ -1,3 +1,4 @@
+import {weaponTraits,MAX_WEAPON_LEVEL} from './equipment';
 export const HEROES=[
  {name:'Bramble',role:'Ranger',price:60,power:12,range:4.5,cooldown:1.1,colour:'#ffe396',attack:'ARROW!',description:'Reliable arrows with a long reach.',tiers:['Scout','Eagle Eye','Master Ranger'],costs:[60,120],growth:[{range:.5,speed:.1},{range:1,speed:.2}],upgrade:['Longer reach and quicker arrows.','Maximum reach and rapid, powerful arrows.']},
  {name:'Luna',role:'Mage',price:100,power:22,range:3.5,cooldown:1.7,colour:'#c6a7ff',attack:'ZAP!',description:'Powerful magic against tough monsters.',tiers:['Apprentice','Moon Weaver','Archmage'],costs:[80,160],growth:[{range:.25,speed:.15},{range:.5,speed:.3}],upgrade:['Stronger spells with a shorter casting time.','Faster spells that reach further.']},
@@ -9,9 +10,19 @@ export const HEROES=[
  {name:'Arrow Tower',role:'Tower',price:120,power:18,range:5,cooldown:1.3,colour:'#ffe396',attack:'VOLLEY!',description:'A steady crossbow covering long paths.',tiers:['Watchpost','Bolt Turret','Manor Ballista'],costs:[80,160],growth:[{range:.5,speed:.15},{range:1,speed:.3}],upgrade:['Faster crossbow reloads and longer reach.','Heavy bolts covering six squares.']},
  {name:'Crystal Tower',role:'Tower',price:200,power:20,range:4,cooldown:1.8,colour:'#d1a0ff',attack:'PULSE!',description:'Magic pulses strike two monsters at once.',tiers:['Crystal Spire','Arcane Beacon','Prismatic Keep'],costs:[120,240],growth:[{range:.5,speed:.15},{range:1,speed:.3}],upgrade:['Stronger pulses and a wider reach.','Prismatic energy hits three targets at once.']},
 ];
-export function heroStats(type:number,level=1,weapon='standard'){const h=HEROES[type],bonus=level>1?h.growth[Math.min(level-2,1)]:null;const damage=level===0?0:h.power*level;const cooldown=Math.max(.25,h.cooldown-(bonus?.speed??0));return{damage:Math.round(damage*(weapon==='swift'||weapon==='frost'?.65:weapon==='blast'?.8:1)),range:h.range+(bonus?.range??0),cooldown:cooldown*(weapon==='swift'?.55:weapon==='blast'?1.35:1),targets:(type===3||type===8)?(level>=3?3:2):1,splash:weapon==='blast'?3.6:type===6?(level>=3?4.6:level===2?4.1:3.6):0,freeze:weapon==='frost'?.6:0};}
-export function upgradeCost(type:number,level:number){return level>=3?null:[40,80][level-1]}
+// Keep legacy tower IDs 7 and 8 stable for existing class records.
+const NEW_HEROES=[['Ash','Wolf',2],['Scout','Raccoon',5],['Briar','Hedgehog',0],['Hazel','Squirrel',4],['Brook','Otter',1],['Bamboo','Panda',3],['Leo','Lion',6]] as const;
+for(const [name,animal,base] of NEW_HEROES)HEROES.push({...HEROES[base],name,description:`${animal} hero. ${HEROES[base].description}`});
+export const SELECTABLE_HERO_IDS=[0,1,2,3,4,5,6,9,10,11,12,13,14,15];
+export const heroArchetype=(type:number)=>type>=9?[2,5,0,4,1,3,6][type-9]:type;
+export function heroStats(type:number,level=1,weapon='standard'){
+ const h=HEROES[type],bonus=level>1?h.growth[Math.min(level-2,1)]:null,t=weaponTraits(weapon,level),base=heroArchetype(type);
+ return{...t,damage:level===0?0:Math.round(h.power*level*t.damage),range:Math.max(1.2,h.range+(bonus?.range??0)+t.range),cooldown:Math.max(.2,(h.cooldown-(bonus?.speed??0))*t.speed/(1+Math.max(0,level-3)*.035)),targets:Math.max(t.targets,(base===3||type===8)?(level>=3?3:2):1),splash:Math.max(t.splash,base===6?(level>=3?4.6:level===2?4.1:3.6):0)};
+}
+export function upgradeCost(type:number,level:number){return level>=MAX_WEAPON_LEVEL?null:Math.round(40*Math.pow(1.55,level-1)/5)*5}
 
 export const MAX_HEROES=2;
 export function spawnCost(count:number){return count===0?120:600}
 export const WEAPONS=[['Training bow','Longbow','Starshot bow'],['Oak staff','Moon staff','Astral staff'],['Iron sword','Knight blade','Champion blade'],['Storm wand','Thunder staff','Tempest sceptre'],['Practice blades','Twin daggers','Wind blades'],['Light crossbow','Reinforced crossbow','Eagle crossbow'],['Spark charm','Flame charm','Inferno gem'],['Wooden bolts','Steel bolts','Golden bolts'],['Quartz core','Amethyst core','Prismatic core']];
+
+for(const [, ,base] of NEW_HEROES)WEAPONS.push([...WEAPONS[base]]);
