@@ -19,7 +19,7 @@ export function heroStats(type:number,level=1,weapon='standard'){
  const h=HEROES[type],bonus=level>1?h.growth[Math.min(level-2,1)]:null,t=weaponTraits(weapon,level),base=heroArchetype(type);
  return{...t,damage:level===0?0:Math.round(h.power*level*t.damage),range:Math.max(1.2,h.range+(bonus?.range??0)+t.range),cooldown:Math.max(.2,(h.cooldown-(bonus?.speed??0))*t.speed/(1+Math.max(0,level-3)*.035)),targets:Math.max(t.targets,(base===3||type===8)?(level>=3?3:2):1),splash:Math.max(t.splash,base===6?(level>=3?4.6:level===2?4.1:3.6):0)};
 }
-export function upgradeCost(type:number,level:number){return level>=MAX_WEAPON_LEVEL?null:Math.round(40*Math.pow(1.55,level-1)/5)*5}
+export function upgradeCost(type:number,level:number){return level>=MAX_WEAPON_LEVEL?null:Math.ceil(100*Math.pow(1.45,level-1)/20)*20}
 
 export const MAX_HEROES=2;
 export function spawnCost(count:number){return count===0?120:600}
