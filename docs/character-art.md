@@ -20,3 +20,8 @@ References: [Manor uniform rules](https://www.manorprep.org/school-life/uniform/
 Built-in ImageGen created public/starters/0–6.png and 9–15.png. Prompt: One transparent sprite atlas, exactly seven columns by two rows. Top row: orange fox, blue cat, brown bear, snowy owl, white rabbit, badger, emerald dragon. Bottom row: gray wolf, raccoon, hedgehog, red squirrel, otter, panda, lion. Full-body upright friendly animals with two separate arms and legs, natural fur/feathers/scales only, child-appropriate cartoon bodies. Polished 3D storybook fantasy style, no clothes, accessories, weapons, text, frames, ground or background.
 
 Decorations removed from shop and all hero rendering. New pupils receive no uniform or accessory; winter/summer/sports cost 40/60/80 coins. Existing purchased uniforms remain owned.
+
+## Individual clothing pieces
+Built-in ImageGen created public/clothes/0–14.png. Exact prompt: Transparent 5-column × 3-row atlas of isolated 3D storybook clothing overlays for broad chibi animals. Row 1: white short-sleeve shirt without tie, white blouse without tie, white polo, green sports polo with white piping, green-and-white leaf summer dress. Row 2: green V-neck pullover, green cardigan, grey trousers, grey shorts, grey pleated skirt. Row 3: green sports shorts, green sports skort, plain green school tie, black school shoes pair, white-and-green trainers pair. Hollow collars and sleeves, generous gaps, no wearers, text, frames or background.
+
+SHUS now sells individual pieces, with separate top, outerwear, bottoms, tie and shoe slots. Existing purchased full uniforms migrate into their corresponding owned pieces. No decorative bows, necklaces or crowns are rendered.

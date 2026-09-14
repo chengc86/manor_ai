@@ -1,3 +1,4 @@
+import type {Wardrobe} from './clothing';
 import {chapterFor} from './chapters';
 import {HEROES,heroStats} from './heroes';
 // Pure, deterministic battle rules shared by the server and the animated board.
@@ -11,13 +12,13 @@ export function isBuildable(cell:number){return Number.isInteger(cell)&&cell>=CO
 export function cellPoint(cell:number){return{x:cell%COLS+.5,y:Math.floor(cell/COLS)+.5}}
 export function percent(cell:number){const p=cellPoint(cell);return{x:p.x/COLS*100,y:p.y/ROWS*100}}
 export function pathPosition(progress:number){const t=Math.max(0,Math.min(PATH.length-1,progress*(PATH.length-1))),i=Math.min(PATH.length-2,Math.floor(t)),f=t-i;return{x:PATH[i].x+(PATH[i+1].x-PATH[i].x)*f,y:PATH[i].y+(PATH[i+1].y-PATH[i].y)*f}}
-export type Fighter={id:string;type:number;level:number;weapon?:string;cell:number;name:string;gender?:'boy'|'girl';uniform?:string;outfit?:string;colour?:string;owner?:string};
-export type Battle={start:number;duration:number;wave:number;power:number;target:number;contributors:number;fighters:Fighter[]};
-export function rules(wave:number){const chapter=chapterFor(wave);const count=Math.min(30,8+Math.floor((wave-1)/2));const travel=Math.max(23,32-(chapter.number-1)*.45);const spawn=Math.max(.8,1.25-(chapter.number-1)*.015);return{count,hp:Math.round((50+10*(wave-1))*(chapter.elite?1.25:1)),spawn,travel,duration:(travel*3.5+3+(count-1)*spawn)*1000,boss:chapter.boss,elite:chapter.elite};}
-export function monsterHealth(wave:number,index:number){const rule=rules(wave);return rule.hp*(rule.boss&&index===rule.count-1?4:1)}
+export type Fighter={id:string;type:number;level:number;weapon?:string;cell:number;name:string;gender?:'boy'|'girl';uniform?:string;clothing?:Wardrobe;outfit?:string;colour?:string;owner?:string};
+export type Battle={start:number;duration:number;wave:number;rulesVersion?:number;power:number;target:number;contributors:number;fighters:Fighter[]};
+export function rules(wave:number,version=2){const chapter=chapterFor(wave);const count=version===1?Math.min(30,8+Math.floor((wave-1)/2)):Math.min(48,18+Math.floor((wave-1)/2));const travel=Math.max(23,32-(chapter.number-1)*.45);const spawn=Math.max(.8,1.25-(chapter.number-1)*.015);return{count,hp:Math.round((version===1?50+10*(wave-1):180+28*(wave-1)+Math.pow(wave-1,1.35)*3)*(chapter.elite?1.25:1)),spawn,travel,duration:(travel*3.5+3+(count-1)*spawn)*1000,boss:chapter.boss,elite:chapter.elite};}
+export function monsterHealth(wave:number,index:number,version=2){const rule=rules(wave,version);return rule.hp*(rule.boss&&index===rule.count-1?4:1)}
 export type Hit={at:number;fighter:number;monster:number;damage:number;freeze?:number;slow?:number;mark?:number;dot?:boolean;critical?:boolean;knockback?:number;point:{x:number;y:number}};
 export function simulate(battle:Battle){
- const rule=rules(battle.wave??1),hp=Array.from({length:rule.count},(_,i)=>monsterHealth(battle.wave,i)),deathAt:(number|null)[]=Array(rule.count).fill(null);
+ const rule=rules(battle.wave??1,battle.rulesVersion??1),hp=Array.from({length:rule.count},(_,i)=>monsterHealth(battle.wave,i,battle.rulesVersion??1)),deathAt:(number|null)[]=Array(rule.count).fill(null);
  const cooldown=battle.fighters.map(()=>0),shots=battle.fighters.map(()=>0),progress=Array.from({length:rule.count},(_,i)=>-i*rule.spawn/rule.travel);
  const frozenUntil=Array(rule.count).fill(0),immuneUntil=Array(rule.count).fill(0),slowUntil=Array(rule.count).fill(0),slows=Array(rule.count).fill(0),marks=Array(rule.count).fill(0),markedUntil=Array(rule.count).fill(0),pushed=Array(rule.count).fill(0);
  const paints=Array.from({length:rule.count},()=>({until:0,damage:0,fighter:0})),events:Hit[]=[],tracks:number[][]=Array.from({length:rule.count},()=>[]);

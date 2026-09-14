@@ -26,3 +26,5 @@ export function spawnCost(count:number){return count===0?120:600}
 export const WEAPONS=[['Training bow','Longbow','Starshot bow'],['Oak staff','Moon staff','Astral staff'],['Iron sword','Knight blade','Champion blade'],['Storm wand','Thunder staff','Tempest sceptre'],['Practice blades','Twin daggers','Wind blades'],['Light crossbow','Reinforced crossbow','Eagle crossbow'],['Spark charm','Flame charm','Inferno gem'],['Wooden bolts','Steel bolts','Golden bolts'],['Quartz core','Amethyst core','Prismatic core']];
 
 for(const [, ,base] of NEW_HEROES)WEAPONS.push([...WEAPONS[base]]);
+
+export const HERO_CHANGE_COST=1000;
