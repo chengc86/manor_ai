@@ -1,3 +1,0 @@
-import {env} from 'cloudflare:workers';
-import {db,user,json} from '@/lib/world';
-export async function GET(req:Request,{params}:{params:Promise<{id:string}>}){try{const uid=await user(req);if(!uid)return json({error:'Please sign in.'},401);const{id}=await params;const row=await db().prepare('SELECT mime FROM uploads WHERE id=? AND (user_id=? OR ?=?)').bind(id,uid,uid,'teacher').first<{mime:string}>();if(!row)return json({error:'Image not found.'},404);const object=await env.BUCKET?.get(id);if(!object)return json({error:'Image not found.'},404);return new Response(object.body,{headers:{'Content-Type':row.mime,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}})}catch{return json({error:'Image unavailable.'},503)}}
