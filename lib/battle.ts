@@ -1,3 +1,4 @@
+import {chapterFor} from './chapters';
 import {HEROES,heroStats} from './heroes';
 // Pure, deterministic battle rules shared by the server and the animated board.
 export const COLS=24,ROWS=18,CELL=60;
@@ -12,9 +13,10 @@ export function percent(cell:number){const p=cellPoint(cell);return{x:p.x/COLS*1
 export function pathPosition(progress:number){const t=Math.max(0,Math.min(PATH.length-1,progress*(PATH.length-1))),i=Math.min(PATH.length-2,Math.floor(t)),f=t-i;return{x:PATH[i].x+(PATH[i+1].x-PATH[i].x)*f,y:PATH[i].y+(PATH[i+1].y-PATH[i].y)*f}}
 export type Fighter={id:string;type:number;level:number;cell:number;name:string;owner?:string};
 export type Battle={start:number;duration:number;wave:number;power:number;target:number;contributors:number;fighters:Fighter[]};
-export function rules(wave:number){const count=Math.min(24,8+Math.floor((wave-1)/2));return{count,hp:50+10*(wave-1),spawn:1.25,travel:32,duration:(35+(count-1)*1.25)*1000}}
+export function rules(wave:number){const chapter=chapterFor(wave);const count=Math.min(30,8+Math.floor((wave-1)/2));const travel=Math.max(23,32-(chapter.number-1)*.45);const spawn=Math.max(.8,1.25-(chapter.number-1)*.015);return{count,hp:Math.round((50+10*(wave-1))*(chapter.elite?1.25:1)),spawn,travel,duration:(travel+3+(count-1)*spawn)*1000,boss:chapter.boss,elite:chapter.elite};}
+export function monsterHealth(wave:number,index:number){const rule=rules(wave);return rule.hp*(rule.boss&&index===rule.count-1?4:1)}
 export type Hit={at:number;fighter:number;monster:number;damage:number;point:{x:number;y:number}};
-export function simulate(battle:Battle){const rule=rules(battle.wave??1);const hp=Array(rule.count).fill(rule.hp),deathAt:(number|null)[]=Array(rule.count).fill(null);const cooldown=battle.fighters.map(()=>0);const events:Hit[]=[];
+export function simulate(battle:Battle){const rule=rules(battle.wave??1);const hp=Array.from({length:rule.count},(_,i)=>monsterHealth(battle.wave,i)),deathAt:(number|null)[]=Array(rule.count).fill(null);const cooldown=battle.fighters.map(()=>0);const events:Hit[]=[];
 for(let t=0;t<=rule.duration/1000;t+=.2){battle.fighters.forEach((f,i)=>{
  if(t<cooldown[i])return;const centre=cellPoint(f.cell),stats=heroStats(f.type,f.level);
  const candidates=Array.from({length:rule.count},(_,m)=>{const progress=(t-m*rule.spawn)/rule.travel;return{m,progress,p:pathPosition(progress)}}).filter(o=>hp[o.m]>0&&o.progress>=0&&o.progress<1&&Math.hypot(o.p.x-centre.x,o.p.y-centre.y)<=stats.range).sort((a,b)=>b.progress-a.progress);
