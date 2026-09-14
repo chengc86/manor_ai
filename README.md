@@ -2,7 +2,7 @@
 
 A cooperative Year 6 school-defence game for The Manor Preparatory School, Abingdon.
 
-Pupils sign in with teacher-created nicknames and passwords. Typed questions award 20 coins for each correct answer. Coins buy up to three heroes per pupil, upgrades and cosmetic outfits. A shared 24 × 18 grid provides placement, collision checks and range-based combat. All clients use the same server-issued battle snapshot. Wins advance the class; losses preserve heroes and the current wave. At least four pupils must contribute a correct answer in each wave.
+Pupils sign in with teacher-created nicknames and passwords. Typed questions award 20 coins for each correct answer. Each pupil permanently chooses one hero type and boy/girl identity, receives two starter costumes, and can deploy up to two copies of their hero (120 then 600 coins). New copies start unarmed. Weapons cost 40–80 coins and can be upgraded for 40 then 80; paid costumes are cosmetic. A shared 24 × 18 grid provides placement, collision checks and range-based combat. All clients use the same server-issued battle snapshot. Wins advance the class; losses preserve heroes and the current wave. There is no minimum number of contributing pupils. Victory depends on defeating the monsters.
 
 ## Runtime
 
@@ -12,7 +12,7 @@ Vinext, React, Cloudflare Workers, D1 and R2. Set `TEACHER_PASSWORD` in local `.
 
 ## Questions
 
-257 original typed-answer questions cover Maths, English comprehension, verbal reasoning and non-verbal reasoning. Correct questions are retired per pupil. Incorrect and skipped questions wait at least 24 hours. There is no pupil upload library. The teacher supplies textbook photos in the Codex conversation; reviewed, original questions can then be added to the bank. The latest expansion adds 25 questions per subject, with stable IDs so existing pupil histories remain valid.
+289 original multiple-choice, short-answer and reading-comprehension questions cover Maths, English comprehension, verbal reasoning and non-verbal reasoning. Correct questions are retired per pupil. Incorrect and skipped questions wait at least 24 hours. There is no pupil upload library. The teacher supplies textbook photos in the Codex conversation; reviewed, original questions can then be added to the bank. The latest expansion adds 25 questions per subject, with stable IDs so existing pupil histories remain valid.
 
 ## Art references
 
@@ -32,3 +32,7 @@ Maths and English follow England’s upper Key Stage 2 programmes, relevant to M
 - https://www.gov.uk/government/publications/national-curriculum-in-england-english-programmes-of-study/national-curriculum-in-england-english-programmes-of-study
 
 Seven heroes have three named tiers each. Upgrades increase damage, range and attack speed; Tempest gains a third lightning target at tier 3 and Ember increases its splash radius. Hero stats, costs and names are shared by the server and UI in lib/heroes.ts. New purchases join the next wave; upgrades and movement take place between waves.
+
+## Render + Neon
+
+See [deployment instructions](docs/render-neon.md). Docker uses the separate `build:render` Next.js standalone target and the Neon database adapter. The existing Sites target continues using D1 until a deliberate migration is performed. Neon requires a private DATABASE_URL. Never store production records in the container filesystem.

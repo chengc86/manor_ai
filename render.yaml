@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: manor-quest
+    runtime: docker
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: TEACHER_PASSWORD
+        sync: false
+      - key: PORT
+        value: 10000

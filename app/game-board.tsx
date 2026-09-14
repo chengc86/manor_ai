@@ -2,8 +2,9 @@
 import {useRef,useState,useMemo} from 'react';
 import {Shield,Swords,ZoomIn,ZoomOut,Maximize2,X,Flag,Users,HelpCircle} from 'lucide-react';
 import {Slider} from '@/components/ui/slider';
-import {COLS,ROWS,CELL,WAYPOINTS,isBuildable,percent,RANGES,simulate} from '@/lib/battle';
+import {COLS,ROWS,CELL,WAYPOINTS,isBuildable,percent,RANGES,simulate,monsterProgress} from '@/lib/battle';
 import {HEROES,heroStats} from '@/lib/heroes';
+import Sprite from './hero-sprite';
 import BattleScene from './battle-scene';
 export default function GameBoard({world,battle,now,placement,onPlace,onHero,onCancel,onHelp}:any){
  const [zoom,setZoom]=useState(.8),[hover,setHover]=useState<number|null>(null),scroll=useRef<HTMLDivElement>(null);
@@ -12,10 +13,10 @@ export default function GameBoard({world,battle,now,placement,onPlace,onHero,onC
  const hoveredHero=hover!==null?occupied.get(hover):null;
  const rangeType=placement?.type??hoveredHero?.type;
  const rangePoint=hover!==null&&rangeType!==undefined?percent(hover):null;
- const sim=useMemo(()=>battle?simulate(battle):null,[battle]);
+ const sim=useMemo(()=>battle?simulate(battle):null,[battle?.start]);
  const elapsed=battle?Math.max(0,(now-battle.start)/1000):0;
  const defeated=sim?sim.deathAt.filter(t=>t!==null&&t+.25<=elapsed).length:0;
- const escaped=sim?sim.deathAt.filter((t,i)=>t===null&&elapsed>=i*sim.rule.spawn+sim.rule.travel).length:0;
+ const escaped=sim?sim.deathAt.filter((t,i)=>t===null&&monsterProgress(sim.tracks[i],elapsed)>=1).length:0;
  const approaching=sim?sim.count-defeated-escaped:0;
  const milliseconds=battle?Math.max(0,battle.duration-(now-battle.start)):0;
  return <><div className="board-controls"><div><span className="board-mode"><Swords size={15}/>{battle?`Your class is fighting · ${Math.ceil(milliseconds/1000)}s`:'Choose your heroes. Hold the path.'}</span><span className="board-size">24 × 18 squares · Room for the whole year</span></div><div className="zoom-controls"><button aria-label="Zoom out" onClick={()=>setZoom(Math.max(.35,zoom-.1))}><ZoomOut size={17}/></button><Slider min={.35} max={1.3} step={.05} value={[zoom]} onValueChange={v=>setZoom(v[0])} aria-label="Map zoom" className="zoom-slider"/><button aria-label="Zoom in" onClick={()=>setZoom(Math.min(1.3,zoom+.1))}><ZoomIn size={17}/></button><button className="fit-map" onClick={()=>setZoom(Math.min(1,(scroll.current?.clientWidth??900)/(COLS*CELL),620/(ROWS*CELL)))}><Maximize2 size={15}/> Fit map</button><button aria-label="How to place heroes" onClick={onHelp}><HelpCircle size={17}/></button></div></div>
@@ -26,9 +27,9 @@ export default function GameBoard({world,battle,now,placement,onPlace,onHero,onC
  <svg className="route-layer" viewBox={`0 0 ${COLS} ${ROWS}`} aria-label="The monster route winds back and forth across the entire board" preserveAspectRatio="none"><polyline points={points} fill="none" stroke="#687139" strokeWidth="1.08" strokeLinejoin="round"/><polyline points={points} fill="none" stroke="#dfc889" strokeWidth=".91" strokeLinejoin="round"/><polyline points={points} fill="none" stroke="#f0dda9" strokeWidth=".65" strokeLinejoin="round"/><polyline points={points} fill="none" stroke="#b6a371" strokeWidth=".025" strokeDasharray=".14 .45"/>{rangePoint&&!battle&&<circle cx={rangePoint.x*COLS/100} cy={rangePoint.y*ROWS/100} r={heroStats(rangeType,placement?placement.level??1:hoveredHero?.level??1).range} fill="#ffef8030" stroke="#fff0b0" strokeWidth=".035" strokeDasharray=".12 .1"/>}</svg>
  <div className="placement-grid" aria-label="Hero placement squares">{Array.from({length:COLS*ROWS},(_,cell)=>{if(!isBuildable(cell))return <span key={cell} className="blocked-square"/>;const d=occupied.get(cell);return <button key={cell} aria-label={`Row ${Math.floor(cell/COLS)+1}, column ${cell%COLS+1}${d?`: ${d.name}'s ${HEROES[d.type].name}`:': empty grass square'}`} className={`grid-square ${d?'occupied':''}`} onMouseEnter={()=>setHover(cell)} onMouseLeave={()=>setHover(null)} onFocus={()=>setHover(cell)} onBlur={()=>setHover(null)} onClick={()=>d?onHero(d):onPlace(cell)}>{!d&&<span>+</span>}</button>})}</div>
  <div className="camp-label"><Users size={18}/> THE MANOR HERO CAMP <span>{world.players.length}/40</span></div>
- {world.players.map((p:any,i:number)=>{const col=2+i%20,row=Math.floor(i/20);return <button className="camp-hero" key={p.id} style={{left:(col+.5)*CELL,top:(row+.52)*CELL,outline:`3px solid ${p.colour}`,borderRadius:'50%'}} title={p.name} aria-label={`${p.name}'s character`} onClick={()=>onHero({camp:true,...p})}><span className={`sprite sprite-${p.hero} outfit-${p.outfit}`}/><b>{p.name}</b></button>})}
+ {world.players.map((p:any,i:number)=>{const col=2+i%20,row=Math.floor(i/20);return <button className="camp-hero" key={p.id} style={{left:(col+.5)*CELL,top:(row+.52)*CELL,outline:`3px solid ${p.colour}`,borderRadius:'50%'}} title={p.name} aria-label={`${p.name}'s character`} onClick={()=>onHero({camp:true,...p})}><Sprite type={p.hero} outfit={p.outfit}/><b>{p.name}</b></button>})}
  <div className="route-entry" style={{left:4,top:3*CELL+8}}><Swords size={17}/> ENTRY</div><div className="school-goal" style={{left:19.8*CELL,top:14.1*CELL}}><img src="/manor-school.png" alt="The Manor House and classroom building, illustrated from photos of Manor Prep in Abingdon"/><span><Shield size={17}/> DEFEND THE MANOR</span></div>
- {!battle&&world.defenders.map((d:any)=>{const p=percent(d.cell);return <button className={`placed-hero tier-${d.level}`} key={d.id} style={{left:`${p.x}%`,top:`${p.y}%`,outline:`3px solid ${d.colour}`,borderRadius:'50%'}} onMouseEnter={()=>setHover(d.cell)} onMouseLeave={()=>setHover(null)} onFocus={()=>setHover(d.cell)} onBlur={()=>setHover(null)} onClick={()=>onHero(d)} aria-label={`${d.name}'s ${HEROES[d.type].name}, level ${d.level}`}><span className={`resting-pedestal pedestal-${d.type}`}/><span className={`sprite sprite-${d.type}`}/><b>{d.level}</b><small>{d.name}</small></button>})}
+ {!battle&&world.defenders.map((d:any)=>{const p=percent(d.cell);return <button className={`placed-hero tier-${d.level}`} key={d.id} style={{left:`${p.x}%`,top:`${p.y}%`,outline:`3px solid ${d.colour}`,borderRadius:'50%'}} onMouseEnter={()=>setHover(d.cell)} onMouseLeave={()=>setHover(null)} onFocus={()=>setHover(d.cell)} onBlur={()=>setHover(null)} onClick={()=>onHero(d)} aria-label={`${d.name}'s ${HEROES[d.type].name}, level ${d.level}`}><span className={`resting-pedestal pedestal-${d.type}`}/><Sprite type={d.type} outfit={d.outfit} weapon={d.weapon??(d.level?'standard':'none')}/><b>{d.level}</b><small>{d.name}</small></button>})}
  {battle&&<BattleScene battle={battle} now={now}/>}
  </div></div></div><div className="board-legend"><span><i className="grass-key"/> Grass: place heroes</span><span><i className="path-key"/> Path: monsters only</span><span><Users size={14}/>{hoveredHero&&!battle?`${HEROES[hoveredHero.type].name} · Range ${heroStats(hoveredHero.type,hoveredHero.level).range} squares`:'Hover over a hero to see their range'}</span></div></>
 }

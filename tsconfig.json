@@ -38,10 +38,13 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    "**/*.mts",
+    ".render-next/types/**/*.ts",
+    ".render-next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "examples"
+    "examples",
+    ".next"
   ]
 }

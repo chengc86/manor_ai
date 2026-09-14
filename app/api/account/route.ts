@@ -1,4 +1,4 @@
-import {env} from 'cloudflare:workers';
+import {env} from '@/lib/runtime-env';
 import {db,sha,user,requireOrigin,json,mutate,newPlayer} from '@/lib/world';
 async function hash(password:string,salt:string){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode(salt),iterations:100000,hash:'SHA-256'},key,256);return Array.from(new Uint8Array(bits)).map(b=>b.toString(16).padStart(2,'0')).join('')}
 async function session(req:Request,uid:string){const token=crypto.randomUUID()+crypto.randomUUID();await db().prepare('INSERT INTO sessions (token,user_id,expires) VALUES (?,?,?)').bind(await sha(token),uid,Date.now()+7*86400000).run();return Response.json({ok:true,isTeacher:uid==='teacher'},{headers:{'Set-Cookie':`qg_session=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=604800${new URL(req.url).protocol==='https:'?'; Secure':''}`,'Cache-Control':'no-store'}})}

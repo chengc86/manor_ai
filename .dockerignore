@@ -1,0 +1,15 @@
+node_modules
+.next
+dist
+.git
+.env*
+!.env.example
+.wrangler
+work
+outputs
+.sites-runtime
+.codex
+.agents
+*.tsbuildinfo
+*private-backup*.json
+.render-next
