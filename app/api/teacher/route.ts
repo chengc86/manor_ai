@@ -1,0 +1,2 @@
+import {db,user,json,readWorld} from '@/lib/world';
+export async function GET(req:Request){try{if(await user(req)!=='teacher')return json({error:'Teacher sign-in required.'},403);const {w}=await readWorld();return json({pupils:Object.entries(w.players).map(([id,p])=>({id,name:p.name,correct:p.correct,incorrect:p.incorrect,coins:p.coins,subjects:p.subjects,hero:p.hero})),wave:w.wave})}catch{return json({error:'The class register is temporarily unavailable.'},503)}}
