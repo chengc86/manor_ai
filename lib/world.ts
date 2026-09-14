@@ -1,10 +1,11 @@
+import {HEROES} from './heroes';
 import {env} from 'cloudflare:workers';
 import {simulate,rules,type Battle} from './battle';
 export function db(){if(!env.DB) throw new Error('Your class world is temporarily unavailable. Please try again.');return env.DB;}
 export type Player={name:string;coins:number;correct:number;incorrect:number;subjects:Record<string,{correct:number;incorrect:number}>;history:Record<string,{correct:boolean;at:number}>;active?:{id:string;token:string;at:number};hero:number;outfit:string;owned:string[];waveAnswers:number;joined:number};
 export type Defender={id:string;owner:string;type:number;level:number;cell:number};
 export type World={wave:number;players:Record<string,Player>;defenders:Defender[];battle:Battle|null;result:null|{won:boolean;wave:number;at:number;power:number;target:number;contributors:number;killed:number;count:number}};
-export const TYPES=[{name:'Bramble',role:'Ranger',price:60,power:12},{name:'Luna',role:'Mage',price:100,power:22},{name:'Flint',role:'Guardian',price:140,power:34}];
+export const TYPES=HEROES;
 export function fresh():World{return{wave:1,players:{},defenders:[],battle:null,result:null}}
 export function power(w:World){return w.defenders.reduce((s,d)=>s+TYPES[d.type].power*d.level,0)}
 export function target(w:World){return 170+70*(w.wave-1)}

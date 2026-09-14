@@ -10,9 +10,9 @@ Vinext, React, Cloudflare Workers, D1 and R2. Set `TEACHER_PASSWORD` in local `.
 
 `npm run dev` starts the local preview. `npm run build` builds the Worker. `npm run db:generate` generates migrations. D1 migrations are in `drizzle/`; the Sites manifest declares DB and BUCKET bindings.
 
-## Questions and photos
+## Questions
 
-157 original typed-answer questions cover Maths, English comprehension, verbal reasoning and non-verbal reasoning. Correct questions are retired per pupil. Incorrect and skipped questions wait at least 24 hours. Photo uploads are stored privately; the teacher can view pupils' source images. Automatic question generation from photos is not yet connected.
+257 original typed-answer questions cover Maths, English comprehension, verbal reasoning and non-verbal reasoning. Correct questions are retired per pupil. Incorrect and skipped questions wait at least 24 hours. There is no pupil upload library. The teacher supplies textbook photos in the Codex conversation; reviewed, original questions can then be added to the bank. The latest expansion adds 25 questions per subject, with stable IDs so existing pupil histories remain valid.
 
 ## Art references
 
@@ -23,3 +23,12 @@ Classroom reference:
 https://www.lawfull-associates.com/our-projects/learn/manor-preparatory-school-abingdon
 
 The palette follows Manor's official website: deep green #00483a, cream #fffaee, gold #d0a300 and plum #7a3971.
+
+## Curriculum and progression
+
+Maths and English follow England’s upper Key Stage 2 programmes, relevant to Manor Prep in Abingdon. Verbal and non-verbal reasoning are supplementary entrance-exam preparation, not separate National Curriculum subjects.
+
+- https://www.gov.uk/government/publications/national-curriculum-in-england-mathematics-programmes-of-study/national-curriculum-in-england-mathematics-programmes-of-study
+- https://www.gov.uk/government/publications/national-curriculum-in-england-english-programmes-of-study/national-curriculum-in-england-english-programmes-of-study
+
+Seven heroes have three named tiers each. Upgrades increase damage, range and attack speed; Tempest gains a third lightning target at tier 3 and Ember increases its splash radius. Hero stats, costs and names are shared by the server and UI in lib/heroes.ts. New purchases join the next wave; upgrades and movement take place between waves.
