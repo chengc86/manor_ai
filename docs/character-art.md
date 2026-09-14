@@ -15,3 +15,8 @@ Recommended later animation pipeline: manually separated body parts, matching cl
 14 upright animal heroes, each with boy/girl winter, summer and sports variants (84 sprites). SHUS includes uniform purchases and seven accessories. The battle uses generated school-themed weapon icons and a Manor-inspired campus background. All artwork is a stylised game adaptation, not an official school illustration.
 
 References: [Manor uniform rules](https://www.manorprep.org/school-life/uniform/), [school photograph](https://www.manorprep.org/wp-content/uploads/2025/10/Video-Banner-1560x875.jpg), [Manor Ted shop](https://www.manorprep.org/admissions-forms-for-years-3-to-6/). Chapter facts and primary sources are stored with each chapter in lib/chapters.ts.
+
+## Natural starter revision
+Built-in ImageGen created public/starters/0–6.png and 9–15.png. Prompt: One transparent sprite atlas, exactly seven columns by two rows. Top row: orange fox, blue cat, brown bear, snowy owl, white rabbit, badger, emerald dragon. Bottom row: gray wolf, raccoon, hedgehog, red squirrel, otter, panda, lion. Full-body upright friendly animals with two separate arms and legs, natural fur/feathers/scales only, child-appropriate cartoon bodies. Polished 3D storybook fantasy style, no clothes, accessories, weapons, text, frames, ground or background.
+
+Decorations removed from shop and all hero rendering. New pupils receive no uniform or accessory; winter/summer/sports cost 40/60/80 coins. Existing purchased uniforms remain owned.
