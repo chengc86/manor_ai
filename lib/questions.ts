@@ -1,10 +1,11 @@
+import {rewardGroupFor,questionReward} from './question-rewards';
 import {readingExpansion} from './reading-expansion';
 import {progressionQuestions} from './progression-questions';
 import {mixedQuestions} from './mixed-questions';
 import {year6Questions} from './year6-expansion';
 // Server-only question bank. Answers are never included in question responses.
 export type Subject = 'Maths'|'English'|'Verbal reasoning'|'Non-verbal reasoning';
-export type Question = {id:string;subject:Subject;prompt:string;answers:string[];explanation:string;options?:string[];passage?:string;diagram?:{kind:string;items:number[]};difficulty:string};
+export type Question = {rewardGroup?:import('./question-rewards').RewardGroup;reward?:number;id:string;subject:Subject;prompt:string;answers:string[];explanation:string;options?:string[];passage?:string;diagram?:{kind:string;items:number[]};difficulty:string};
 export const questions:Question[]=[];
 function add(subject:Subject,prompt:string,answers:string[],explanation:string,extra:Partial<Question>={}){questions.push({id:`q${questions.length+1}`,subject,prompt,answers,explanation,difficulty:'Year 6',...extra})}
 for(let n=2;n<=16;n++){
@@ -68,5 +69,6 @@ add('Non-verbal reasoning','How many lines of symmetry does this regular hexagon
 add('Non-verbal reasoning','How many sides will the next shape have?',['6','six'],'The shapes gain one side each time: triangle (3), square (4), pentagon (5), hexagon (6).',{diagram:{kind:'polygon',items:[3,4,5]}});
 add('Non-verbal reasoning','How many sides will the next shape have?',['8','eight'],'The shapes gain one side each time: pentagon (5), hexagon (6), heptagon (7), octagon (8).',{diagram:{kind:'polygon',items:[5,6,7]}});
 questions.push(...year6Questions,...mixedQuestions,...progressionQuestions,...readingExpansion);
+for(const q of questions){q.rewardGroup=rewardGroupFor(q);q.reward=questionReward(q);}
 export function normalise(s:string){return s.toLowerCase().trim().replace(/[.,!?]$/,'').replace(/\s+/g,' ').replace(/\s*\/\s*/g,'/');}
-export function publicQuestion(q:Question){const {answers,explanation,...safe}=q;return safe;}
+export function publicQuestion(q:Question,reward=q.reward){const {answers,explanation,...safe}=q;return {...safe,reward};}
