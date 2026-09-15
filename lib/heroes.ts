@@ -22,8 +22,7 @@ export function legacyHeroStats(type:number,level=1,weapon='standard'){
 }
 export function upgradeCost(type:number,level:number){return level>=MAX_WEAPON_LEVEL?null:Math.ceil(100*Math.pow(1.45,level-1)/20)*20}
 
-export const MAX_HEROES=2;
-export function spawnCost(count:number){return count===0?120:600}
+export function spawnCost(count:number){return count===0?120:100*(count+1)*(count+2)}
 export const WEAPONS=[['Training bow','Longbow','Starshot bow'],['Oak staff','Moon staff','Astral staff'],['Iron sword','Knight blade','Champion blade'],['Storm wand','Thunder staff','Tempest sceptre'],['Practice blades','Twin daggers','Wind blades'],['Light crossbow','Reinforced crossbow','Eagle crossbow'],['Spark charm','Flame charm','Inferno gem'],['Wooden bolts','Steel bolts','Golden bolts'],['Quartz core','Amethyst core','Prismatic core']];
 
 for(const [, ,base] of NEW_HEROES)WEAPONS.push([...WEAPONS[base]]);

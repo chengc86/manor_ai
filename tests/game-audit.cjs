@@ -23,3 +23,5 @@ assert.equal(battleLib.breachDamage(5,0),30);assert.equal(battleLib.breachDamage
 const protectedBattle=simulate({...make(10,1),rulesVersion:4});assert(protectedBattle.won);assert.equal(Object.values(protectedBattle.contributions).reduce((sum,c)=>sum+c.kills,0),protectedBattle.killed);
 assert.equal(undefended.breaches.length,new Set(undefended.breaches.map(b=>b.monster)).size);
 console.log('PASS: school HP, five ordinary breaches lose, elite/boss damage, early defeat, and unique kill attribution.');
+
+const {spawnCost}=require('../work/heroes.cjs');assert.deepEqual([0,1,2,3,4].map(spawnCost),[120,600,1200,2000,3000]);for(let n=1;n<432;n++)assert(spawnCost(n)>spawnCost(n-1));console.log('PASS: deployment prices rise across the entire map capacity.');

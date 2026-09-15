@@ -20,4 +20,6 @@ Validation: game-audit checks school damage, five-breach failure, elite/boss dam
 
 ## Unlimited test account
 
-A teacher-created test profile can carry a persisted `unlimitedCoins` flag. Spending checks and deductions are bypassed only for that profile; ordinary pupils cannot set the flag through game actions. Its wallet displays infinity. Weapon levels, equipment slots, the two-hero deployment cap and between-wave restrictions remain normal. Regular player balances are untouched.
+A teacher-created test profile can carry a persisted `unlimitedCoins` flag. Spending checks and deductions are bypassed only for that profile; ordinary pupils cannot set the flag through game actions. Its wallet displays infinity. Weapon levels, equipment slots, progressively more expensive deployments and between-wave restrictions remain normal. Regular player balances are untouched.
+
+Deployment update: removed the personal two-hero cap. The first hero costs 120; hero n (n >= 2) costs 100 × n × (n + 1): 600, 1,200, 2,000, 3,000… Shared empty grass squares are the physical limit. Existing heroes remain, and moving/retrying does not charge again.

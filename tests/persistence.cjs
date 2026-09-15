@@ -46,5 +46,6 @@ console.log('PASS: combat totals settle once; wrong answers remain private, retr
 
 assert.equal((await post({action:'item_buy',item:'stopwatch',unlimitedCoins:true})).status,400);
 await W.mutate(w=>{w.players.b.unlimitedCoins=true});assert.equal((await post({action:'item_buy',item:'stopwatch'})).status,200);assert.equal((await W.readWorld()).w.players.b.coins,0);assert.equal((await get()).me.unlimitedCoins,true);assert.equal((await get()).me.coins,Number.MAX_SAFE_INTEGER);console.log('PASS: unlimited test account spends no coins; ordinary pupils cannot enable it through game requests.');
+assert.equal((await post({action:'hero',hero:0,gender:'boy'})).status,200);for(const cell of [112,124,133])assert.equal((await post({action:'recruit',type:0,cell})).status,200);assert.equal((await get()).defenders.filter(d=>d.owner==='b').length,3);console.log('PASS: third hero deploys successfully; no personal deployment cap.');
 sqlite.close();fs.unlinkSync(file);console.log('PASS: unselected heroes hidden; answers, wardrobe, items, coins and placements survive database reopen; pending question restored; simultaneous start accepts one; late join/reopen sees identical battle; stale start rejected after finish; pupil records isolated.');
 })().catch(e=>{console.error(e);process.exitCode=1});
