@@ -5,19 +5,19 @@ export const EQUIPMENT=[
  {id:'frost',name:'Frost Glue',price:160,description:'Briefly freezes monsters. Longer freezes at levels 3 and 6.',effect:'Freeze',art:2},
  {id:'blast',name:'Football Launcher',price:180,description:'A powerful splash around the target. Blast radius grows with upgrades.',effect:'Area damage',art:3},
  {id:'ruler',name:'Ruler of Reach',price:100,description:'Short-range ruler waves push monsters backwards along the path.',effect:'Knockback',art:4},
- {id:'glue',name:'Super Glue',price:120,description:'Sticky splashes slow enemies; level 6 adds a brief freeze.',effect:'Slow + root',art:5},
+ {id:'glue',name:'Super Glue',price:120,description:'Sticky splashes slow enemies; level 10 adds a sticky area.',effect:'Slow + root',art:5},
  {id:'tennis',name:'Tennis Trickshot',price:140,description:'Bounces between nearby monsters, reaching more targets at levels 3 and 6.',effect:'Chain bounce',art:6},
  {id:'basketball',name:'Basketball Bouncer',price:160,description:'A close-range slam damages a group and knocks it back.',effect:'Splash + knockback',art:7},
- {id:'cricket',name:'Cricket Sixer',price:180,description:'Every third hit is a double-damage sixer. Level 6 adds piercing.',effect:'Critical hit',art:8},
+ {id:'cricket',name:'Cricket Sixer',price:180,description:'High critical chance. Upgrades add critical power and Boss damage.',effect:'Critical hit',art:8},
  {id:'pingpong',name:'Table Tennis Flurry',price:100,description:'Light but extremely fast shots; level 6 attacks two targets.',effect:'Fast multi-shot',art:9},
  {id:'rugby',name:'Rugby Rocket',price:160,description:'A heavy hit pushes enemies back; level 3 adds splash.',effect:'Heavy impact',art:10},
  {id:'badminton',name:'Shuttle Storm',price:120,description:'Long-range shuttle magic slows its target; later shots pierce.',effect:'Long-range slow',art:11},
  {id:'fork',name:'Lunch Fork Trident',price:120,description:'Three magical prongs hit three enemies in close range.',effect:'Triple shot',art:12},
- {id:'teddy',name:'Manor Ted’s Heartbeam',price:240,description:'Heart magic marks enemies so every classmate hits harder. Upgrades add freeze and splash.',effect:'Team damage boost',art:13},
+ {id:'teddy',name:'Manor Ted’s Heartbeam',price:240,description:'Heart magic marks enemies so every classmate hits harder. Upgrades strengthen and extend the team mark.',effect:'Team damage boost',art:13},
  {id:'paint',name:'Rainbow Paintbrush',price:160,description:'Magic paint deals damage over time; level 3 spreads it with a splash.',effect:'Damage over time',art:14},
  {id:'book',name:'Storybook Spells',price:200,description:'Pages of magic jump between enemies. Level 6 adds slowing.',effect:'Chain + slow',art:15},
  {id:'bell',name:'School Bell Burst',price:220,description:'A ringing pulse briefly stuns a group of monsters.',effect:'Area stun',art:16},
- {id:'eraser',name:'Super Eraser',price:180,description:'A strong erasing blast; every second shot is critical from level 3.',effect:'Power hit',art:17},
+ {id:'eraser',name:'Super Eraser',price:180,description:'A strong erasing blast; upgrades improve Boss damage and critical hits.',effect:'Power hit',art:17},
 ];
 export function equipment(id='standard'){return EQUIPMENT.find(w=>w.id===id)??EQUIPMENT[0]}
 export function weaponStage(level:number){return level>=10?'Legendary':level>=6?'Master':level>=3?'Advanced':'Starter'}
@@ -43,4 +43,4 @@ export function weaponTraits(id:string,level:number){const tier=level>=6?2:level
  case 'eraser':t.damage=1.6;t.speed=1.5;t.criticalEvery=tier?2:0;t.pierce=tier===2?2:0;break;
  }return t;
 }
-export function effectSummary(s:ReturnType<typeof weaponTraits>){return [s.targets>1?`${s.targets} targets`:'',s.splash?`${s.splash.toFixed(1)}-square splash`:'',s.freeze?`${s.freeze.toFixed(1)}s freeze`:'',s.slow?`${Math.round(s.slow*100)}% slow`:'',s.knockback?`${s.knockback.toFixed(1)}-square push`:'',s.chain?`${s.chain} bounces`:'',s.pierce?`Pierces ${s.pierce}`:'',s.dot?`${Math.round(s.dot*100)}% hit damage/sec for ${s.dotDuration}s`:'',s.mark?`Team damage +${Math.round(s.mark*100)}% for 3s`:'',s.criticalEvery?`Double damage every ${s.criticalEvery} shots`:''].filter(Boolean).join(' · ')||'Single-target attack'}
+export function effectSummary(s:Omit<ReturnType<typeof weaponTraits>,"speed"|"damage"|"range">){return [s.targets>1?`${s.targets} targets`:'',s.splash?`${s.splash.toFixed(1)}-square splash`:'',s.freeze?`${s.freeze.toFixed(1)}s freeze`:'',s.slow?`${Math.round(s.slow*100)}% slow`:'',s.knockback?`${s.knockback.toFixed(1)}-square push`:'',s.chain?`${s.chain} bounces`:'',s.pierce?`Pierces ${s.pierce}`:'',s.dot?`${Math.round(s.dot*100)}% hit damage/sec for ${s.dotDuration}s`:'',s.mark?`Team damage +${Math.round(s.mark*100)}% for 3s`:'',s.criticalEvery?`Double damage every ${s.criticalEvery} shots`:''].filter(Boolean).join(' · ')||'Single-target attack'}

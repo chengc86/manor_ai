@@ -1,3 +1,4 @@
+import {buildStats,type ItemLoadout} from './builds';
 import {weaponTraits,MAX_WEAPON_LEVEL} from './equipment';
 export const HEROES=[
  {name:'Bramble',role:'Ranger',price:60,power:12,range:4.5,cooldown:1.1,colour:'#ffe396',attack:'ARROW!',description:'Reliable arrows with a long reach.',tiers:['Scout','Eagle Eye','Master Ranger'],costs:[60,120],growth:[{range:.5,speed:.1},{range:1,speed:.2}],upgrade:['Longer reach and quicker arrows.','Maximum reach and rapid, powerful arrows.']},
@@ -15,7 +16,7 @@ const NEW_HEROES=[['Ash','Wolf',2],['Scout','Raccoon',5],['Briar','Hedgehog',0],
 for(const [name,animal,base] of NEW_HEROES)HEROES.push({...HEROES[base],name,description:`${animal} hero. ${HEROES[base].description}`});
 export const SELECTABLE_HERO_IDS=[0,1,2,3,4,5,6,9,10,11,12,13,14,15];
 export const heroArchetype=(type:number)=>type>=9?[2,5,0,4,1,3,6][type-9]:type;
-export function heroStats(type:number,level=1,weapon='standard'){
+export function legacyHeroStats(type:number,level=1,weapon='standard'){
  const h=HEROES[type],bonus=level>1?h.growth[Math.min(level-2,1)]:null,t=weaponTraits(weapon,level),base=heroArchetype(type);
  return{...t,damage:level===0?0:Math.round(h.power*level*t.damage),range:Math.max(1.2,h.range+(bonus?.range??0)+t.range),cooldown:Math.max(.2,(h.cooldown-(bonus?.speed??0))*t.speed/(1+Math.max(0,level-3)*.035)),targets:Math.max(t.targets,(base===3||type===8)?(level>=3?3:2):1),splash:Math.max(t.splash,base===6?(level>=3?4.6:level===2?4.1:3.6):0)};
 }
@@ -28,3 +29,5 @@ export const WEAPONS=[['Training bow','Longbow','Starshot bow'],['Oak staff','Mo
 for(const [, ,base] of NEW_HEROES)WEAPONS.push([...WEAPONS[base]]);
 
 export const HERO_CHANGE_COST=1000;
+
+export function heroStats(type:number,level=1,weapon="standard",loadout:ItemLoadout={}){return buildStats(type,level,weapon,loadout)}
