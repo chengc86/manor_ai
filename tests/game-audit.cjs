@@ -1,6 +1,6 @@
 const fs=require('fs'),ts=require('typescript'),assert=require('assert/strict');
 fs.mkdirSync('work',{recursive:true});
-for(const n of ['builds','equipment','heroes','chapters','battle','clothing','questions','year6-expansion','mixed-questions','progression-questions','reading-expansion','question-rewards'])fs.writeFileSync(`work/${n}.cjs`,ts.transpileModule(fs.readFileSync(`lib/${n}.ts`,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText.replace(/require\("\.\/(.*?)"\)/g,'require("./$1.cjs")'));
+for(const n of ['builds','equipment','heroes','chapters','battle','clothing','questions','year6-expansion','mixed-questions','progression-questions','reading-expansion','question-rewards','year2-questions'])fs.writeFileSync(`work/${n}.cjs`,ts.transpileModule(fs.readFileSync(`lib/${n}.ts`,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText.replace(/require\("\.\/(.*?)"\)/g,'require("./$1.cjs")'));
 const {buildStats,ITEMS,HERO_TRAITS,itemUpgradeCost,referenceDps}=require('../work/builds.cjs'),{EQUIPMENT}=require('../work/equipment.cjs'),{simulate,rules,isBuildable}=require('../work/battle.cjs'),{SELECTABLE_HERO_IDS}=require('../work/heroes.cjs'),{questions,publicQuestion}=require('../work/questions.cjs');
 assert.equal(ITEMS.length,24);assert.equal(new Set(SELECTABLE_HERO_IDS.map(i=>JSON.stringify(HERO_TRAITS[i].mods))).size,14);
 for(const type of SELECTABLE_HERO_IDS)for(const w of EQUIPMENT)for(const level of [1,3,6,10]){const s=buildStats(type,level,w.id);assert(s.damage>=1&&s.cooldown>=.2&&s.range<=8&&s.critChance<=.5);}
@@ -27,3 +27,5 @@ console.log('PASS: school HP, five ordinary breaches lose, elite/boss damage, ea
 const {spawnCost}=require('../work/heroes.cjs');assert.deepEqual([0,1,2,3,4].map(spawnCost),[120,600,1200,2000,3000]);for(let n=1;n<432;n++)assert(spawnCost(n)>spawnCost(n-1));console.log('PASS: deployment prices rise across the entire map capacity.');
 
 assert(questions.every(q=>[10,20,30,40].includes(q.reward)&&q.rewardGroup));console.log('Reward groups:',Object.fromEntries(['quick','standard','challenge','extended'].map(g=>[g,questions.filter(q=>q.rewardGroup===g).length])));
+
+const y2=questions.filter(q=>q.difficulty==='Year 2');assert(y2.length>=150);for(const subject of ['Maths','English','Verbal reasoning','Non-verbal reasoning'])assert(y2.filter(q=>q.subject===subject).length>=25);console.log('Year 2 questions:',y2.length);
