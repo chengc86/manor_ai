@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Manor Quest | The Manor Preparatory School",
-  description: "Answer Year 6 questions, earn coins, buy heroes and protect your shared Manor Prep class world together.",
+  title: "Manor Quest",
+  description: "Answer Year 6 questions, earn coins, buy heroes and protect your shared Manor Quest world together.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

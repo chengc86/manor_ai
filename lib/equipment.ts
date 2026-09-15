@@ -13,7 +13,7 @@ export const EQUIPMENT=[
  {id:'rugby',name:'Rugby Rocket',price:160,description:'A heavy hit pushes enemies back; level 3 adds splash.',effect:'Heavy impact',art:10},
  {id:'badminton',name:'Shuttle Storm',price:120,description:'Long-range shuttle magic slows its target; later shots pierce.',effect:'Long-range slow',art:11},
  {id:'fork',name:'Lunch Fork Trident',price:120,description:'Three magical prongs hit three enemies in close range.',effect:'Triple shot',art:12},
- {id:'teddy',name:'Manor Ted’s Heartbeam',price:240,description:'Heart magic marks enemies so every classmate hits harder. Upgrades strengthen and extend the team mark.',effect:'Team damage boost',art:13},
+ {id:'teddy',name:'Teddy Heartbeam',price:240,description:'Heart magic marks enemies so every classmate hits harder. Upgrades strengthen and extend the team mark.',effect:'Team damage boost',art:13},
  {id:'paint',name:'Rainbow Paintbrush',price:160,description:'Magic paint deals damage over time; level 3 spreads it with a splash.',effect:'Damage over time',art:14},
  {id:'book',name:'Storybook Spells',price:200,description:'Pages of magic jump between enemies. Level 6 adds slowing.',effect:'Chain + slow',art:15},
  {id:'bell',name:'School Bell Burst',price:220,description:'A ringing pulse briefly stuns a group of monsters.',effect:'Area stun',art:16},

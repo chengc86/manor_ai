@@ -1,17 +1,16 @@
-const manor='https://www.manorprep.org/';
 const town='https://www.abingdon.gov.uk/places-to-visit';
 const oxford='https://www.ox.ac.uk/about/visit-us/what-to-see';
 export const CHAPTER_DETAILS=[
- ['The Manor Gates','Manor','Hold the entrance and welcome the hero squad.','The Manor is on Faringdon Road in Shippon, near Abingdon.',manor],
- ['The Three Dormers','Manor','Protect the familiar cream-coloured Manor House.','The main house has three dormer windows in its tiled roof.',manor],
- ['The Library Watch','Manor','Keep the story scrolls safe from the slimes.','The Manor has a school library.','https://www.manorprep.org/school-life/the-library/'],
- ['Forest School Guardians','Manor','Patrol the woodland edge together.','Forest School is part of life at The Manor.','https://www.manorprep.org/extra-curricular/forest-school/'],
- ['Eagles Take Flight','Manor','The blue banners lead the first house challenge.','Eagles is one of the four Manor houses; its colour is blue.',manor+'school-life/uniform/'],
- ['Hawks on Watch','Manor','Rally beneath the red banners.','Hawks is a Manor house represented by red.',manor+'school-life/uniform/'],
- ['Falcons of the Green','Manor','Stand together beneath the green banners.','Falcons is a Manor house represented by green.',manor+'school-life/uniform/'],
- ['Kestrels Shine','Manor','Protect the golden rally point.','Kestrels is a Manor house represented by yellow.',manor+'school-life/uniform/'],
- ['The Sports Kit Squad','Manor','Defend the playing-field boundary.','Manor sports kit combines bottle green and emerald.',manor+'school-life/uniform/'],
- ['All Houses Together','Manor','Unite the four houses for the campus boss.','The school stands in a nine-acre setting near Abingdon.',manor],
+ ['The Quest Gates','Manor Quest','Hold the entrance and welcome the hero squad.','Your shared adventure begins at the gates.',''],
+ ['The Watchtower House','Manor Quest','Protect the house at the heart of your world.','Keep the home base safe from the approaching slimes.',''],
+ ['The Library Watch','Manor Quest','Keep the story scrolls safe from the slimes.','Guard the shelves and their enchanted stories.',''],
+ ['Woodland Guardians','Manor Quest','Patrol the woodland edge together.','Build a defence along the forest paths.',''],
+ ['Azure Banner Rally','Manor Quest','The blue banners mark a new challenge.','Bring your strongest equipment for the elite wave.',''],
+ ['Crimson Watch','Manor Quest','Rally beneath the red banners.','Watch every turn in the monster route.',''],
+ ['Emerald Guard','Manor Quest','Stand together beneath the green banners.','Mix weapon effects to strengthen your defence.',''],
+ ['Golden Beacon','Manor Quest','Protect the golden rally point.','Every teammate can help hold the path.',''],
+ ['The Playing Field','Manor Quest','Defend the playing-field boundary.','Turn everyday sports equipment into heroic tools.',''],
+ ['The United Squad','Manor Quest','Unite your heroes for the first boss.','Protect your home base against a powerful foe.',''],
  ['Abingdon Market Watch','Abingdon','Guard the town-centre gathering place.','County Hall overlooks Abingdon Market Place.',town],
  ['County Hall Keepers','Abingdon','Protect the museum from a wave of curious slimes.','County Hall now houses the town museum.','https://www.abingdon.gov.uk/abingdon-county-hall-museum'],
  ['The Bun Throwing Beacon','Abingdon','Keep the celebration supplies safe.','Bun throwing from County Hall marks royal occasions.','https://www.abingdon.gov.uk/abingdon-county-hall-museum/about-the-museum'],
@@ -31,7 +30,7 @@ export const CHAPTER_DETAILS=[
  ['Pitt Rivers Storykeepers','Oxford','Protect objects and the stories they carry.','The Pitt Rivers Museum holds collections from around the world.',oxford],
  ['The Botanic Garden Defence','Oxford','Protect the plants with a carefully placed squad.','Oxford Botanic Garden is the oldest botanic garden in Britain.',oxford],
  ['The Science Instrument Quest','Oxford','Guard the instruments before the final journey.','Oxford has a History of Science Museum.',oxford],
- ['Home to The Manor','Manor','Bring everything you have learned home for the final defence.','This adventure links real places with an imaginary monster story.',manor],
+ ['Home to Manor Quest','Manor Quest','Bring everything you have learned home for the final defence.','Your squad returns to protect its home base.',''],
 ].map(([name,region,mission,fact,source])=>({name,region,mission,fact,source}));
 export const CHAPTERS=CHAPTER_DETAILS.map(c=>c.name);
 export function chapterFor(wave:number){const number=Math.floor((wave-1)/10)+1;return{...CHAPTER_DETAILS[Math.min(number-1,29)],number,name:CHAPTERS[number-1]??`Manor Legends ${number-30}`,stage:(wave-1)%10+1,boss:wave%10===0,elite:wave%10===5};}
