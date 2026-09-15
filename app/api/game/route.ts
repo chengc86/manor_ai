@@ -7,7 +7,7 @@ import {json,user,mutate,view,readWorld,finish,power,target,TYPES,requireOrigin,
 import {questions,publicQuestion,normalise} from '@/lib/questions';
 import {isBuildable} from '@/lib/battle';
 export async function GET(req:Request){try{const uid=await user(req);let{w}=await readWorld();if(w.battle&&Date.now()-w.battle.start>=w.battle.duration)return json(await mutate(s=>view(s,uid)));return json(view(w,uid))}catch(e){console.error(e);return json({error:'The class world is unavailable. Please try again.'},503)}}
-export async function POST(req:Request){try{requireOrigin(req);const uid=await user(req);if(!uid)return json({error:'Sign in to join your class.'},401);const b:any=await req.json();const result=await mutate(w=>{if(b.action==='battle'&&uid==='teacher'){beginBattle(w);return{world:view(w,uid)}}const p=w.players[uid];if(!p)throw new Error('Please sign in again.');
+export async function POST(req:Request){try{requireOrigin(req);const uid=await user(req);if(!uid)return json({error:'Sign in to join your class.'},401);const b:any=await req.json();const result=await mutate(w=>{if(b.action==='battle'&&uid==='teacher'){beginBattle(w,b.battleVersion);return{world:view(w,uid)}}const p=w.players[uid];if(!p)throw new Error('Please sign in again.');
 const transactional=['recruit','move','weapon','upgrade','hero','clothing','undress','item_buy','item_equip','item_unequip','item_upgrade','item_slot'].includes(b.action);
 const body=JSON.stringify({...b,requestId:undefined});if(transactional){if(typeof b.requestId!=='string'||b.requestId.length>100||b.requestId.length<8)throw new Error('Refresh the page and try again.');const old=p.receipts?.find(r=>r.id===b.requestId);if(old){if(old.body!==body)throw new Error('This transaction reference was already used.');return{world:view(w,uid),duplicate:true};}}
 if(b.action.startsWith('item_')){if(w.battle)throw new Error('Manage items between waves.');p.itemInventory??={};p.equippedItems??=[];p.itemSlots??=2;const item=ITEMS.find(i=>i.id===b.item);const spend=(n:number)=>{if(p.coins<n)throw new Error(`Save ${n} coins by answering questions.`);p.coins-=n;};
@@ -31,5 +31,5 @@ else if(b.action==='clothing'){const item=CLOTHING.find(c=>c.id===b.item);if(!it
 else if(b.action==='undress'){if(!CLOTHING_SLOTS.some(s=>s.id===b.slot))throw new Error('Choose a clothing slot.');if(p.clothing)delete p.clothing[b.slot as keyof typeof p.clothing];}
 
 else if(b.action==='outfit'){throw new Error('Decorations are no longer available. Visit SHUS to buy a uniform.');}
-else if(b.action==='battle'){beginBattle(w);}
+else if(b.action==='battle'){beginBattle(w,b.battleVersion);}
 else throw new Error('That action is not available.');if(transactional)p.receipts=[...(p.receipts??[]),{id:b.requestId,body}].slice(-64);return{world:view(w,uid)};});return json(result)}catch(e){return json({error:e instanceof Error?e.message:'Unable to save. Try again.'},400)}}

@@ -45,6 +45,9 @@
   "exclude": [
     "node_modules",
     "examples",
-    ".next"
+    ".next",
+    "work",
+    "outputs",
+    "dist"
   ]
 }

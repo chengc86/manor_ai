@@ -32,3 +32,7 @@ This project isolates all tables in `manor_quest`; it does not use or modify exi
 ## Lockfile validation
 
 The 15 September 2026 Render failure was reproduced with npm 10.9.8: the lockfile was missing nested optional `@emnapi` dependencies and contained an incompatible hoisted `wasi-threads` entry. Regenerated the lock metadata in an empty directory with npm 10.9.8, retaining package.json constraints. A real clean `npm ci` then succeeded. Keep Docker's `npm ci`; do not replace it with an unlocked install to hide dependency inconsistencies. Docker itself was unavailable in the local validation environment.
+
+## Existing tables owned by a separate database role
+
+Startup now checks the catalog before creating tables or the optional session-user index. Existing tables receive no DDL; the runtime role is checked for data permissions and expected columns instead. A missing optional index does not block a non-owner role. Missing required data permissions still stop startup with a targeted error; no grants or ownership are changed automatically. Verified against the configured Neon database and with a non-owner-role startup fixture (`node tests/neon-startup.mjs`).
