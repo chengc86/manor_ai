@@ -21,7 +21,7 @@ for(const uid of ['a','b']){sqlite.prepare('INSERT INTO sessions VALUES (?,?,?)'
 cookie='qg_session=a';let v=await get();assert.equal(v.players.length,0);assert.equal(v.me.heroLocked,false);
 assert.equal((await post({action:'hero',hero:0,gender:'boy'})).status,200);v=await get();assert.deepEqual(v.players.map(p=>p.id),['a']);
 let pending=await post({action:'question',subject:'English'});assert.equal(pending.status,200);v=await get();assert.equal(v.me.pendingQuestion.token,pending.body.token);assert(!('answers' in v.me.pendingQuestion.question));
-for(let i=0;i<35;i++){const q=i===0?pending:await post({action:'question',subject:'Maths'});const a=questions.find(x=>x.id===q.body.question.id).answers[0];assert.equal((await post({action:'answer',token:q.body.token,answer:a})).status,200);}
+for(let i=0;i<35;i++){const q=i===0?pending:await post({action:'question',subject:['Maths','English','Verbal reasoning','Non-verbal reasoning'][i%4]});const a=questions.find(x=>x.id===q.body.question.id).answers[0];assert.equal((await post({action:'answer',token:q.body.token,answer:a})).status,200);}
 assert.equal((await post({action:'recruit',type:0,cell:104})).status,200);v=await get();const id=v.defenders[0].id;
 assert.equal((await post({action:'weapon',id,weapon:'standard'})).status,200);assert.equal((await post({action:'upgrade',id})).status,200);
 assert.equal((await post({action:'item_buy',item:'stopwatch'})).status,200);assert.equal((await post({action:'item_equip',item:'stopwatch'})).status,200);
@@ -36,7 +36,7 @@ await get();assert.equal((await post({action:'battle',battleVersion:version})).s
 assert.equal((await get()).me.correct,0);cookie='qg_session=a';assert.equal((await get()).me.correct,35);
 
 const combat=(await get()).me.combat;await get();assert.deepEqual((await get()).me.combat,combat);assert.equal(combat.battles,1);
-const wrong=await post({action:'question',subject:'English'});await post({action:'answer',token:wrong.body.token,answer:'definitely-wrong-answer'});
+const wrong=await post({action:'question',subject:'Maths'});await post({action:'answer',token:wrong.body.token,answer:'definitely-wrong-answer'});
 const review=require('../work/persistence/review.cjs');let rr=await review.GET(new Request('https://game.test/api/review',{headers:{cookie}}));let notebook=await rr.json();assert(notebook.entries.some(m=>m.id===wrong.body.question.id));assert.equal((await post({action:'retry_question',id:wrong.body.question.id})).status,400);
 const beforeRetry=(await get()).me.coins;Date.now=()=>now()+25*3600000;
 const retry=await post({action:'retry_question',id:wrong.body.question.id});assert.equal(retry.status,200);
@@ -47,6 +47,18 @@ console.log('PASS: combat totals settle once; wrong answers remain private, retr
 assert.equal((await post({action:'item_buy',item:'stopwatch',unlimitedCoins:true})).status,400);
 await W.mutate(w=>{w.players.b.unlimitedCoins=true});assert.equal((await post({action:'item_buy',item:'stopwatch'})).status,200);assert.equal((await W.readWorld()).w.players.b.coins,0);assert.equal((await get()).me.unlimitedCoins,true);assert.equal((await get()).me.coins,Number.MAX_SAFE_INTEGER);console.log('PASS: unlimited test account spends no coins; ordinary pupils cannot enable it through game requests.');
 assert.equal((await post({action:'hero',hero:0,gender:'boy'})).status,200);for(const cell of [112,124,133])assert.equal((await post({action:'recruit',type:0,cell})).status,200);assert.equal((await get()).defenders.filter(d=>d.owner==='b').length,3);console.log('PASS: third hero deploys successfully; no personal deployment cap.');
-for(const subject of ['Maths','English','Verbal reasoning','Non-verbal reasoning']){const easy=await post({action:'question',subject,year:2});assert.equal(easy.status,200);assert.equal(easy.body.question.difficulty,'Year 2');assert([10,20].includes(easy.body.question.reward));assert.equal((await get()).me.learningYear,2);assert.equal((await get()).me.pendingQuestion.question.id,easy.body.question.id);const hard=await post({action:'question',subject,year:6});assert.notEqual(hard.body.question.difficulty,'Year 2');assert.notEqual(hard.body.question.id,easy.body.question.id);}assert.equal((await post({action:'question',year:3})).status,400);console.log('PASS: Year 2 and Year 6 pools stay separate across every subject; preference and pending question persist.');
+const subjects=['Maths','English','Verbal reasoning','Non-verbal reasoning'];
+await W.mutate(w=>{w.players.b=W.newPlayer('b');w.players.b.learningYear=2});
+let issued=await post({action:'question',subject:'Maths',year:2});assert.notEqual(issued.body.question.difficulty,'Year 2');
+fs.writeFileSync('work/persistence/teacher.cjs',ts.transpileModule(fs.readFileSync('app/api/teacher/route.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText.replace(/require\("@\/lib\/(.*?)"\)/g,'require("./$1.cjs")'));
+const teacher=require('../work/persistence/teacher.cjs');const setYear=()=>teacher.POST(new Request('https://game.test/api/teacher',{method:'POST',headers:{cookie,origin:'https://game.test'},body:JSON.stringify({action:'set_year',id:'b',year:2})}));assert.equal((await setYear()).status,403);
+sqlite.prepare('INSERT INTO sessions VALUES (?,?,?)').run(await W.sha('teacher'),'teacher',Date.now()+86400000);cookie='qg_session=teacher';assert.equal((await setYear()).status,200);cookie='qg_session=b';assert.equal((await get()).me.pendingQuestion,null);
+for(const subject of subjects){for(let i=0;i<10;i++){const q=await post({action:'question',subject,year:6});assert.equal(q.body.question.difficulty,'Year 2');const answer=questions.find(x=>x.id===q.body.question.id).answers[0];assert.equal((await post({action:'answer',token:q.body.token,answer})).status,200);}if(subject!==subjects.at(-1))assert.equal((await post({action:'question',subject})).body.question,null);}
+let status=await get();assert(subjects.every(s=>status.me.questionProgress[s].completed===0));
+await W.mutate(w=>{const p=w.players.b;for(const q of questions.filter(q=>q.subject==='Maths'&&q.difficulty==='Year 2'))p.history[q.id]={correct:true,at:Date.now()};});assert.equal((await post({action:'question',subject:'Maths'})).body.question,null);
+const missed=await post({action:'question',subject:'English'});await post({action:'answer',token:missed.body.token,answer:'wrong-on-purpose'});assert.equal((await get()).me.questionProgress.English.completed,1);
+await W.mutate(w=>{w.players.b.questionRound={'English':9,'Verbal reasoning':10,'Non-verbal reasoning':10};});const last=await post({action:'question',subject:'English'});await post({action:'answer',token:last.body.token,answer:'wrong-on-purpose'});assert.equal((await get()).me.questionProgress.English.completed,0);
+console.log('PASS: wrong answers count; exhausted subjects do not deadlock the round.');
+console.log('PASS: teacher-only year assignment defaults to Year 6; 10-answer cap, 40-answer reset and exhausted subjects enforced.');
 sqlite.close();fs.unlinkSync(file);console.log('PASS: unselected heroes hidden; answers, wardrobe, items, coins and placements survive database reopen; pending question restored; simultaneous start accepts one; late join/reopen sees identical battle; stale start rejected after finish; pupil records isolated.');
 })().catch(e=>{console.error(e);process.exitCode=1});
