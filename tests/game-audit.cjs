@@ -15,3 +15,11 @@ assert.equal(new Set(questions.map(q=>q.id)).size,questions.length);assert(quest
 const {ensureWardrobe}=require('../work/clothing.cjs');const legacy={uniform:'winter',uniforms:['winter'],gender:'girl'};ensureWardrobe(legacy);assert(legacy.clothingOwned.includes('blouse'));assert.equal(legacy.clothing.top,'blouse');
 console.log('Questions:',questions.length,Object.fromEntries([...new Set(questions.map(q=>q.subject))].map(s=>[s,questions.filter(q=>q.subject===s).length])));
 console.log('PASS: attributes, item caps, equipped-only bonuses, legacy battle, determinism, question structure, legacy clothes.');
+
+const battleLib=require('../work/battle.cjs');
+const undefended=simulate({...make(0,1),rulesVersion:4});assert.equal(undefended.schoolHealth,0);assert.equal(undefended.breaches.length,5);assert.equal(undefended.won,false);assert(undefended.endedAt<rules(1).duration/1000);
+assert.equal(battleLib.schoolHealthAt([{at:1,monster:0,damage:20},{at:2,monster:1,damage:20},{at:3,monster:2,damage:20},{at:4,monster:3,damage:20}],4),20);
+assert.equal(battleLib.breachDamage(5,0),30);assert.equal(battleLib.breachDamage(10,rules(10).count-1),60);
+const protectedBattle=simulate({...make(10,1),rulesVersion:4});assert(protectedBattle.won);assert.equal(Object.values(protectedBattle.contributions).reduce((sum,c)=>sum+c.kills,0),protectedBattle.killed);
+assert.equal(undefended.breaches.length,new Set(undefended.breaches.map(b=>b.monster)).size);
+console.log('PASS: school HP, five ordinary breaches lose, elite/boss damage, early defeat, and unique kill attribution.');
