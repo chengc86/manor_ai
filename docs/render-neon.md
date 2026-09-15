@@ -28,3 +28,7 @@ References: [Render Docker](https://render.com/docs/docker), [Render web service
 ## Existing Neon database
 
 This project isolates all tables in `manor_quest`; it does not use or modify existing public-schema tables. If the connection role cannot create schemas, a database owner must first run `CREATE SCHEMA IF NOT EXISTS manor_quest; GRANT USAGE, CREATE ON SCHEMA manor_quest TO authenticator;` (use your actual application role). Then run the migration with the application connection.
+
+## Lockfile validation
+
+The 15 September 2026 Render failure was reproduced with npm 10.9.8: the lockfile was missing nested optional `@emnapi` dependencies and contained an incompatible hoisted `wasi-threads` entry. Regenerated the lock metadata in an empty directory with npm 10.9.8, retaining package.json constraints. A real clean `npm ci` then succeeded. Keep Docker's `npm ci`; do not replace it with an unlocked install to hide dependency inconsistencies. Docker itself was unavailable in the local validation environment.
