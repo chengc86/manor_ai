@@ -1,3 +1,4 @@
+import {freshQuestions} from './fresh-questions';
 import {year2Questions} from './year2-questions';
 import {rewardGroupFor,questionReward} from './question-rewards';
 import {readingExpansion} from './reading-expansion';
@@ -69,7 +70,7 @@ for(let n=1;n<=8;n++){
 add('Non-verbal reasoning','How many lines of symmetry does this regular hexagon have?',['6','six'],'A regular hexagon has 6 lines of symmetry: 3 through opposite corners and 3 through opposite side midpoints.',{diagram:{kind:'polygon',items:[6]}});
 add('Non-verbal reasoning','How many sides will the next shape have?',['6','six'],'The shapes gain one side each time: triangle (3), square (4), pentagon (5), hexagon (6).',{diagram:{kind:'polygon',items:[3,4,5]}});
 add('Non-verbal reasoning','How many sides will the next shape have?',['8','eight'],'The shapes gain one side each time: pentagon (5), hexagon (6), heptagon (7), octagon (8).',{diagram:{kind:'polygon',items:[5,6,7]}});
-questions.push(...year6Questions,...mixedQuestions,...progressionQuestions,...readingExpansion,...year2Questions);
+questions.push(...year6Questions,...mixedQuestions,...progressionQuestions,...readingExpansion,...year2Questions,...freshQuestions);
 for(const q of questions){q.rewardGroup=rewardGroupFor(q);q.reward=questionReward(q);}
 export function normalise(s:string){return s.toLowerCase().trim().replace(/[.,!?]$/,'').replace(/\s+/g,' ').replace(/\s*\/\s*/g,'/');}
 export function publicQuestion(q:Question,reward=q.reward){const {answers,explanation,...safe}=q;return {...safe,reward};}
