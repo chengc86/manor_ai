@@ -49,7 +49,7 @@ const vr:[string,string,string][]=[
  ['Complete the sequence: 3, 7, 15, 31, ___.','63','Each term is double the previous term plus 1.'],
  ['If A = 1, B = 2 and so on, what is the total value of CAT?','24','C = 3, A = 1, T = 20. Their total is 24.'],
  ['Complete the analogy: author is to book as composer is to ___.','music|a piece of music|song|a song','An author creates a book; a composer creates music.'],
- ['Add the same letter to the start of “ate” and the end of “tea” to make two new words. What is the letter?','m','M + ate makes mate. Tea + M makes team.'],
+ ['Add the same letter to “ate” and “tea” to make a word meaning companion and a word meaning a group playing together. Put it before “ate” and after “tea”. What is the letter?','m','M + ate makes mate. Tea + M makes team.'],
  ['Rearrange SECURE to make a word meaning “save from danger”.','rescue','RESCUE is an anagram of SECURE.'],
  ['Which word means the opposite of “scarce”: rare, plentiful, hidden, empty?','plentiful','Scarce means not enough; plentiful means a large amount.'],
  ['Complete the letter sequence: B, E, H, K, ___.','n','Move forward three letters each time.'],
@@ -73,6 +73,10 @@ add('Non-verbal reasoning','How many lines of symmetry does this regular hexagon
 add('Non-verbal reasoning','How many sides will the next shape have?',['6','six'],'The shapes gain one side each time: triangle (3), square (4), pentagon (5), hexagon (6).',{diagram:{kind:'polygon',items:[3,4,5]}});
 add('Non-verbal reasoning','How many sides will the next shape have?',['8','eight'],'The shapes gain one side each time: pentagon (5), hexagon (6), heptagon (7), octagon (8).',{diagram:{kind:'polygon',items:[5,6,7]}});
 questions.push(...year6Questions,...mixedQuestions,...progressionQuestions,...readingExpansion,...year2Questions,...freshQuestions,...textbookQuestions,...questExpansion);
+// Explicit choices keep open analogies from rejecting other plausible answers.
+for(const q of questions){if(q.prompt==='Complete the analogy: seed is to plant as egg is to ___.')q.options=['chick','calf','sapling','kitten'];if(q.prompt==='Complete the analogy: author is to book as composer is to ___.')q.options=['music','brush','stage','audience'];if(q.id==='y6-2026-051')q.options=['wall','river','story','tree'];if(q.id==='y6-2026-052')q.options=['school','hotel','factory','farm'];}
 for(const q of questions){q.rewardGroup=rewardGroupFor(q);q.reward=questionReward(q);}
-export function normalise(s:string){return s.toLowerCase().trim().replace(/[.,!?]$/,'').replace(/\s+/g,' ').replace(/\s*\/\s*/g,'/');}
+export function normalise(s:string){if(/^[.,!?;:]$/.test(s.trim()))return s.trim();return s.normalize('NFKC').replace(/[‘’]/g,"'").replace(/−/g,'-').toLowerCase().trim().replace(/[.,!?]$/,'').replace(/\s+/g,' ').replace(/\s*\/\s*/g,'/');}
 export function publicQuestion(q:Question,reward=q.reward){const {answers,explanation,...safe}=q;return {...safe,reward};}
+
+export function answerMatches(q:Question,input:string){const value=normalise(input);if(q.answers.some(a=>normalise(a)===value))return true;if(q.subject!=='Maths')return false;const numeric=(s:string)=>{s=normalise(s);if(/pounds|£/.test(q.prompt))s=s.replace(/^£/,'');if(/what percentage|which percentage/i.test(q.prompt))s=s.replace(/%$/,'');if(!/^[+-]?(?:\d{1,3}(?:,\d{3})+|\d+|)(?:\.\d+)?$/.test(s)||!/[0-9]/.test(s))return null;const n=Number(s.replace(/,/g,''));return Number.isFinite(n)?n:null;};const n=numeric(input);return n!==null&&q.answers.some(a=>{const expected=numeric(a);return expected!==null&&n===expected;});}

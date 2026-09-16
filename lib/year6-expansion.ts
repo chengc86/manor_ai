@@ -286,7 +286,7 @@ export const year6Questions:Question[]=[
   {
     "id": "y6-2026-028",
     "subject": "English",
-    "prompt": "Which adjective best describes how Leila crosses: cautiously or carelessly? Type one word.",
+    "prompt": "Which adverb best describes how Leila crosses: cautiously or carelessly? Type one word.",
     "answers": [
       "cautiously"
     ],
