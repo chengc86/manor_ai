@@ -20,7 +20,7 @@ export const year6Questions:Question[]=[
       "8500000",
       "8,500,000"
     ],
-    "explanation": "The ten-thousands digit is 6, so 8,400,000 rounds up to 8,500,000.",
+    "explanation": "The ten-thousands digit is 6, which is 5 or more, so 8,462,718 rounds up to 8,500,000.",
     "difficulty": "Year 6"
   },
   {
@@ -67,7 +67,7 @@ export const year6Questions:Question[]=[
   {
     "id": "y6-2026-007",
     "subject": "Maths",
-    "prompt": "What is the greatest common factor of 36 and 60?",
+    "prompt": "What is the highest common factor of 36 and 60?",
     "answers": [
       "12"
     ],
@@ -394,7 +394,11 @@ export const year6Questions:Question[]=[
     "answers": [
       "beak",
       "a beak",
-      "the beak"
+      "the beak",
+      "its beak",
+      "hard beak",
+      "a hard beak",
+      "the hard beak"
     ],
     "explanation": "The passage says the hard beak limits the size of the gap.",
     "difficulty": "Year 6",
@@ -444,7 +448,11 @@ export const year6Questions:Question[]=[
       "six oclock",
       "6 oclock",
       "six o’clock",
-      "six o'clock"
+      "six o'clock",
+      "6 o’clock",
+      "6 o'clock",
+      "6:00",
+      "6.00"
     ],
     "explanation": "The opening sentence states that the clock struck six.",
     "difficulty": "Year 6",
@@ -479,9 +487,15 @@ export const year6Questions:Question[]=[
     "prompt": "Which item helps Ellis recognise his sister?",
     "answers": [
       "scarf",
+      "a scarf",
+      "the scarf",
+      "her scarf",
       "red scarf",
       "a red scarf",
-      "the red scarf"
+      "the red scarf",
+      "her red scarf",
+      "familiar red scarf",
+      "a familiar red scarf"
     ],
     "explanation": "A familiar red scarf appears before he runs to his sister.",
     "difficulty": "Year 6",
@@ -655,7 +669,8 @@ export const year6Questions:Question[]=[
     "subject": "Verbal reasoning",
     "prompt": "Add one letter to the start of light to make a word meaning a journey through the air.",
     "answers": [
-      "f"
+      "f",
+      "flight"
     ],
     "explanation": "F + light makes flight.",
     "difficulty": "Year 6"
@@ -675,9 +690,10 @@ export const year6Questions:Question[]=[
     "subject": "Verbal reasoning",
     "prompt": "What three-letter word can follow both sun and moon to make two compound words?",
     "answers": [
-      "set"
+      "set",
+      "lit"
     ],
-    "explanation": "Sunset and moonset both describe a celestial body dropping below the horizon.",
+    "explanation": "Sunset and moonset describe the sun or moon dropping below the horizon. Sunlit and moonlit are also compound words, so lit is accepted too.",
     "difficulty": "Year 6"
   },
   {
@@ -685,9 +701,10 @@ export const year6Questions:Question[]=[
     "subject": "Verbal reasoning",
     "prompt": "What four-letter word can follow both rain and snow to make two compound words?",
     "answers": [
-      "fall"
+      "fall",
+      "drop"
     ],
-    "explanation": "Rainfall and snowfall both measure or describe precipitation.",
+    "explanation": "Rainfall and snowfall both describe precipitation. Raindrop and snowdrop are also compound words, so drop is accepted too.",
     "difficulty": "Year 6"
   },
   {
@@ -865,7 +882,7 @@ export const year6Questions:Question[]=[
     "answers": [
       "2"
     ],
-    "explanation": "A clockwise quarter-turn maps the top row to the right column. The shaded square moves to position 2.",
+    "explanation": "A clockwise quarter-turn maps the left column to the top row. Square 4, in the middle of the left column, moves to the middle of the top row: position 2.",
     "difficulty": "Year 6",
     "diagram": {
       "kind": "grid",
@@ -881,7 +898,7 @@ export const year6Questions:Question[]=[
     "answers": [
       "1"
     ],
-    "explanation": "A clockwise quarter-turn maps the top row to the right column. The shaded square moves to position 1.",
+    "explanation": "A clockwise quarter-turn maps the left column to the top row. Square 7, at the bottom of the left column, moves to the top-left corner: position 1.",
     "difficulty": "Year 6",
     "diagram": {
       "kind": "grid",
@@ -1140,24 +1157,24 @@ export const year6Questions:Question[]=[
     "subject": "Non-verbal reasoning",
     "prompt": "Study the dot groups. How many dots should be in the next group?",
     "answers": [
-      "12"
+      "16"
     ],
-    "explanation": "The increases are 1, 2, 3, then 4.",
+    "explanation": "The increases are 2, 3 and 4, so the next increase is 5: 11 + 5 = 16.",
     "difficulty": "Year 6",
     "diagram": {
       "kind": "dots",
       "items": [
         2,
-        3,
-        5,
-        8
+        4,
+        7,
+        11
       ]
     }
   },
   {
     "id": "y6-2026-096",
     "subject": "Non-verbal reasoning",
-    "prompt": "Follow the moving shaded square. Which numbered position comes next? Type 1–9.",
+    "prompt": "The shaded square moves around the outside squares of the grid. Which numbered position comes next? Type 1–9.",
     "answers": [
       "9"
     ],
@@ -1176,7 +1193,7 @@ export const year6Questions:Question[]=[
   {
     "id": "y6-2026-097",
     "subject": "Non-verbal reasoning",
-    "prompt": "Follow the moving shaded square. Which numbered position comes next? Type 1–9.",
+    "prompt": "The shaded square moves around the outside squares of the grid. Which numbered position comes next? Type 1–9.",
     "answers": [
       "3"
     ],

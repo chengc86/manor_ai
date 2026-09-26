@@ -499,7 +499,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "Ella hurried home."
     ],
-    "explanation": "In “The lost mitten”, the passage supports this answer: Ella hurried home..",
+    "explanation": "The last sentence says Ella “hurried home”, so that happened last.",
     "rewardGroup": "standard",
     "passage": "Ella dropped a red mitten beside the pond. On her way home, her fingers felt cold. She went back and found the mitten under a bench. She put it on and hurried home.",
     "options": [
@@ -703,7 +703,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "The sun was warm."
     ],
-    "explanation": "In “The snowman”, the passage supports this answer: The sun was warm..",
+    "explanation": "By lunchtime “the sun was warm”, so the snowman began to melt.",
     "rewardGroup": "standard",
     "passage": "Noah rolled three snowballs in the garden. He put the smallest one on top. His mum gave him a carrot for the nose. By lunchtime the sun was warm, and the snowman began to melt.",
     "options": [
@@ -771,7 +771,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "Its leaves stood tall."
     ],
-    "explanation": "In “The class plant”, the passage supports this answer: Its leaves stood tall..",
+    "explanation": "After Ruby watered it, the leaves “stood tall again” the next day.",
     "rewardGroup": "standard",
     "passage": "Each Monday, Ruby checked the class plant. This week its leaves were drooping and the soil was dry. She gave it some water. The next day, the leaves stood tall again.",
     "options": [
@@ -788,7 +788,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "It needed repairs."
     ],
-    "explanation": "In “The bridge”, the details support this answer: It needed repairs..",
+    "explanation": "Workers were replacing its “cracked boards”, so the bridge was probably closed for repairs.",
     "rewardGroup": "challenge",
     "passage": "The footbridge had been closed for months. Every morning, Arun watched workers replace its cracked boards. When the barriers finally came down, he crossed slowly, trailing his hand along the new rail. On the far bank he turned and waved to his grandmother, who was taking the longer path. Tomorrow, he thought, she would not need to.",
     "options": [
@@ -805,7 +805,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "He crosses slowly."
     ],
-    "explanation": "In “The bridge”, the details support this answer: He crosses slowly..",
+    "explanation": "Arun “crossed slowly”, trailing his hand along the rail, which shows he is being careful.",
     "rewardGroup": "challenge",
     "passage": "The footbridge had been closed for months. Every morning, Arun watched workers replace its cracked boards. When the barriers finally came down, he crossed slowly, trailing his hand along the new rail. On the far bank he turned and waved to his grandmother, who was taking the longer path. Tomorrow, he thought, she would not need to.",
     "options": [
@@ -839,7 +839,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "A repaired route becomes usable again."
     ],
-    "explanation": "In “The bridge”, the details support this answer: A repaired route becomes usable again..",
+    "explanation": "The footbridge had been closed while it was repaired; when “the barriers finally came down”, the mended bridge could be used again.",
     "rewardGroup": "challenge",
     "passage": "The footbridge had been closed for months. Every morning, Arun watched workers replace its cracked boards. When the barriers finally came down, he crossed slowly, trailing his hand along the new rail. On the far bank he turned and waved to his grandmother, who was taking the longer path. Tomorrow, he thought, she would not need to.",
     "options": [
@@ -890,7 +890,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "They identify the seeds."
     ],
-    "explanation": "In “The seed library”, the details support this answer: They identify the seeds..",
+    "explanation": "A missing label “can leave the next gardener guessing”, so labels are needed to show which seeds are which.",
     "rewardGroup": "challenge",
     "passage": "At the community seed library, people borrow seeds instead of books. They grow the plants and return some seeds from the new crop. This system can preserve local varieties and reduce costs. However, it depends on clear labels and careful storage: damp seeds may rot, and a missing label can leave the next gardener guessing.",
     "options": [
@@ -907,7 +907,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "Seed sharing has benefits but needs careful organisation."
     ],
-    "explanation": "In “The seed library”, the details support this answer: Seed sharing has benefits but needs careful organisation..",
+    "explanation": "The passage gives benefits (preserving local varieties and reducing costs) but says the system “depends on clear labels and careful storage”.",
     "rewardGroup": "challenge",
     "passage": "At the community seed library, people borrow seeds instead of books. They grow the plants and return some seeds from the new crop. This system can preserve local varieties and reduce costs. However, it depends on clear labels and careful storage: damp seeds may rot, and a missing label can leave the next gardener guessing.",
     "options": [
@@ -924,7 +924,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "She feels nervous about performing."
     ],
-    "explanation": "In “The rehearsal”, the details support this answer: She feels nervous about performing..",
+    "explanation": "She knew her solo well, yet her hands trembled “when the hall filled”, which suggests nerves about performing in front of an audience.",
     "rewardGroup": "challenge",
     "passage": "Imani had practised her solo until every note felt familiar. Yet when the hall filled, her hands trembled. She looked towards the empty seat where her brother usually sat. Then she spotted him by the doorway, still wearing his work apron. He lifted one thumb. Imani took a breath and began.",
     "options": [
@@ -941,7 +941,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "Her brother has come from work."
     ],
-    "explanation": "In “The rehearsal”, the details support this answer: Her brother has come from work..",
+    "explanation": "He is “still wearing his work apron”, which suggests he has come straight from work.",
     "rewardGroup": "challenge",
     "passage": "Imani had practised her solo until every note felt familiar. Yet when the hall filled, her hands trembled. She looked towards the empty seat where her brother usually sat. Then she spotted him by the doorway, still wearing his work apron. He lifted one thumb. Imani took a breath and began.",
     "options": [
@@ -975,7 +975,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "She gathers herself and starts."
     ],
-    "explanation": "In “The rehearsal”, the details support this answer: She gathers herself and starts..",
+    "explanation": "After her brother’s thumbs-up, “Imani took a breath and began”: she steadies herself and starts her solo.",
     "rewardGroup": "challenge",
     "passage": "Imani had practised her solo until every note felt familiar. Yet when the hall filled, her hands trembled. She looked towards the empty seat where her brother usually sat. Then she spotted him by the doorway, still wearing his work apron. He lifted one thumb. Imani took a breath and began.",
     "options": [
@@ -1026,7 +1026,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "He expects stillness but discovers moving creatures."
     ],
-    "explanation": "In “The tide pool”, the details support this answer: He expects stillness but discovers moving creatures..",
+    "explanation": "Finn was “expecting stillness”, but a shrimp “flickered” and a crab “edged sideways”: the pool is full of moving creatures.",
     "rewardGroup": "challenge",
     "passage": "As the tide withdrew, pools remained between the rocks. Finn crouched beside one, expecting stillness. Instead, a shrimp flickered beneath a ribbon of seaweed and a tiny crab edged sideways into a crack. He put away the bucket he had brought. Watching, he decided, was enough.",
     "options": [
@@ -1043,7 +1043,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "He decides to leave the creatures where they are."
     ],
-    "explanation": "In “The tide pool”, the details support this answer: He decides to leave the creatures where they are..",
+    "explanation": "Finn puts the bucket away and decides that watching is “enough”, so he chooses to leave the creatures in the pool rather than collect them.",
     "rewardGroup": "challenge",
     "passage": "As the tide withdrew, pools remained between the rocks. Finn crouched beside one, expecting stillness. Instead, a shrimp flickered beneath a ribbon of seaweed and a tiny crab edged sideways into a crack. He put away the bucket he had brought. Watching, he decided, was enough.",
     "options": [
@@ -1060,7 +1060,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "The marked building is missing."
     ],
-    "explanation": "In “The old map”, the details support this answer: The marked building is missing..",
+    "explanation": "The map marked a mill, “but no building stood there now”, so at first the map seemed to be wrong.",
     "rewardGroup": "challenge",
     "passage": "The map marked a mill beside the stream, but no building stood there now. Tess almost folded it away. Then she noticed a circle of stones beneath the brambles and a narrow channel cut into the bank. The map was not wrong, she realised; the landscape had changed.",
     "options": [
@@ -1077,7 +1077,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "She finds traces of an old structure."
     ],
-    "explanation": "In “The old map”, the details support this answer: She finds traces of an old structure..",
+    "explanation": "She notices “a circle of stones” and “a narrow channel cut into the bank”, which are traces of the old mill.",
     "rewardGroup": "challenge",
     "passage": "The map marked a mill beside the stream, but no building stood there now. Tess almost folded it away. Then she noticed a circle of stones beneath the brambles and a narrow channel cut into the bank. The map was not wrong, she realised; the landscape had changed.",
     "options": [
@@ -1111,7 +1111,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "Old maps can reveal features that no longer survive intact."
     ],
-    "explanation": "In “The old map”, the details support this answer: Old maps can reveal features that no longer survive intact..",
+    "explanation": "Tess realises the map “was not wrong” because “the landscape had changed”: the mill survives only as stones and a channel.",
     "rewardGroup": "challenge",
     "passage": "The map marked a mill beside the stream, but no building stood there now. Tess almost folded it away. Then she noticed a circle of stones beneath the brambles and a narrow channel cut into the bank. The map was not wrong, she realised; the landscape had changed.",
     "options": [
@@ -1128,7 +1128,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "dog"
     ],
-    "explanation": "kitten and cat have the same relationship as puppy and dog.",
+    "explanation": "A kitten is a young cat, and a puppy is a young dog.",
     "rewardGroup": "quick",
     "options": [
       "dog",
@@ -1144,7 +1144,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "sheep"
     ],
-    "explanation": "calf and cow have the same relationship as lamb and sheep.",
+    "explanation": "A calf is a young cow, and a lamb is a young sheep.",
     "rewardGroup": "quick",
     "options": [
       "sheep",
@@ -1160,7 +1160,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "foot"
     ],
-    "explanation": "finger and hand have the same relationship as toe and foot.",
+    "explanation": "A finger is part of a hand, and a toe is part of a foot.",
     "rewardGroup": "quick",
     "options": [
       "foot",
@@ -1176,7 +1176,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "bird"
     ],
-    "explanation": "wheel and bicycle have the same relationship as wing and bird.",
+    "explanation": "A wheel is part of a bicycle, and a wing is part of a bird.",
     "rewardGroup": "quick",
     "options": [
       "bird",
@@ -1192,7 +1192,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "hospital"
     ],
-    "explanation": "teacher and school have the same relationship as doctor and hospital.",
+    "explanation": "A teacher works in a school, and a doctor works in a hospital.",
     "rewardGroup": "quick",
     "options": [
       "hospital",
@@ -1208,7 +1208,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "fly"
     ],
-    "explanation": "fish and swim have the same relationship as bird and fly.",
+    "explanation": "A fish swims, and a bird flies.",
     "rewardGroup": "quick",
     "options": [
       "fly",
@@ -1224,7 +1224,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "cut"
     ],
-    "explanation": "pencil and write have the same relationship as scissors and cut.",
+    "explanation": "You write with a pencil, and you cut with scissors.",
     "rewardGroup": "quick",
     "options": [
       "cut",
@@ -1240,7 +1240,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "hear"
     ],
-    "explanation": "eye and see have the same relationship as ear and hear.",
+    "explanation": "You see with your eyes, and you hear with your ears.",
     "rewardGroup": "quick",
     "options": [
       "hear",
@@ -1256,7 +1256,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "quack"
     ],
-    "explanation": "cow and moo have the same relationship as duck and quack.",
+    "explanation": "A cow says “moo”, and a duck says “quack”.",
     "rewardGroup": "quick",
     "options": [
       "quack",
@@ -1272,7 +1272,7 @@ export const freshQuestions:Question[]=[
     "answers": [
       "head"
     ],
-    "explanation": "sock and foot have the same relationship as hat and head.",
+    "explanation": "A sock goes on your foot, and a hat goes on your head.",
     "rewardGroup": "quick",
     "options": [
       "head",
@@ -1984,11 +1984,11 @@ export const freshQuestions:Question[]=[
     "id": "fresh-20260916-141",
     "difficulty": "Year 6",
     "subject": "Non-verbal reasoning",
-    "prompt": "Each step changes the leftmost ■ into ●; ▲ stays fixed. Starting with ● ■ ▲, what remains after 1 steps?",
+    "prompt": "Each step changes the leftmost ■ into ●; ▲ stays fixed. Starting with ● ■ ▲, what remains after 1 step?",
     "answers": [
       "● ● ▲"
     ],
-    "explanation": "All 1 ■ shapes become ●; the final ▲ does not change.",
+    "explanation": "The only ■ becomes ●; the final ▲ does not change.",
     "rewardGroup": "standard",
     "options": [
       "● ● ▲",
@@ -2048,11 +2048,11 @@ export const freshQuestions:Question[]=[
     "id": "fresh-20260916-145",
     "difficulty": "Year 6",
     "subject": "Non-verbal reasoning",
-    "prompt": "Each step changes the leftmost ▲ into ■; ◆ stays fixed. Starting with ■ ▲ ◆, what remains after 1 steps?",
+    "prompt": "Each step changes the leftmost ▲ into ■; ◆ stays fixed. Starting with ■ ▲ ◆, what remains after 1 step?",
     "answers": [
       "■ ■ ◆"
     ],
-    "explanation": "All 1 ▲ shapes become ■; the final ◆ does not change.",
+    "explanation": "The only ▲ becomes ■; the final ◆ does not change.",
     "rewardGroup": "standard",
     "options": [
       "■ ■ ◆",
@@ -2112,11 +2112,11 @@ export const freshQuestions:Question[]=[
     "id": "fresh-20260916-149",
     "difficulty": "Year 6",
     "subject": "Non-verbal reasoning",
-    "prompt": "Each step changes the leftmost ◆ into ▲; ★ stays fixed. Starting with ▲ ◆ ★, what remains after 1 steps?",
+    "prompt": "Each step changes the leftmost ◆ into ▲; ★ stays fixed. Starting with ▲ ◆ ★, what remains after 1 step?",
     "answers": [
       "▲ ▲ ★"
     ],
-    "explanation": "All 1 ◆ shapes become ▲; the final ★ does not change.",
+    "explanation": "The only ◆ becomes ▲; the final ★ does not change.",
     "rewardGroup": "standard",
     "options": [
       "▲ ▲ ★",
@@ -2176,11 +2176,11 @@ export const freshQuestions:Question[]=[
     "id": "fresh-20260916-153",
     "difficulty": "Year 6",
     "subject": "Non-verbal reasoning",
-    "prompt": "Each step changes the leftmost ★ into ◆; ● stays fixed. Starting with ◆ ★ ●, what remains after 1 steps?",
+    "prompt": "Each step changes the leftmost ★ into ◆; ● stays fixed. Starting with ◆ ★ ●, what remains after 1 step?",
     "answers": [
       "◆ ◆ ●"
     ],
-    "explanation": "All 1 ★ shapes become ◆; the final ● does not change.",
+    "explanation": "The only ★ becomes ◆; the final ● does not change.",
     "rewardGroup": "standard",
     "options": [
       "◆ ◆ ●",
@@ -2240,11 +2240,11 @@ export const freshQuestions:Question[]=[
     "id": "fresh-20260916-157",
     "difficulty": "Year 6",
     "subject": "Non-verbal reasoning",
-    "prompt": "Each step changes the leftmost ● into ★; ■ stays fixed. Starting with ★ ● ■, what remains after 1 steps?",
+    "prompt": "Each step changes the leftmost ● into ★; ■ stays fixed. Starting with ★ ● ■, what remains after 1 step?",
     "answers": [
       "★ ★ ■"
     ],
-    "explanation": "All 1 ● shapes become ★; the final ■ does not change.",
+    "explanation": "The only ● becomes ★; the final ■ does not change.",
     "rewardGroup": "standard",
     "options": [
       "★ ★ ■",

@@ -76,5 +76,13 @@ const originalPlayer=(await W.readWorld()).w.players[winner];assert.equal((await
 assert.equal((await heroRequest(winner,115)).status,200);let claimWorld=(await W.readWorld()).w;assert.equal(claimWorld.players[winner].coins,4000);assert.equal(claimWorld.players[winner].hero,115);assert.deepEqual(claimWorld.players[winner].clothing,originalPlayer.clothing);assert.deepEqual(claimWorld.players[winner].itemInventory,originalPlayer.itemInventory);assert(claimWorld.defenders.filter(d=>d.owner===winner).every(d=>d.type===115));assert.equal(claimWorld.defenders.find(d=>d.id==='claim-one').weaponLevels.frost,3);
 assert.equal((await heroRequest(loser,16)).status,200);await W.mutate(w=>{w.players[winner].coins=999;});const poorBefore=(await W.readWorld()).w;assert.equal((await heroRequest(winner,18)).status,400);assert.deepEqual((await W.readWorld()).w,poorBefore);sqlite.close();sqlite=new DatabaseSync(file);claimWorld=(await W.readWorld()).w;assert.equal(claimWorld.players[winner].hero,115);assert.equal(claimWorld.players[loser].hero,16);
 console.log('PASS: simultaneous hero claim has one winner; taken heroes reject without spending; only selected hero deploys; paid switch changes every defender, preserves equipment and releases old hero; choices survive reopen.');
+cookie='qg_session='+winner;
+await W.mutate(w=>{for(const p of Object.values(w.players))p.lastSeen=0;w.players[winner].combat={kills:12,damage:345.7,controlSeconds:0,assistedDamage:0,battles:4,wins:3};});
+assert.equal((await post({action:'heartbeat',uid:loser,lastSeen:1})).status,200);
+let presence=(await W.readWorld()).w;assert(presence.players[winner].lastSeen>Date.now()-5000);assert.equal(presence.players[loser].lastSeen,0);
+let ranking=await get();assert(ranking.onlinePlayers.some(p=>p.id===winner));const ranked=ranking.players.find(p=>p.id===winner);assert.equal(ranked.stats.kills,12);assert.equal(ranked.stats.damage,345);assert.equal(ranked.stats.wins,3);assert(!('history' in ranked));
+sqlite.close();sqlite=new DatabaseSync(file);assert((await W.readWorld()).w.players[winner].lastSeen>0);
+await W.mutate(w=>{w.players[winner].lastSeen=Date.now()-91000});ranking=await get();assert(!ranking.onlinePlayers.some(p=>p.id===winner));
+console.log('PASS: authenticated heartbeat ignores spoofed identity/time, persists across reopen, expires after 90 seconds, and ranking exposes only summary statistics.');
 sqlite.close();fs.unlinkSync(file);console.log('PASS: unselected heroes hidden; answers, wardrobe, items, coins and placements survive database reopen; pending question restored; simultaneous start accepts one; late join/reopen sees identical battle; stale start rejected after finish; pupil records isolated.');
 })().catch(e=>{console.error(e);process.exitCode=1});

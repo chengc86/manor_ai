@@ -12,7 +12,7 @@ Vinext, React, Cloudflare Workers, D1 and R2. Set `TEACHER_PASSWORD` in local `.
 
 ## Questions
 
-289 original multiple-choice, short-answer and reading-comprehension questions cover Maths, English comprehension, verbal reasoning and non-verbal reasoning. Correct questions are retired per pupil. Incorrect and skipped questions wait at least 24 hours. There is no pupil upload library. The teacher supplies textbook photos in the Codex conversation; reviewed, original questions can then be added to the bank. The latest expansion adds 25 questions per subject, with stable IDs so existing pupil histories remain valid.
+2,636 original multiple-choice, short-answer and reading-comprehension questions (Year 6 and Year 2) cover Maths, English comprehension, verbal reasoning and non-verbal reasoning. Correct questions are retired per pupil. Incorrect and skipped questions wait at least 24 hours. Wrong answers never reveal the answer or explanation until the pupil gets the question right; instead they can post it to the Help a friend board, where classmates who first answer it correctly can send a hint. A helper earns 10 coins when their friend then gets the question right ([details](docs/design/help-a-friend.md)). Maths answers may include the unit the question asks for, such as "22 cm" or "45p". There is no pupil upload library. The teacher supplies textbook photos in the Codex conversation; reviewed, original questions can then be added to the bank. The latest expansion adds 200 11+ entrance-exam questions ([details](docs/design/entrance-questions.md)), and every question was re-checked in the [September 2026 audit](docs/design/question-audit-2026-09-26.md). Stable IDs keep existing pupil histories valid.
 
 ## Art references
 
