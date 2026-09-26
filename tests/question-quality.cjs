@@ -16,5 +16,14 @@ for(const q of questions){
 const punct=questions.find(q=>q.prompt==='Which mark ends a question?');assert(answerMatches(punct,'?'));assert(!answerMatches(punct,'!'));assert(!answerMatches(punct,'.'));
 assert(answerMatches(questions.find(q=>q.id==='y6-2026-014'),'1.20'));assert(!answerMatches(questions.find(q=>q.id==='y6-2026-014'),'12'));
 assert(!answerMatches(questions.find(q=>q.id==='q101'),'6/8'));assert(!answerMatches(questions.find(q=>q.id==='q101'),'0.75'));
+// A unit after a number counts only when it is the unit the question asks for.
+const byId=id=>questions.find(q=>q.id===id),units=(q,input,ok)=>assert.equal(answerMatches(q,input),ok,`${q.prompt} :: ${input}`);
+for(const input of ['22 cm','22cm','22 centimetres'])units(byId('q3'),input,true);units(byId('q3'),'22 m',false);
+units(byId('photo-20260916-033'),'45p',true);units(byId('y2-66'),'35p',true);units(byId('y2-66'),'35 pence',true);units(byId('y2-66'),'35 cm',false);units(byId('y2-71'),'15 cm',true);
+units(byId('q100'),'2750 ml',true);units(byId('q100'),'2,750 millilitres',true);units(byId('q100'),'2750 litres',false);
+const area={subject:'Maths',prompt:'A triangle has a base of 14 cm and a height of 9 cm. What is its area in cm²?',answers:['63']};units(area,'63 cm²',true);units(area,'63 cm',false);
+const speed={subject:'Maths',prompt:'A train travels 210 km in 1 hour 45 minutes. What is its average speed in km/h?',answers:['120']};units(speed,'120 km/h',true);units(speed,'120 km',false);
+const angle={subject:'Maths',prompt:'What is each interior angle of a regular hexagon, in degrees?',answers:['120']};units(angle,'120°',true);units(angle,'120 degrees',true);
+units({subject:'English',prompt:'How many winters had it survived?',answers:['100']},'100 years',false);
 const bad=renderToStaticMarkup(React.createElement(Diagram,{diagram:{kind:'unsupported',items:[24]}}));assert(bad.includes('could not load')&&!bad.includes('<polygon'));
 console.log(`PASS: all ${questions.length} questions structurally checked; ${diagrams} diagrams render correctly; ${calculations} generated arithmetic/transform/code answers independently verified; numeric formats and punctuation checks passed.`);

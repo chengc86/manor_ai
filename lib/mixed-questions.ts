@@ -188,7 +188,7 @@ export const mixedQuestions:Question[]=[
       "Green roofs can help cities but need careful planning.",
       "Plants only survive on city roofs."
     ],
-    "passage": "A Roof That Works\n\nOn some city buildings, a layer of plants covers the roof. These “green roofs” are more than decoration. The soil and plants absorb some rainwater, slowing the amount that reaches drains during a storm. The plants also offer food and shelter to insects.\n\nA green roof cannot simply be added to any building. Wet soil is heavy, so an expert must check that the roof can support it. The plants need to suit the local weather, and someone must look after them. Although a green roof can help keep a building cooler in summer, it does not replace every other way of saving energy.\n\nFor a suitable building, a carefully planned green roof can turn an unused surface into a small, useful habitat."
+    "passage": "A Roof That Works\n\nOn some city buildings, a layer of plants covers the roof. These “green roofs” are more than decoration. The soil and plants absorb some rainwater, reducing the amount that reaches drains during a storm. The plants also offer food and shelter to insects.\n\nA green roof cannot simply be added to any building. Wet soil is heavy, so an expert must check that the roof can support it. The plants need to suit the local weather, and someone must look after them. Although a green roof can help keep a building cooler in summer, it does not replace every other way of saving energy.\n\nFor a suitable building, a carefully planned green roof can turn an unused surface into a small, useful habitat."
   },
   {
     "id": "mix-2026-014",
@@ -205,7 +205,7 @@ export const mixedQuestions:Question[]=[
       "The plants need darkness.",
       "Drains must be removed."
     ],
-    "passage": "A Roof That Works\n\nOn some city buildings, a layer of plants covers the roof. These “green roofs” are more than decoration. The soil and plants absorb some rainwater, slowing the amount that reaches drains during a storm. The plants also offer food and shelter to insects.\n\nA green roof cannot simply be added to any building. Wet soil is heavy, so an expert must check that the roof can support it. The plants need to suit the local weather, and someone must look after them. Although a green roof can help keep a building cooler in summer, it does not replace every other way of saving energy.\n\nFor a suitable building, a carefully planned green roof can turn an unused surface into a small, useful habitat."
+    "passage": "A Roof That Works\n\nOn some city buildings, a layer of plants covers the roof. These “green roofs” are more than decoration. The soil and plants absorb some rainwater, reducing the amount that reaches drains during a storm. The plants also offer food and shelter to insects.\n\nA green roof cannot simply be added to any building. Wet soil is heavy, so an expert must check that the roof can support it. The plants need to suit the local weather, and someone must look after them. Although a green roof can help keep a building cooler in summer, it does not replace every other way of saving energy.\n\nFor a suitable building, a carefully planned green roof can turn an unused surface into a small, useful habitat."
   },
   {
     "id": "mix-2026-015",
@@ -222,7 +222,7 @@ export const mixedQuestions:Question[]=[
       "expert",
       "Although"
     ],
-    "passage": "A Roof That Works\n\nOn some city buildings, a layer of plants covers the roof. These “green roofs” are more than decoration. The soil and plants absorb some rainwater, slowing the amount that reaches drains during a storm. The plants also offer food and shelter to insects.\n\nA green roof cannot simply be added to any building. Wet soil is heavy, so an expert must check that the roof can support it. The plants need to suit the local weather, and someone must look after them. Although a green roof can help keep a building cooler in summer, it does not replace every other way of saving energy.\n\nFor a suitable building, a carefully planned green roof can turn an unused surface into a small, useful habitat."
+    "passage": "A Roof That Works\n\nOn some city buildings, a layer of plants covers the roof. These “green roofs” are more than decoration. The soil and plants absorb some rainwater, reducing the amount that reaches drains during a storm. The plants also offer food and shelter to insects.\n\nA green roof cannot simply be added to any building. Wet soil is heavy, so an expert must check that the roof can support it. The plants need to suit the local weather, and someone must look after them. Although a green roof can help keep a building cooler in summer, it does not replace every other way of saving energy.\n\nFor a suitable building, a carefully planned green roof can turn an unused surface into a small, useful habitat."
   },
   {
     "id": "mix-2026-016",
@@ -234,7 +234,7 @@ export const mixedQuestions:Question[]=[
     ],
     "explanation": "The first paragraph says plants offer food and shelter.",
     "difficulty": "Year 6",
-    "passage": "A Roof That Works\n\nOn some city buildings, a layer of plants covers the roof. These “green roofs” are more than decoration. The soil and plants absorb some rainwater, slowing the amount that reaches drains during a storm. The plants also offer food and shelter to insects.\n\nA green roof cannot simply be added to any building. Wet soil is heavy, so an expert must check that the roof can support it. The plants need to suit the local weather, and someone must look after them. Although a green roof can help keep a building cooler in summer, it does not replace every other way of saving energy.\n\nFor a suitable building, a carefully planned green roof can turn an unused surface into a small, useful habitat."
+    "passage": "A Roof That Works\n\nOn some city buildings, a layer of plants covers the roof. These “green roofs” are more than decoration. The soil and plants absorb some rainwater, reducing the amount that reaches drains during a storm. The plants also offer food and shelter to insects.\n\nA green roof cannot simply be added to any building. Wet soil is heavy, so an expert must check that the roof can support it. The plants need to suit the local weather, and someone must look after them. Although a green roof can help keep a building cooler in summer, it does not replace every other way of saving energy.\n\nFor a suitable building, a carefully planned green roof can turn an unused surface into a small, useful habitat."
   },
   {
     "id": "mix-2026-017",
