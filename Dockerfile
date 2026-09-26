@@ -12,8 +12,8 @@ ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 HOSTNAME=0.0.0.0 PORT=10000
 COPY --from=build --chown=node:node /app/.render-next/standalone ./
 COPY --from=build --chown=node:node /app/.render-next/static ./.render-next/static
 COPY --from=build --chown=node:node /app/public ./public
-COPY --from=build --chown=node:node /app/scripts/neon-migrate.mjs ./scripts/neon-migrate.mjs
-COPY --from=build --chown=node:node /app/node_modules/@neondatabase/serverless ./node_modules/@neondatabase/serverless
+COPY --from=build --chown=node:node /app/scripts/postgres-migrate.mjs ./scripts/postgres-migrate.mjs
+COPY --from=build --chown=node:node /app/node_modules/postgres ./node_modules/postgres
 USER node
 EXPOSE 10000
-CMD ["sh","-c","node scripts/neon-migrate.mjs && node server.js"]
+CMD ["sh","-c","node scripts/postgres-migrate.mjs && node server.js"]

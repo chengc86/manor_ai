@@ -33,6 +33,6 @@ Maths and English follow England’s upper Key Stage 2 programmes, relevant to M
 
 Seven heroes have three named tiers each. Upgrades increase damage, range and attack speed; Tempest gains a third lightning target at tier 3 and Ember increases its splash radius. Hero stats, costs and names are shared by the server and UI in lib/heroes.ts. New purchases join the next wave; upgrades and movement take place between waves.
 
-## Render + Neon
+## Render + Supabase
 
-See [deployment instructions](docs/render-neon.md). Docker uses the separate `build:render` Next.js standalone target and the Neon database adapter. The existing Sites target continues using D1 until a deliberate migration is performed. Neon requires a private DATABASE_URL. Never store production records in the container filesystem.
+See [deployment instructions](docs/render-supabase.md). Docker uses the separate `build:render` Next.js standalone target and the PostgreSQL database adapter. The existing Sites target continues using D1 until a deliberate migration is performed. Supabase requires a private DATABASE_URL. Never store production records in the container filesystem.

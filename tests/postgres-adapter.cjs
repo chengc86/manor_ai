@@ -1,0 +1,15 @@
+const assert=require('node:assert/strict'),fs=require('fs'),ts=require('typescript');
+const code=ts.transpileModule(fs.readFileSync('runtime/postgres-env.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText;
+const calls=[];let fail=false,options;
+const rows=Object.assign([{id:'class',revision:'12'}],{count:1});
+const query=async(q,values)=>{calls.push({q,values});if(fail&&q.includes('sessions'))throw Error('fixture failure');return rows};
+const fake=(_url,o)=>{options=o;return{unsafe:query,begin:async fn=>{calls.push('BEGIN');try{const result=await fn({unsafe:query});calls.push('COMMIT');return result}catch(e){calls.push('ROLLBACK');throw e}}}};
+const mod={exports:{}};process.env.DATABASE_URL='postgresql://fixture';new Function('require','module','exports',code)(()=>fake,mod,mod.exports);
+(async()=>{const {env,postgresQuery}=mod.exports;
+assert.equal(postgresQuery('INSERT OR IGNORE INTO world (id,revision,data) VALUES (?,?,?)'),'INSERT INTO manor_quest.world (id,revision,data) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING');
+assert.equal((await env.DB.prepare('SELECT * FROM world WHERE id=?').bind('class').first()).id,'class');assert.equal(options.prepare,false);assert.equal(options.ssl,'verify-full');assert.equal(options.max,5);
+assert.equal((await env.DB.prepare('UPDATE world SET revision=?').bind(13).run()).meta.changes,1);
+assert.deepEqual((await env.DB.prepare('SELECT * FROM world').all()).results,[{id:'class',revision:'12'}]);
+await env.DB.batch([env.DB.prepare('DELETE FROM sessions'),env.DB.prepare('DELETE FROM accounts')]);assert.equal(calls.at(-1),'COMMIT');
+fail=true;await assert.rejects(env.DB.batch([env.DB.prepare('DELETE FROM accounts'),env.DB.prepare('DELETE FROM sessions')]),/fixture failure/);assert.equal(calls.at(-1),'ROLLBACK');
+console.log('PASS: PostgreSQL result mapping, parameterisation, schema isolation, TLS, bounded pooling and transactional batch rollback.');})().catch(e=>{console.error(e);process.exitCode=1});
