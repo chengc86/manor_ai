@@ -14,14 +14,14 @@ const DB={prepare(sql){
 const original=Module._load;Module._load=function(id,...args){if(id==='cloudflare:workers')return{env:{DB}};return original.call(this,id,...args)};
 const W=require('../work/persistence/world.cjs'),API=require('../work/persistence/game.cjs'),{questions}=require('../work/persistence/questions.cjs');
 let cookie;
-async function get(){const r=await API.GET(new Request('https://game.test/api/game',{headers:{cookie,'X-Quest-Heroes':'2'}}));assert.equal(r.status,200);return r.json()}
-async function post(body){const r=await API.POST(new Request('https://game.test/api/game',{method:'POST',headers:{'X-Quest-Questions':'2','X-Quest-Heroes':'2',origin:'https://game.test',host:'game.test',cookie,'content-type':'application/json'},body:JSON.stringify({requestId:crypto.randomUUID(),...body})}));return{status:r.status,body:await r.json()}}
+async function get(){const r=await API.GET(new Request('https://game.test/api/game',{headers:{cookie,'X-Quest-Heroes':'3'}}));assert.equal(r.status,200);return r.json()}
+async function post(body){const r=await API.POST(new Request('https://game.test/api/game',{method:'POST',headers:{'X-Quest-Questions':'2','X-Quest-Heroes':'3',origin:'https://game.test',host:'game.test',cookie,'content-type':'application/json'},body:JSON.stringify({requestId:crypto.randomUUID(),...body})}));return{status:r.status,body:await r.json()}}
 (async()=>{
 for(const uid of ['a','b']){sqlite.prepare('INSERT INTO sessions VALUES (?,?,?)').run(await W.sha(uid),uid,Date.now()+7*86400000);await W.mutate(w=>{w.players[uid]=W.newPlayer(uid);});}
 cookie='qg_session=a';let v=await get();assert.equal(v.players.length,0);assert.equal(v.me.heroLocked,false);
 assert.equal((await post({action:'hero',hero:0,gender:'boy'})).status,200);v=await get();assert.deepEqual(v.players.map(p=>p.id),['a']);
 let pending=await post({action:'question',subject:'English'});assert.equal(pending.status,200);v=await get();assert.equal(v.me.pendingQuestion.token,pending.body.token);assert(!('answers' in v.me.pendingQuestion.question));
-const beforeOldClient=(await W.readWorld()).w;assert.equal((await API.GET(new Request('https://game.test/api/game',{headers:{cookie}}))).status,409);for(const action of ['question','retry_question','answer']){const rejected=await API.POST(new Request('https://game.test/api/game',{method:'POST',headers:{cookie,'X-Quest-Heroes':'2',origin:'https://game.test','content-type':'application/json'},body:JSON.stringify({action,subject:'English',token:pending.body.token,answer:'wrong'})}));assert.equal(rejected.status,409);}assert.deepEqual((await W.readWorld()).w,beforeOldClient);console.log('PASS: outdated clients cannot issue or grade questions; no pupil data changes.');
+const beforeOldClient=(await W.readWorld()).w;assert.equal((await API.GET(new Request('https://game.test/api/game',{headers:{cookie}}))).status,409);for(const action of ['question','retry_question','answer']){const rejected=await API.POST(new Request('https://game.test/api/game',{method:'POST',headers:{cookie,'X-Quest-Heroes':'3',origin:'https://game.test','content-type':'application/json'},body:JSON.stringify({action,subject:'English',token:pending.body.token,answer:'wrong'})}));assert.equal(rejected.status,409);}assert.deepEqual((await W.readWorld()).w,beforeOldClient);console.log('PASS: outdated clients cannot issue or grade questions; no pupil data changes.');
 for(let i=0;i<35;i++){const q=i===0?pending:await post({action:'question',subject:['Maths','English','Verbal reasoning','Non-verbal reasoning'][i%4]});const a=questions.find(x=>x.id===q.body.question.id).answers[0];assert.equal((await post({action:'answer',token:q.body.token,answer:a})).status,200);}
 assert.equal((await post({action:'recruit',type:0,cell:104})).status,200);v=await get();const id=v.defenders[0].id;
 assert.equal((await post({action:'weapon',id,weapon:'standard'})).status,200);assert.equal((await post({action:'upgrade',id})).status,200);
@@ -67,7 +67,7 @@ sqlite.close();sqlite=new DatabaseSync(file);cookie='qg_session=a';let messages=
 
 // Exclusive hero claims use the same revision-checked database mutation as spending.
 for(const uid of ['c','d']){sqlite.prepare('INSERT INTO sessions VALUES (?,?,?)').run(await W.sha(uid),uid,Date.now()+86400000);await W.mutate(w=>{w.players[uid]=W.newPlayer(uid);w.players[uid].coins=5000;});}
-const heroRequest=(uid,hero)=>API.POST(new Request('https://game.test/api/game',{method:'POST',headers:{cookie:'qg_session='+uid,'X-Quest-Heroes':'2',origin:'https://game.test','content-type':'application/json'},body:JSON.stringify({action:'hero',hero,gender:'boy',requestId:crypto.randomUUID()})}));
+const heroRequest=(uid,hero)=>API.POST(new Request('https://game.test/api/game',{method:'POST',headers:{cookie:'qg_session='+uid,'X-Quest-Heroes':'3',origin:'https://game.test','content-type':'application/json'},body:JSON.stringify({action:'hero',hero,gender:'boy',requestId:crypto.randomUUID()})}));
 const claims=await Promise.all([heroRequest('c',16),heroRequest('d',16)]);assert.equal(claims.filter(r=>r.status===200).length,1);const winner=claims[0].status===200?'c':'d',loser=winner==='c'?'d':'c';
 assert.equal((await heroRequest(loser,17)).status,200);cookie='qg_session='+winner;
 assert.equal((await post({action:'recruit',type:17,cell:215})).status,400);

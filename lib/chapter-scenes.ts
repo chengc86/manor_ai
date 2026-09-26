@@ -1,0 +1,3 @@
+const effects=['petals','sunbeams','motes','leaves','leaves','rain','motes','sunbeams','sunbeams','lanterns','motes','sunbeams','petals','petals','sunbeams','motes','rain','lanterns','rain','motes','sunbeams','motes','sunbeams','rain','motes','lanterns','motes','petals','lanterns','lanterns'] as const;
+const terrain=['#d8c28e','#ccbc95','#b9b0a0','#b89869','#bcc6cd','#c6a878','#bdd09b','#d7c19c','#d7c58c','#d3c2a0'];
+export function chapterScene(wave:number){const chapter=Math.max(1,Math.floor((wave-1)/10)+1),index=(chapter-1)%30,sceneIndex=chapter<=3?index:3+(chapter-4)%7;return{art:chapter<=3?'/manor-campus-v2.png':`/chapters/chapter-${sceneIndex+1}.webp`,effect:effects[sceneIndex],path:terrain[index%terrain.length],chapter};}

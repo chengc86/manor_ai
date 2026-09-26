@@ -1,3 +1,5 @@
+import {mapLayout} from './map-layout';
+import {enemyFor,enemyDamage} from './enemies';
 import {buildStats,type ItemLoadout} from './builds';
 import type {Wardrobe} from './clothing';
 import {chapterFor} from './chapters';
@@ -9,14 +11,14 @@ export const PATH:{x:number;y:number}[]=[];
 for(let i=0;i<WAYPOINTS.length-1;i++){let[x,y]=WAYPOINTS[i];const[tx,ty]=WAYPOINTS[i+1];while(x!==tx||y!==ty){PATH.push({x:x+.5,y:y+.5});x+=Math.sign(tx-x);y+=Math.sign(ty-y)}}PATH.push({x:20.5,y:16.5});
 export const PATH_CELLS=new Set(PATH.map(p=>Math.floor(p.y)*COLS+Math.floor(p.x)));
 export const RANGES=HEROES.map(h=>h.range),DAMAGE=HEROES.map(h=>h.power),COOLDOWN=HEROES.map(h=>h.cooldown);
-export function isBuildable(cell:number){return Number.isInteger(cell)&&cell>=COLS*2&&cell<COLS*(ROWS-1)&&cell%COLS>0&&cell%COLS<COLS-1&&!(cell%COLS>=20&&Math.floor(cell/COLS)>=14)&&!PATH_CELLS.has(cell)}
+export function isBuildable(cell:number,wave=1){return Number.isInteger(cell)&&cell>=COLS*2&&cell<COLS*(ROWS-1)&&cell%COLS>0&&cell%COLS<COLS-1&&!(cell%COLS>=20&&Math.floor(cell/COLS)>=14)&&!mapLayout(wave).cells.has(cell)}
 export function cellPoint(cell:number){return{x:cell%COLS+.5,y:Math.floor(cell/COLS)+.5}}
 export function percent(cell:number){const p=cellPoint(cell);return{x:p.x/COLS*100,y:p.y/ROWS*100}}
-export function pathPosition(progress:number){const t=Math.max(0,Math.min(PATH.length-1,progress*(PATH.length-1))),i=Math.min(PATH.length-2,Math.floor(t)),f=t-i;return{x:PATH[i].x+(PATH[i+1].x-PATH[i].x)*f,y:PATH[i].y+(PATH[i+1].y-PATH[i].y)*f}}
+export function pathPosition(progress:number,wave=1,version=4){const path=mapLayout(wave,version).path;const t=Math.max(0,Math.min(path.length-1,progress*(path.length-1))),i=Math.min(path.length-2,Math.floor(t)),f=t-i;return{x:path[i].x+(path[i+1].x-path[i].x)*f,y:path[i].y+(path[i+1].y-path[i].y)*f}}
 export type Fighter=ItemLoadout & {stats?:ReturnType<typeof buildStats>;id:string;type:number;level:number;weapon?:string;cell:number;name:string;gender?:'boy'|'girl';uniform?:string;clothing?:Wardrobe;outfit?:string;colour?:string;owner?:string};
 export type Battle={start:number;duration:number;wave:number;rulesVersion?:number;seed?:number;power:number;target:number;contributors:number;fighters:Fighter[]};
 export function rules(wave:number,version=3){const chapter=chapterFor(wave);const count=version===1?Math.min(30,8+Math.floor((wave-1)/2)):Math.min(48,18+Math.floor((wave-1)/2));const travel=Math.max(23,32-(chapter.number-1)*.45);const spawn=Math.max(.8,1.25-(chapter.number-1)*.015);return{count,hp:Math.round((version===1?50+10*(wave-1):version===2?180+28*(wave-1)+Math.pow(wave-1,1.35)*3:180*(1+.035*(wave-1)))*(chapter.elite?1.25:1)),spawn,travel,duration:(travel*3.5+3+(count-1)*spawn)*1000,boss:chapter.boss,elite:chapter.elite};}
-export function monsterHealth(wave:number,index:number,version=3){const rule=rules(wave,version);return rule.hp*(rule.boss&&index===rule.count-1?4:1)}
+export function monsterHealth(wave:number,index:number,version=3){const rule=rules(wave,version);return Math.round(rule.hp*(rule.boss&&index===rule.count-1?4:1)*enemyFor(wave,index,version).hp)}
 export const SCHOOL_MAX_HP=100;
 export type Breach={at:number;monster:number;damage:number};
 export function breachDamage(wave:number,monster:number){const r=rules(wave);return r.boss&&monster===r.count-1?60:r.elite?30:20;}
@@ -62,23 +64,23 @@ export function monsterProgress(track:number[],elapsed:number){const t=Math.max(
 export type Contribution={kills:number;damage:number;controlSeconds:number;assistedDamage:number};
 function roll(seed:number,id:string,shot:number){let h=(seed^shot)>>>0;for(let i=0;i<id.length;i++)h=Math.imul(h^id.charCodeAt(i),16777619)>>>0;h=Math.imul(h^(h>>>16),2246822507)>>>0;return ((h^(h>>>13))>>>0)/4294967296;}
 function modernSimulate(battle:Battle){
- const rule=rules(battle.wave,3),count=rule.count,hp=Array.from({length:count},(_,i)=>monsterHealth(battle.wave,i,3)),deathAt:(number|null)[]=Array(count).fill(null),progress=Array(count).fill(0),tracks:number[][]=Array.from({length:count},()=>[]),events:Hit[]=[];
+ const version=battle.rulesVersion??3,rule=rules(battle.wave,3),count=rule.count,types=Array.from({length:count},(_,i)=>enemyFor(battle.wave,i,version)),hp=Array.from({length:count},(_,i)=>monsterHealth(battle.wave,i,version)),deathAt:(number|null)[]=Array(count).fill(null),progress=Array(count).fill(0),tracks:number[][]=Array.from({length:count},()=>[]),events:Hit[]=[];
  const stats=battle.fighters.map(f=>f.stats??buildStats(f.type,f.level,f.weapon,f)),nextShot=Array(stats.length).fill(0),shots=Array(stats.length).fill(0),centres=battle.fighters.map(f=>cellPoint(f.cell));
  const frozen=Array(count).fill(0),immune=Array(count).fill(0),slowEnd=Array(count).fill(0),slow=Array(count).fill(0),markEnd=Array(count).fill(0),mark=Array(count).fill(0),markOwner=Array(count).fill(''),pushed=Array(count).fill(0),slowOwner=Array(count).fill(''),frozenOwner=Array(count).fill('');
  const paints:Map<string,{damage:number;until:number;fighter:number;next:number}>[]=Array.from({length:count},()=>new Map());
  const contributions:Record<string,Contribution>={};const owner=(i:number)=>battle.fighters[i].owner??battle.fighters[i].id;const credit=(id:string)=>contributions[id]??=( {kills:0,damage:0,controlSeconds:0,assistedDamage:0});
  const usesSchoolHealth=(battle.rulesVersion??1)>=4,breaches:Breach[]=[],escaped=new Set<number>();let schoolHealth=SCHOOL_MAX_HP;
  battle.fighters.forEach((_,i)=>credit(owner(i)));let endedAt=rule.duration/1000;
- const deal=(m:number,amount:number,t:number,i:number)=>{const actual=Math.min(hp[m],Math.max(0,amount));hp[m]-=actual;credit(owner(i)).damage+=actual;if(hp[m]===0&&deathAt[m]===null){deathAt[m]=t;credit(owner(i)).kills++;}return actual;};
+ const deal=(m:number,amount:number,t:number,i:number,dot=false)=>{const actual=Math.min(hp[m],Math.max(0,version>=5?enemyDamage(amount,types[m],stats[i].category,dot):amount));hp[m]-=actual;credit(owner(i)).damage+=actual;if(hp[m]===0&&deathAt[m]===null){deathAt[m]=t;credit(owner(i)).kills++;}return actual;};
  for(let tick=0;tick<=Math.ceil(rule.duration/100);tick++){
  const t=tick*.1;
  for(let m=0;m<count;m++){
- const spawnAt=m*rule.spawn;if(t<spawnAt){progress[m]=(t-spawnAt)/rule.travel;}else if(hp[m]>0&&progress[m]<1){progress[m]=Math.max(0,progress[m]);if(tick&&t<frozen[m]&&frozenOwner[m])credit(frozenOwner[m]).controlSeconds+=.1;if(tick&&t>=frozen[m]){const reduction=t<slowEnd[m]?slow[m]:0;progress[m]+=.1/rule.travel*(1-reduction);if(reduction&&slowOwner[m])credit(slowOwner[m]).controlSeconds+=.1*reduction;}}
+ const spawnAt=m*rule.spawn;if(t<spawnAt){progress[m]=(t-spawnAt)/rule.travel;}else if(hp[m]>0&&progress[m]<1){progress[m]=Math.max(0,progress[m]);if(tick&&t<frozen[m]&&frozenOwner[m])credit(frozenOwner[m]).controlSeconds+=.1;if(tick&&t>=frozen[m]){const reduction=t<slowEnd[m]?slow[m]:0;progress[m]+=.1/rule.travel*types[m].speed*(1-reduction);if(reduction&&slowOwner[m])credit(slowOwner[m]).controlSeconds+=.1*reduction;}}
  if(hp[m]>0&&progress[m]>=1&&!escaped.has(m)){escaped.add(m);const damage=breachDamage(battle.wave,m);breaches.push({at:t,monster:m,damage});schoolHealth=Math.max(0,schoolHealth-damage);}
- if(hp[m]>0&&progress[m]>=0&&progress[m]<1){for(const [key,p] of paints[m])if(p.until<t)paints[m].delete(key);const active=[...paints[m]].sort((a,b)=>b[1].damage-a[1].damage||a[0].localeCompare(b[0])).slice(0,3);for(const [,p] of active)if(t+1e-8>=p.next&&hp[m]>0){const damage=deal(m,p.damage,t,p.fighter);events.push({at:t,fighter:p.fighter,monster:m,damage,dot:true,point:pathPosition(progress[m])});p.next=t+1;}}
+ if(hp[m]>0&&progress[m]>=0&&progress[m]<1){for(const [key,p] of paints[m])if(p.until<t)paints[m].delete(key);const active=[...paints[m]].sort((a,b)=>b[1].damage-a[1].damage||a[0].localeCompare(b[0])).slice(0,3);for(const [,p] of active)if(t+1e-8>=p.next&&hp[m]>0){const damage=deal(m,p.damage,t,p.fighter,true);events.push({at:t,fighter:p.fighter,monster:m,damage,dot:true,point:pathPosition(progress[m],battle.wave,version)});p.next=t+1;}}
  }
  if(usesSchoolHealth&&schoolHealth===0){if(tick%2===0)for(let m=0;m<count;m++)tracks[m].push(progress[m]);endedAt=t;break;}
- const living=progress.map((p,m)=>({m,progress:p,p:pathPosition(p)})).filter(o=>hp[o.m]>0&&o.progress>=0&&o.progress<1);
+ const living=progress.map((p,m)=>({m,progress:p,p:pathPosition(p,battle.wave,version)})).filter(o=>hp[o.m]>0&&o.progress>=0&&o.progress<1);
  battle.fighters.forEach((f,i)=>{
  const s=stats[i];if(!s.damage||t+1e-8<nextShot[i])return;const centre=centres[i],candidates=living.filter(o=>hp[o.m]>0&&Math.hypot(o.p.x-centre.x,o.p.y-centre.y)<=s.range).sort((a,b)=>b.progress-a.progress||a.m-b.m);
  if(!candidates.length){nextShot[i]=t;return;}const hits=candidates.slice(0,s.targets),impact=hits[0].p;
@@ -88,13 +90,13 @@ function modernSimulate(battle:Battle){
  const critical=roll(battle.seed??battle.start,f.id,++shots[i])<s.critChance;
  hits.forEach((hit,j)=>{const m=hit.m;if(hp[m]<=0)return;const boss=rule.boss&&m===count-1,falloff=j===0?1:s.splash?s.splashFalloff:s.chain?Math.pow(.75,j):s.pierce?Math.pow(.7,j):1;
  const base=Math.max(1,Math.round(s.damage*falloff*(1+(boss?s.bossDamage:s.normalDamage))*(critical?s.critMultiplier:1))),marked=t<markEnd[m]?mark[m]:0,before=hp[m],damage=deal(m,Math.round(base*(1+marked)),t,i);
- if(marked&&markOwner[m]&&markOwner[m]!==owner(i))credit(markOwner[m]).assistedDamage+=Math.max(0,damage-Math.min(before,base));
- const freeze=hp[m]>0&&s.freeze&&t>=immune[m]?s.freeze*(boss?.5:1):0;if(freeze){frozen[m]=t+freeze;immune[m]=frozen[m]+(boss?4:2);frozenOwner[m]=owner(i);}
- if(s.slow){const strength=Math.min(boss?.3:.6,s.slow);if(t>=slowEnd[m]||strength>=slow[m]){slow[m]=strength;slowEnd[m]=t+s.slowDuration;slowOwner[m]=owner(i);}}
+ if(marked&&markOwner[m]&&markOwner[m]!==owner(i))credit(markOwner[m]).assistedDamage+=Math.max(0,damage-Math.min(before,version>=5?enemyDamage(base,types[m],s.category):base));
+ const freeze=hp[m]>0&&s.freeze&&t>=immune[m]?s.freeze*(boss?.5:1)*types[m].control:0;if(freeze){frozen[m]=t+freeze;immune[m]=frozen[m]+(boss?4:2);frozenOwner[m]=owner(i);}
+ if(s.slow){const strength=Math.min(boss?.3:.6,s.slow)*types[m].control;if(t>=slowEnd[m]||strength>=slow[m]){slow[m]=strength;slowEnd[m]=t+s.slowDuration;slowOwner[m]=owner(i);}}
  if(s.mark&&(t>=markEnd[m]||s.mark>=mark[m])){mark[m]=Math.min(.3,s.mark);markEnd[m]=t+s.markDuration;markOwner[m]=owner(i);}
  if(s.dot){const key=owner(i),dot=Math.max(1,Math.round(s.damage*falloff*(1+(boss?s.bossDamage:s.normalDamage))*s.dot)),old=paints[m].get(key);if(!old||old.until<t||dot>=old.damage)paints[m].set(key,{damage:dot,until:t+s.dotDuration,fighter:i,next:old&&old.until>=t?old.next:t+1});}
- const knockback=Math.min(s.knockback*(boss?.5:1),Math.max(0,6-pushed[m]));if(knockback){progress[m]=Math.max(0,progress[m]-knockback/(PATH.length-1));pushed[m]+=knockback;}
- events.push({at:t,fighter:i,monster:m,damage,freeze,slow:s.slow,slowDuration:s.slowDuration,mark:s.mark,markDuration:s.markDuration,critical,knockback,point:hit.p});
+ const knockback=Math.min(s.knockback*(boss?.5:1)*types[m].control,Math.max(0,6-pushed[m]));if(knockback){progress[m]=Math.max(0,progress[m]-knockback/(mapLayout(battle.wave,version).path.length-1));pushed[m]+=knockback;}
+ events.push({at:t,fighter:i,monster:m,damage,freeze,slow:Math.min(boss?.3:.6,s.slow)*types[m].control,slowDuration:s.slowDuration,mark:s.mark,markDuration:s.markDuration,critical,knockback,point:hit.p});
  });nextShot[i]+=s.cooldown;
  });
  if(tick%2===0)for(let m=0;m<count;m++)tracks[m].push(progress[m]);

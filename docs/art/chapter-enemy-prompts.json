@@ -1,0 +1,240 @@
+{
+  "mode": "Built-in image generation; reference-guided chapters 4–10",
+  "assets": [
+    {
+      "kind": "chapter",
+      "id": 4,
+      "prompt": "Use case: stylized-concept. Generate a beautiful landscape4:3 almost-top-down tower defence game background inspired by TWO supplied reference photos. Image1 is reference for real campus architecture/layout: low interconnected red terracotta tiled roofs, white/cream rendered manor on left, brick classrooms, glass-fronted modern hall at right, courtyard with timber gazebo, playing field at rear. Image2 is reference for curved drive, warm brick boundary walls and deep green posts; do not copy logos, website or school name. Chapter4 Courtyard Guardians: concentrate on the aerial campus buildings and paved courtyard. Polished hand-painted3D storybook miniature game art, richly textured but clear, bright welcoming late-afternoon light. Adapt layout to a playable board: huge open central80% lawn and paving, buildings cluster along top, left and right outer rim, defendable glass-fronted hall at bottom-right rim. No objects blocking central playfield. No drawn road across centre; game overlays its own route. No grid, no UI, no people, no text, no labels, no watermarks. Retain school architectural character; do not invent castle towers or domes. Slightly elevated overhead perspective matching game board.",
+      "output": "public/chapters/chapter-4.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 5,
+      "prompt": "Use case: stylized-concept. Generate a beautiful landscape4:3 almost-top-down tower defence game background inspired by TWO supplied reference photos. Image1 is reference for real campus architecture/layout: low interconnected red terracotta tiled roofs, white/cream rendered manor on left, brick classrooms, glass-fronted modern hall at right, courtyard with timber gazebo, playing field at rear. Image2 is reference for curved drive, warm brick boundary walls and deep green posts; do not copy logos, website or school name. Chapter5 Gatehouse Rally: concentrate on the curved entrance, walls and gate, with recognisable campus in the distance. Polished hand-painted3D storybook miniature game art, richly textured but clear, bright welcoming late-afternoon light. Adapt layout to a playable board: huge open central80% lawn and paving, buildings cluster along top, left and right outer rim, defendable glass-fronted hall at bottom-right rim. No objects blocking central playfield. No drawn road across centre; game overlays its own route. No grid, no UI, no people, no text, no labels, no watermarks. Retain school architectural character; do not invent castle towers or domes. Slightly elevated overhead perspective matching game board.",
+      "output": "public/chapters/chapter-5.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 6,
+      "prompt": "Use case: stylized-concept. Generate landscape4:3 almost-top-down game background for Manor Quest chapter6 Rainy Playground. The supplied photo is an architectural and atmosphere reference only: two timber play towers with small pitched roofs and connecting play structure, low pale stone/rendered school buildings with orange-red clay tile roofs, asphalt courtyard, reflective shallow puddles. Exclude the child and every person; do not reproduce uniforms, logos, signage or text. Beautiful polished painterly3D storybook miniature landscape. Frame a huge open playable courtyard/lawn through central80% of canvas, buildings and play equipment only around outer edges, defendable low school hall bottom-right, playground towers upper-left, distant hedge and trees. Shallow puddles are decorative ground texture, never large water obstacles. Gentle after-rain silver light with warm reflections, child-friendly inviting scene. No grid, no UI, no characters, no road/path across centre, no castle architecture. Game overlays route and hero placement.",
+      "output": "public/chapters/chapter-6.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 7,
+      "prompt": "Use case: stylized-concept. Landscape4:3 tower defence game background, chapter7 Sports Hall Entrance, based on supplied interior reference photograph. Preserve distinctive deep emerald green feature wall, warm ivory walls, long overhead skylight, pale oak doorframes, glazed entrance doors, round wall lights, carpet tiles in alternating slate-blue and moss-green rectangles. Adapt to a large overhead dollhouse cutaway school sports foyer: expansive central80% clear carpeted playable floor, walls only around perimeter, door to defend at bottom-right corner, bright skylight daylight. Crisp charming polished3D illustrated game art with realistic architectural inspiration. No people, heroes, monsters, readable signs, logos, screen text, UI, overlay grid, routes or arrows. No furniture obstructing centralfloor. Warm welcoming child-friendly modern school interior. Keep geometry usable for a rectangular tower defence board.",
+      "output": "public/chapters/chapter-7.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 8,
+      "prompt": "Use case: stylized-concept. Create landscape4:3 tower defence game background for Manor Quest chapter8 Sports Hall Defence using supplied sports hall exterior photo as architectural reference. Recognisable modern orange-brown brick sports hall with pale vertical supports, broad dark single-pitch sloped roof, continuous high clerestory windows, low projecting entrance wing, large grey window/door frames, fenced sports court, bench and dark tarmac forecourt with curved grass borders. Adapt into overhead near-top-down miniature game map: building occupies top and right perimeter, defendable entrance at bottom-right rim, central80% generous clear tarmac/lawn playable area; fencing and bench at left rim. Warm polished painterly3D storybook style, daylight, lovely tactile architectural detail. No people, characters, text, logos, grid, gameplay route, UI, street markings, castle additions or large obstacles in middle. Keep it recognisably the contemporary sports hall in the photograph.",
+      "output": "public/chapters/chapter-8.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 9,
+      "prompt": "Create a polished child-friendly Manor Quest tower defence game background using the attached photo as architectural and colour reference. Wide landscape 4:3 composition, elevated almost top-down three-quarter view. A charming English school drop-off courtyard: white rendered buildings with steep weathered reddish-brown tiled roofs and a brick gable around the top and side edges, trimmed round shrubs, one recognisable dark forest-green school minibus parked along the upper left perimeter, small parking bays and a curved arrival lane at the edges. Expand the reference into a coherent imaginative playable courtyard, not a literal photographic reproduction. Central 80 percent predominantly spacious unobstructed pale tarmac and paving, subtle surface variation, ample room for a game path and forty small heroes to be overlaid later. Small welcoming white gatehouse toward bottom right edge as destination. Beautiful detailed hand-painted stylised 3D storybook game art, warm daylight, soft shadows, rich emerald and terracotta palette, clear readability. No people, no characters, no enemies, no text, no school names, no logos, no readable number plates, no UI, no grid, no drawn route. Buildings and parked minibus should stay on outer edges, never dominate central gameplay space.",
+      "output": "public/chapters/chapter-9.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 10,
+      "prompt": "Generate a beautiful child-friendly Manor Quest tower defence background inspired by attached school entrance photograph. Landscape 4:3, elevated almost top-down three-quarter game map. Preserve recognisable curved entrance driveway, warm red brick boundary walls, dark emerald green gate posts, mature leafy trees and distant modest English school buildings with pitched terracotta roofs. Create an expanded imaginative entrance forecourt at golden evening with gentle glowing lanterns; peaceful and adventurous. Walls and trees frame perimeter; broad unobstructed courtyard takes central 80 percent, ample placement space for forty small heroes and overlay path. Small welcoming school entrance building at bottom right edge. Polished painterly 3D storybook strategy game environment, cohesive emerald/terracotta/amber palette, clear forms, soft lighting. No characters, people, enemies, text, logos, school signage lettering, watermarks, UI, route markings or grid. Avoid castles and fantasy towers; use architecture from reference. This is a playable environment inspired by the photograph, not a literal road-level view.",
+      "output": "public/chapters/chapter-10.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 11,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 11, Market Watch. Abingdon market square, warm stone arcade buildings, striped market stalls at edges. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-11.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 12,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 12, County Hall Keepers. Abingdon County Hall inspired baroque stone building with open arches and cupola, stone plaza. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-12.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 13,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 13, Bun Throwing Beacon. County Hall celebration plaza, hanging bunting and bakery stalls, sunset. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-13.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 14,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 14, Abbey Gardens. formal Abbey Gardens inspired rose beds and old stone ruins at edges, summer. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-14.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 15,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 15, Abbey Meadow. Thames-side meadow, willow trees, low footbridge and wildflowers at edges. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-15.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 16,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 16, Abbey Buildings. medieval limestone abbey barns with timber roofs, historic walled garden. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-16.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 17,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 17, Bridge Patrol. Abingdon stone arched bridge crossing blue river along far right edge, broad grassy left bank. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-17.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 18,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 18, St Helens Wharf. riverside wharf with moored narrowboats and tall church spire at horizon, cobbled terrace. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-18.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 19,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 19, Ock Meets Thames. two blue rivers meeting beyond lawn perimeter, reeds willow and wooden footbridge. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-19.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 20,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 20, Thames Guardians. moonlit Thames embankment, warm lamps, stone boathouse, mist beyond edges. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-20.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 21,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 21, Dreaming Spires. Oxford honey-stone skyline of dreaming spires around college quad, blue morning. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-21.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 22,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 22, Bodleian Bookkeepers. Bodleian inspired Gothic library quadrangle, carved stone gates and old library windows. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-22.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 23,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 23, Radcliffe Camera. round domed Oxford Radcliffe Camera inspired library at upper right edge, honey-stone plaza. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-23.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 24,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 24, Weston Story Vault. Oxford Broad Street inspired library frontage, sandstone modern classic facade and book festival bunting. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-24.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 25,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 25, Ashmolean Rescue. neoclassical museum portico with Ionic columns at top edge, museum courtyard garden. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-25.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 26,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 26, Natural History. Oxford natural history museum inspired neo-Gothic brick facade, glass roof, fossil garden with dinosaur sculpture at edge. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-26.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 27,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 27, Pitt Rivers. storybook museum cabinet courtyard, timber vitrines and globes under glass gallery around edge. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-27.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 28,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 28, Botanic Garden. Oxford botanic garden inspired stone gateway, glasshouses, lily pond along edge, rich flower borders. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-28.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 29,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 29, Science Instrument Quest. historic Oxford stone museum court, brass astrolabe sculptures and observatory dome, twilight. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-29.webp"
+    },
+    {
+      "kind": "chapter",
+      "id": 30,
+      "prompt": "Use case: stylized-concept. Asset: landscape 4:3 tower defence board background for Manor Quest chapter 30, Homecoming. cream Georgian manor with red tiled hipped roof and dormers, festive lanterns, starlit homecoming garden. Premium illustrated 3D storybook game landscape, aerial almost top-down camera. Distinctive architecture and foliage confined to outer rim. Huge central 80% open flat lawn or paving with subtle texture for gameplay. Top12% clear hero camp. Largest defendable landmark near bottom-right rim. No roads or paths because game draws route, no grids, no lettering, no logos, no people or characters. Rich soft light, crisp miniatures, cohesive green and gold game style. Inspired by Oxfordshire rather than a literal surveyed plan.",
+      "output": "public/chapters/backups/chapter-30.webp"
+    },
+    {
+      "kind": "enemy",
+      "id": "slime",
+      "prompt": "Use case: stylized-concept. Asset: single transparent full-body enemy sprite for child-friendly Manor Quest tower defence. Meadow Slime: round translucent lime-green jelly creature with little leaf sprouts. A charming cheeky antagonist, not scary. Polished 3D storybook toy style, readable strong silhouette, three-quarter front view looking slightly left, complete body with feet, centred, fills80% of square. Rich material detail and large expressive eyes, gentle studio light. No background, no ground plane, no text, no UI, no gore, no harsh weapons, no cast shadow outside silhouette. Genuine transparent alpha.",
+      "output": "public/enemies/slime.webp"
+    },
+    {
+      "kind": "enemy",
+      "id": "runner",
+      "prompt": "Use case: stylized-concept. Asset: single transparent full-body enemy sprite for child-friendly Manor Quest tower defence. Bramble Runner: nimble orange foxlike woodland imp with twig antlers and oversized running feet. A charming cheeky antagonist, not scary. Polished 3D storybook toy style, readable strong silhouette, three-quarter front view looking slightly left, complete body with feet, centred, fills80% of square. Rich material detail and large expressive eyes, gentle studio light. No background, no ground plane, no text, no UI, no gore, no harsh weapons, no cast shadow outside silhouette. Genuine transparent alpha.",
+      "output": "public/enemies/runner.webp"
+    },
+    {
+      "kind": "enemy",
+      "id": "tinback",
+      "prompt": "Use case: stylized-concept. Asset: single transparent full-body enemy sprite for child-friendly Manor Quest tower defence. Tinback Beetle: chunky blue beetle wearing overlapping silver metal plates. A charming cheeky antagonist, not scary. Polished 3D storybook toy style, readable strong silhouette, three-quarter front view looking slightly left, complete body with feet, centred, fills80% of square. Rich material detail and large expressive eyes, gentle studio light. No background, no ground plane, no text, no UI, no gore, no harsh weapons, no cast shadow outside silhouette. Genuine transparent alpha.",
+      "output": "public/enemies/tinback.webp"
+    },
+    {
+      "kind": "enemy",
+      "id": "moth",
+      "prompt": "Use case: stylized-concept. Asset: single transparent full-body enemy sprite for child-friendly Manor Quest tower defence. Inkwing Moth: violet moth creature with magical ink-patterned wings and bright eyes. A charming cheeky antagonist, not scary. Polished 3D storybook toy style, readable strong silhouette, three-quarter front view looking slightly left, complete body with feet, centred, fills80% of square. Rich material detail and large expressive eyes, gentle studio light. No background, no ground plane, no text, no UI, no gore, no harsh weapons, no cast shadow outside silhouette. Genuine transparent alpha.",
+      "output": "public/enemies/moth.webp"
+    },
+    {
+      "kind": "enemy",
+      "id": "shell",
+      "prompt": "Use case: stylized-concept. Asset: single transparent full-body enemy sprite for child-friendly Manor Quest tower defence. Acorn Shellguard: round acorn creature protected by thick walnut shell armour. A charming cheeky antagonist, not scary. Polished 3D storybook toy style, readable strong silhouette, three-quarter front view looking slightly left, complete body with feet, centred, fills80% of square. Rich material detail and large expressive eyes, gentle studio light. No background, no ground plane, no text, no UI, no gore, no harsh weapons, no cast shadow outside silhouette. Genuine transparent alpha.",
+      "output": "public/enemies/shell.webp"
+    },
+    {
+      "kind": "enemy",
+      "id": "frost",
+      "prompt": "Use case: stylized-concept. Asset: single transparent full-body enemy sprite for child-friendly Manor Quest tower defence. Frost Puff: fluffy ice-blue snow creature with frosted crystal tufts. A charming cheeky antagonist, not scary. Polished 3D storybook toy style, readable strong silhouette, three-quarter front view looking slightly left, complete body with feet, centred, fills80% of square. Rich material detail and large expressive eyes, gentle studio light. No background, no ground plane, no text, no UI, no gore, no harsh weapons, no cast shadow outside silhouette. Genuine transparent alpha.",
+      "output": "public/enemies/frost.webp"
+    },
+    {
+      "kind": "enemy",
+      "id": "boots",
+      "prompt": "Use case: stylized-concept. Asset: single transparent full-body enemy sprite for child-friendly Manor Quest tower defence. Boot Brute: round clay-brown goblin toy in enormous heavy boots. A charming cheeky antagonist, not scary. Polished 3D storybook toy style, readable strong silhouette, three-quarter front view looking slightly left, complete body with feet, centred, fills80% of square. Rich material detail and large expressive eyes, gentle studio light. No background, no ground plane, no text, no UI, no gore, no harsh weapons, no cast shadow outside silhouette. Genuine transparent alpha.",
+      "output": "public/enemies/boots.webp"
+    },
+    {
+      "kind": "enemy",
+      "id": "bubble",
+      "prompt": "Use case: stylized-concept. Asset: single transparent full-body enemy sprite for child-friendly Manor Quest tower defence. Bubble Warden: lavender round creature inside a clear iridescent bubble shield. A charming cheeky antagonist, not scary. Polished 3D storybook toy style, readable strong silhouette, three-quarter front view looking slightly left, complete body with feet, centred, fills80% of square. Rich material detail and large expressive eyes, gentle studio light. No background, no ground plane, no text, no UI, no gore, no harsh weapons, no cast shadow outside silhouette. Genuine transparent alpha.",
+      "output": "public/enemies/bubble.webp"
+    },
+    {
+      "kind": "enemy",
+      "id": "paper",
+      "prompt": "Use case: stylized-concept. Asset: single transparent full-body enemy sprite for child-friendly Manor Quest tower defence. Paper Skitter: cream folded-paper origami critter with springy paper feet. A charming cheeky antagonist, not scary. Polished 3D storybook toy style, readable strong silhouette, three-quarter front view looking slightly left, complete body with feet, centred, fills80% of square. Rich material detail and large expressive eyes, gentle studio light. No background, no ground plane, no text, no UI, no gore, no harsh weapons, no cast shadow outside silhouette. Genuine transparent alpha.",
+      "output": "public/enemies/paper.webp"
+    },
+    {
+      "kind": "enemy",
+      "id": "moss",
+      "prompt": "Use case: stylized-concept. Asset: single transparent full-body enemy sprite for child-friendly Manor Quest tower defence. Moss Golem: stocky green moss-covered stone creature with broad shoulders. A charming cheeky antagonist, not scary. Polished 3D storybook toy style, readable strong silhouette, three-quarter front view looking slightly left, complete body with feet, centred, fills80% of square. Rich material detail and large expressive eyes, gentle studio light. No background, no ground plane, no text, no UI, no gore, no harsh weapons, no cast shadow outside silhouette. Genuine transparent alpha.",
+      "output": "public/enemies/moss.webp"
+    },
+    {
+      "kind": "enemy",
+      "id": "rubber",
+      "prompt": "Use case: stylized-concept. Asset: single transparent full-body enemy sprite for child-friendly Manor Quest tower defence. Rubber Rascal: bouncy golden rubber creature with tyre-like ribbed shell. A charming cheeky antagonist, not scary. Polished 3D storybook toy style, readable strong silhouette, three-quarter front view looking slightly left, complete body with feet, centred, fills80% of square. Rich material detail and large expressive eyes, gentle studio light. No background, no ground plane, no text, no UI, no gore, no harsh weapons, no cast shadow outside silhouette. Genuine transparent alpha.",
+      "output": "public/enemies/rubber.webp"
+    },
+    {
+      "kind": "enemy",
+      "id": "lantern",
+      "prompt": "Use case: stylized-concept. Asset: single transparent full-body enemy sprite for child-friendly Manor Quest tower defence. Lantern Knight: small friendly mischievous creature in bronze armour carrying a glowing lantern. A charming cheeky antagonist, not scary. Polished 3D storybook toy style, readable strong silhouette, three-quarter front view looking slightly left, complete body with feet, centred, fills80% of square. Rich material detail and large expressive eyes, gentle studio light. No background, no ground plane, no text, no UI, no gore, no harsh weapons, no cast shadow outside silhouette. Genuine transparent alpha.",
+      "output": "public/enemies/lantern.webp"
+    }
+  ],
+  "selection": "Chapters 1–3 keep manor-campus-v2.png. Chapters 4–30 cycle the seven photo-reference scenes 4–10; each chapter has a distinct shared route. Other scenes are backups."
+}
