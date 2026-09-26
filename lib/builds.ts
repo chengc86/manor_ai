@@ -1,3 +1,4 @@
+import {EXTRA_HEROES} from './hero-catalogue';
 export type Mods={str?:number;aim?:number;magic?:number;damage?:number;speed?:number;range?:number;crit?:number;critDamage?:number;area?:number;control?:number;dot?:number;boss?:number;normal?:number;single?:number};
 export const MOD_LABELS:Record<keyof Mods,string>={str:'Strength',aim:'Aim',magic:'Magic',damage:'Damage',speed:'Attack speed',range:'Range',crit:'Crit chance',critDamage:'Crit multiplier',area:'Area radius',control:'Control duration',dot:'Damage over time',boss:'Boss damage',normal:'Normal-enemy damage',single:'Non-area damage'};
 export function modText(m:Mods){return Object.entries(m).map(([k,v])=>`${v!>=0?'+':''}${['str','aim','magic','range','critDamage'].includes(k)?Number(v!.toFixed(2)):Math.round(v!*100)}${k==='range'?' squares':k==='critDamage'?'×':['str','aim','magic'].includes(k)?'':'%'} ${MOD_LABELS[k as keyof Mods]}`).join(' · ')}
@@ -18,6 +19,8 @@ export const HERO_TRAITS:{role:string;mods:Mods;weapons:string}[]=[
 {role:'Team supporter',mods:{control:.25,area:.15,damage:-.15},weapons:'Manor Ted / Bell'},
 {role:'Boss hunter',mods:{boss:.25,damage:.1,speed:-.15},weapons:'Cricket / Rugby / Eraser'},
 ];
+// Share the established balanced combat profiles; appearance never buys extra power.
+for(const hero of EXTRA_HEROES){const base=HERO_TRAITS[hero.traitBase];HERO_TRAITS.push({...base,mods:{...base.mods}});}
 export const ITEMS:{id:string;name:string;price:number;mods:Mods}[]=[
 {id:'stopwatch',name:'Stopwatch',price:100,mods:{speed:.15,damage:-.05}},
 {id:'sharpener',name:'Pencil sharpener',price:100,mods:{aim:3,range:-.2}},
