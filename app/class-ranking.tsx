@@ -2,7 +2,7 @@
 import {useState} from 'react';
 import {Trophy} from 'lucide-react';
 import Sprite from './hero-sprite';
-const metrics=[['correct','Correct answers'],['kills','Monsters defeated'],['damage','Damage dealt'],['wins','Waves won']] as const;
+const metrics=[['correct','Correct answers'],['kills','Monsters defeated'],['damage','Damage dealt']] as const;
 export default function ClassRanking({players,me}:any){
  const [metric,setMetric]=useState('correct');
  const rows=[...players].filter(p=>!p.testAccount).sort((a,b)=>(b.stats?.[metric]??0)-(a.stats?.[metric]??0)||a.name.localeCompare(b.name));

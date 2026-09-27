@@ -80,7 +80,7 @@ cookie='qg_session='+winner;
 await W.mutate(w=>{for(const p of Object.values(w.players))p.lastSeen=0;w.players[winner].combat={kills:12,damage:345.7,controlSeconds:0,assistedDamage:0,battles:4,wins:3};});
 assert.equal((await post({action:'heartbeat',uid:loser,lastSeen:1})).status,200);
 let presence=(await W.readWorld()).w;assert(presence.players[winner].lastSeen>Date.now()-5000);assert.equal(presence.players[loser].lastSeen,0);
-let ranking=await get();assert(ranking.onlinePlayers.some(p=>p.id===winner));const ranked=ranking.players.find(p=>p.id===winner);assert.equal(ranked.stats.kills,12);assert.equal(ranked.stats.damage,345);assert.equal(ranked.stats.wins,3);assert(!('history' in ranked));
+let ranking=await get();assert(ranking.onlinePlayers.some(p=>p.id===winner));const ranked=ranking.players.find(p=>p.id===winner);assert.equal(ranked.stats.kills,12);assert.equal(ranked.stats.damage,345);assert(!('wins' in ranked.stats));assert(!('history' in ranked));
 sqlite.close();sqlite=new DatabaseSync(file);assert((await W.readWorld()).w.players[winner].lastSeen>0);
 await W.mutate(w=>{w.players[winner].lastSeen=Date.now()-91000});ranking=await get();assert(!ranking.onlinePlayers.some(p=>p.id===winner));
 console.log('PASS: authenticated heartbeat ignores spoofed identity/time, persists across reopen, expires after 90 seconds, and ranking exposes only summary statistics.');
