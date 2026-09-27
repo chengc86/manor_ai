@@ -86,5 +86,24 @@ assert(!(await board('b')).requests.some(x=>x.id===id));assert.equal((await send
 const plain=await game('g',{action:'question',subject:'English'});assert.deepEqual((await game('g',{action:'answer',token:plain.body.token,answer:questions.find(q=>q.id===plain.body.question.id).answers[0]})).body.thanked,[]);Date.now=now;
 console.log('PASS: when the asker gets it right, each helper with a standing hint earns 10 coins once; removed hints earn nothing; the answer and explanation then appear.');
 
+// A hint that gives the answer away: the teacher fines it. A paid hint also loses its reward, so giving the answer never pays.
+await W.mutate(w=>{w.players.f.coins=40});const fHint=(await W.readWorld()).w.players.a.mistakes.q1.help.hints.find(h=>h.owner==='f').id,fBefore=40;
+assert.equal((await help('b',{action:'gave_answer',id,hint:fHint})).status,400);assert.equal(await coins('f'),fBefore);
+r=await help('teacher',{action:'gave_answer',id,hint:fHint});assert.equal(r.status,200);assert.equal(r.body.name,'f');assert.equal(r.body.coins,15);assert.equal(await coins('f'),fBefore-15);
+assert.equal((await help('teacher',{action:'gave_answer',id,hint:fHint})).body.already,true);assert.equal((await help('teacher',{action:'remove',id,hint:fHint})).status,200);assert.equal(await coins('f'),fBefore-15);
+const fSent=(await board('f')).sentHints.find(h=>h.id===fHint);assert.equal(fSent.status,'answer');assert.equal(fSent.lost,15);assert(fSent.text);
+const fTeacher=(await board('teacher')).requests.find(x=>x.id===id).hints.find(h=>h.id===fHint);assert.equal(fTeacher.removed,true);assert.equal(fTeacher.gaveAnswer.coins,15);assert(fTeacher.text);
+assert.deepEqual((await notebook('a','corrected')).entries.find(m=>m.id==='q1').help.hints.map(h=>h.name).sort(),['b','c']);
+const P=questions.find(q=>q.id==='q5'),ago=Date.now()-25*3600000;await W.mutate(w=>{w.players.g.mistakes={q5:{attempts:1,lastWrongAt:ago}};w.players.g.history.q5={correct:false,at:ago,attempted:true};w.players.e.coins=3;});
+assert.equal((await help('g',{action:'ask',question:'q5'})).status,200);const id5=(await board('b')).requests.find(x=>x.question.id==='q5').id,hints5={};
+for(const [uid,text] of [['b','It is fifty. Type it in numbers.'],['e','Fifty! Trust me.'],['c','Count the parts first: 3 + 5 = 8 parts.']]){assert.equal((await help(uid,{action:'answer',id:id5,answer:P.answers[0]})).body.correct,true);hints5[uid]=crypto.randomUUID();assert.equal((await help(uid,{action:'hint',id:id5,hint:hints5[uid],text})).status,200);}
+const bBefore=await coins('b');r=await help('teacher',{action:'gave_answer',id:id5,hint:hints5.b});assert.equal(r.body.coins,5);assert.equal(await coins('b'),bBefore-5);
+r=await help('teacher',{action:'gave_answer',id:id5,hint:hints5.e});assert.equal(r.body.coins,3);assert.equal(await coins('e'),0);
+const bCard=(await board('b')).requests.find(x=>x.id===id5);assert.equal(bCard.status,'sent');assert.equal(bCard.sent,null);assert.equal(bCard.lost,5);assert.equal((await sendHint('b',id5)).status,400);
+assert.deepEqual((await notebook('g')).entries.find(m=>m.id==='q5').help.hints.map(h=>h.name),['c']);
+const cBefore5=await coins('c');retry=await game('g',{action:'retry_question',id:'q5'});assert.equal(retry.status,200);const solved=await game('g',{action:'answer',token:retry.body.token,answer:P.answers[0]});assert.equal(solved.body.correct,true);assert.deepEqual(solved.body.thanked,['c']);
+assert.equal(await coins('b'),bBefore-5);assert.equal(await coins('e'),0);assert.equal(await coins('c'),cBefore5+10);
+console.log('PASS: only the teacher can fine a hint that gave the answer away; the helper loses 5 coins (15 once paid), never below zero; fined hints are hidden from the asker and never paid; fining twice changes nothing.');
+
 sqlite.close();fs.unlinkSync(file);console.log('PASS: help-a-friend flow.');
 })().catch(e=>{console.error(e);process.exitCode=1});
