@@ -4,9 +4,8 @@ import {equipment} from '@/lib/equipment';
 import {useMemo,useEffect,useRef,useState,type CSSProperties} from 'react';
 import Sprite from './hero-sprite';
 import {HEROES} from '@/lib/heroes';
-import {mapLayout} from '@/lib/map-layout';
 import {enemyFor} from '@/lib/enemies';
-import {simulate,monsterProgress,monsterHealth,percent,pathPosition,COLS,ROWS,PATH,type Battle} from '@/lib/battle';
+import {simulate,monsterProgress,monsterHealth,percent,battleLayout,COLS,ROWS,PATH,type Battle} from '@/lib/battle';
 // Round only the visual corner, keeping the shared combat rules unchanged.
 function visualPosition(progress:number,path=PATH){
  const distance=Math.max(0,Math.min(path.length-1,progress*(path.length-1))),corner=Math.round(distance),radius=.35;
@@ -35,7 +34,7 @@ function useBattleClock(now:number){
  return frame;
 }
 export default function BattleScene({battle,now}:{battle:Battle;now:number}){
- const route=mapLayout(battle.wave,battle.rulesVersion??1).path;
+ const route=battleLayout(battle).path;
  const sim=useMemo(()=>simulate(battle),[battle.start]);
  const monsterHits=useMemo(()=>Array.from({length:sim.count},(_,i)=>sim.events.filter(e=>e.monster===i)),[sim]);
  const frameNow=useBattleClock(now);

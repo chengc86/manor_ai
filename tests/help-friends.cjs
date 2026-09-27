@@ -9,7 +9,7 @@ sqlite.exec('CREATE TABLE world(id TEXT PRIMARY KEY,revision INTEGER NOT NULL,da
 const DB={prepare(sql){return {bind(...values){return {async run(){return {meta:{changes:Number(sqlite.prepare(sql).run(...values).changes)}}},async first(){return sqlite.prepare(sql).get(...values)??null}}}}}};
 const original=Module._load;Module._load=function(id,...args){if(id==='cloudflare:workers')return{env:{DB}};return original.call(this,id,...args)};
 const W=require(`../${dir}/world.cjs`),GAME=require(`../${dir}/game.cjs`),REVIEW=require(`../${dir}/review.cjs`),HELP=require(`../${dir}/help.cjs`),{questions,revealsAnswer}=require(`../${dir}/questions.cjs`);
-const request=(url,uid,body)=>new Request('https://game.test'+url,{method:body?'POST':'GET',headers:{cookie:'qg_session='+uid,origin:'https://game.test',host:'game.test','content-type':'application/json','X-Quest-Questions':'2','X-Quest-Heroes':'3'},...(body?{body:JSON.stringify(body)}:{})});
+const request=(url,uid,body)=>new Request('https://game.test'+url,{method:body?'POST':'GET',headers:{cookie:'qg_session='+uid,origin:'https://game.test',host:'game.test','content-type':'application/json','X-Quest-Questions':'2','X-Quest-Heroes':'4'},...(body?{body:JSON.stringify(body)}:{})});
 const read=async r=>({status:r.status,body:await r.json()});
 const game=(uid,body)=>GAME.POST(request('/api/game',uid,{requestId:crypto.randomUUID(),...body})).then(read);
 const help=(uid,body)=>(body?HELP.POST(request('/api/help',uid,body)):HELP.GET(request('/api/help',uid))).then(read);
