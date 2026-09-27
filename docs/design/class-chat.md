@@ -25,8 +25,24 @@ The Chat tab is one class-wide conversation for planning waves. Pupils and the t
 
 Pupils can remove their own messages and the teacher can remove any message, each after a **Remove / Keep** confirmation. Only the latest 200 messages are kept.
 
+## Keeping chat friendly
+
+Pupils' messages are checked on the server before they are posted. The teacher's messages are not checked.
+
+- **What is blocked:**
+  - Rude or unkind words and phrases: swearing, insults such as "idiot" or "shut up", slurs and sexual words.
+  - Links to other websites.
+  - Phone numbers and email addresses.
+- **Disguised spellings** are caught too, such as "f.u.c.k", "sh1t", "f*ck", "fuuuck" or letters with spaces between them.
+- **Everyday words** that contain a rude one, such as "class", "Scunthorpe", "Essex" and "grapes", are allowed. The word list is in `lib/chat-filter.ts` and is never sent to the browser.
+- **Consequences:** a blocked message is never posted. The first 2 blocked messages in a week (Monday to Sunday, UK time) are warnings. Each one after that costs 10 coins, and balances stop at zero. Resending the same message after a lost connection is not counted twice.
+- **What the pupil sees:** a banner explaining why the message was blocked and whether it was a warning or a fine. The message box also shows how many warnings they have used this week.
+- **What the teacher sees:** below the chat, **Blocked messages** lists the latest 50, with the pupil, the reason, the time, the text and whether it was a warning or a fine.
+
+Each pupil's weekly count is kept in `chatConduct`, and the latest 200 blocked messages in `chatFlags` in the world JSON. Neither is shown to other pupils.
+
 ## Server
 
-The chat API is unchanged. The world poll (every second) now carries a small `chatState` summary: message count and the last message's ID, time and sender, never its text. It goes only to signed-in class members and the teacher. The chat fetches messages only when that summary changes, plus a 15-second safety refresh while the page is visible, instead of polling every 2.5 seconds.
+The world poll (every second) now carries a small `chatState` summary: message count and the last message's ID, time and sender, never its text. It goes only to signed-in class members and the teacher. The chat fetches messages only when that summary changes, plus a 15-second safety refresh while the page is visible, instead of polling every 2.5 seconds.
 
-Validation: `tests/persistence.cjs` covers sign-in, sharing, duplicate sends, the rate limit, moderation and the member-only summary.
+Validation: `tests/persistence.cjs` covers sign-in, sharing, duplicate sends, the rate limit, moderation and the member-only summary. `tests/chat-safety.cjs` covers the filter (blocked, disguised and everyday messages), warnings, fines, the weekly reset, the teacher's list and teacher messages.
