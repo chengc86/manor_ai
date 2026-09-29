@@ -9,3 +9,22 @@ This is a style and fitting prototype, not a conversion of the 114 existing rast
 Keep permanent ownership separate from equipped/displayed state. Use stable catalogue IDs, categories (wardrobe, vehicle, home, toy), prices and renderer/attachment metadata. Server-authoritative purchases must check the catalogue price, balance, and transaction receipt, then persist ownership atomically. No duplicate charges for re-equipping or moving owned possessions.
 
 Vehicles need parking/riding anchors and a garage display; homes need a personal plot and furnishing anchors; toys need hand, floor and shelf attachments. These are future features, not currently purchasable. Cosmetic possessions should not silently change combat stats. Continue using earned coins, with meaningful savings goals rather than charging to display an already-owned item.
+
+## 3D direction — 29 September 2026
+The user rejected the flat skirt and chose 3D as the direction for the roster.
+`app/hero-3d.tsx` is a Three.js procedural art study of fox, bear and rabbit.
+The dressing room now offers real geometry, shaped skirt, rotatable view,
+attached sleeves/accessories and idle/walk/attack motion. `/hero-study` is an
+account-free preview containing no player data or purchase operations.
+
+This does not convert the live roster. These are rigid articulated mesh parts,
+not finished, deforming skinned character assets. Production requires authored
+GLB models, garment meshes fitted to body families, animation clips and testing
+for intersections in each pose. Preserve hero IDs and owned item IDs during
+migration. Use the same final assets for portraits and the battlefield; test
+class-size performance before replacing battlefield sprites. Future bikes,
+cars, houses and toys can use separate 3D assets and attachment points.
+
+Three.js supports production skinned meshes and glTF loading:
+https://threejs.org/docs/pages/SkinnedMesh.html
+https://threejs.org/docs/pages/GLTFLoader.html
