@@ -74,3 +74,9 @@ model test. Existing persistence suite passes. A synthetic 40-player GameBoard
 rendered 120 portraits (online list, camp, placed units) with zero live canvases
 in the map DOM; opening a placed hero shows the rotatable profile. The temporary
 test page is removed before shipping. Production build validated.
+
+## On the 3D battlefield
+The battlefield itself is now 3D ([3d-battlefield.md](3d-battlefield.md)). Board heroes use the same
+`createHeroModel` geometry, which now also returns its moving parts. Each look and weapon is baked once
+at lower detail into one rigidly skinned mesh that the original animation code still drives. Portraits
+and the dressing room are unchanged.

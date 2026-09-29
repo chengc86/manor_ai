@@ -5,20 +5,8 @@ import {useMemo,useEffect,useRef,useState,type CSSProperties} from 'react';
 import Sprite from './hero-sprite';
 import {HEROES} from '@/lib/heroes';
 import {enemyFor} from '@/lib/enemies';
-import {simulate,monsterProgress,monsterHealth,percent,battleLayout,COLS,ROWS,PATH,type Battle} from '@/lib/battle';
-// Round only the visual corner, keeping the shared combat rules unchanged.
-function visualPosition(progress:number,path=PATH){
- const distance=Math.max(0,Math.min(path.length-1,progress*(path.length-1))),corner=Math.round(distance),radius=.35;
- if(corner>0&&corner<path.length-1&&Math.abs(distance-corner)<radius){
-  const a=path[corner-1],b=path[corner],c=path[corner+1];
-  if((b.x-a.x)!==(c.x-b.x)||(b.y-a.y)!==(c.y-b.y)){
-   const t=(distance-corner+radius)/(radius*2),u=1-t;
-   const start={x:b.x+(a.x-b.x)*radius,y:b.y+(a.y-b.y)*radius},end={x:b.x+(c.x-b.x)*radius,y:b.y+(c.y-b.y)*radius};
-   return{x:u*u*start.x+2*u*t*b.x+t*t*end.x,y:u*u*start.y+2*u*t*b.y+t*t*end.y};
-  }
- }
- const i=Math.min(path.length-2,Math.floor(distance)),f=distance-i;return{x:path[i].x+(path[i+1].x-path[i].x)*f,y:path[i].y+(path[i+1].y-path[i].y)*f};
-}
+import {simulate,monsterProgress,monsterHealth,percent,battleLayout,COLS,ROWS,type Battle} from '@/lib/battle';
+import {visualPosition} from '@/lib/route-visual';
 function useBattleClock(now:number){
  const target=useRef({now,at:0}),[frame,setFrame]=useState(now);
  useEffect(()=>{target.current={now,at:performance.now()}},[now]);

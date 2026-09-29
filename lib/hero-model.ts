@@ -239,7 +239,8 @@ export function createHeroModel(skin:Hero3DSkin,outfit:RigOutfit,wardrobe?:Wardr
     if(wardrobe?.badge){piece(body,wardrobe.badge==='star-badge'?new THREE.OctahedronGeometry(.07):new THREE.SphereGeometry(.055,16,12),0xe8c971,[-.2,1.38,.259],[1,1,.32],.5);}
     if(wardrobe?.wrist)for(const arm of arms)piece(arm,new THREE.CylinderGeometry(.122,.122,.055,16),wardrobe.wrist==='mint-band'?0x89d1b4:0xe3ac77,[0,-.34,.01]);
 
- return {root,animate(t:number,motion:'idle'|'walk'|'attack',enabled=true){
+ // The moving parts, so the battlefield can bake each hero into one low-poly skinned mesh.
+ return {root,parts:{body,legs,arms},animate(t:number,motion:'idle'|'walk'|'attack',enabled=true){
  body.position.y=enabled?.012*Math.sin(t*2):0;
  legs.forEach((leg,i)=>{leg.rotation.x=enabled&&motion==='walk'?Math.sin(t*5+i*Math.PI)*.27:0;});
  arms.forEach((arm,i)=>{arm.rotation.x=enabled&&motion==='walk'?Math.sin(t*5+i*Math.PI+Math.PI)*.3:enabled&&motion==='attack'&&i===1?-.8+Math.sin(t*5)*.7:0;});
