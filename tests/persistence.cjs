@@ -104,5 +104,13 @@ assert.equal((await get()).routeFrom,2);assert.equal((await post({action:'recrui
 world=(await W.readWorld()).w;assert(world.defenders.every(d=>d.cell<0||!next.has(d.cell)));
 assert.equal((await post({action:'battle',battleVersion:(await get()).battleVersion})).status,200);assert.deepEqual((await get()).battle.route,ROUTES[0]);
 console.log('PASS: the next chapter uses a new route for placement, heroes on it return to reserve, and battles carry their route.');
+cookie='qg_session='+winner;
+await W.mutate(w=>{w.players[winner].coins=5000});
+const {CLOTHING}=require('../work/persistence/clothing.cjs');
+const accessories=CLOTHING.filter(c=>c.art>=15);assert.equal(accessories.length,12);
+for(const item of accessories){const before=(await W.readWorld()).w.players[winner].coins;assert.equal((await post({action:'clothing',item:item.id})).status,200);assert.equal((await W.readWorld()).w.players[winner].coins,before-item.price);assert.equal((await post({action:'clothing',item:item.id})).status,200);assert.equal((await W.readWorld()).w.players[winner].coins,before-item.price);}
+let profile=(await get()).players.find(p=>p.id===winner);assert(accessories.every(c=>profile.collection.clothing.includes(c.id)));assert(!('history' in profile));assert(!('mistakes' in profile));
+sqlite.close();sqlite=new DatabaseSync(file);assert.equal((await W.readWorld()).w.players[winner].clothing.head,'star-cap');assert.equal((await post({action:'undress',slot:'head'})).status,200);assert((await W.readWorld()).w.players[winner].clothingOwned.includes('star-cap'));assert.equal((await post({action:'clothing',item:'fake-accessory'})).status,400);
+console.log('PASS: all 12 accessories buy once, re-equip free, persist across reopen, unequip without losing ownership, and expose only collection summaries.');
 sqlite.close();fs.unlinkSync(file);console.log('PASS: unselected heroes hidden; answers, wardrobe, items, coins and placements survive database reopen; pending question restored; simultaneous start accepts one; late join/reopen sees identical battle; stale start rejected after finish; pupil records isolated.');
 })().catch(e=>{console.error(e);process.exitCode=1});

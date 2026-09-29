@@ -1,0 +1,23 @@
+import {useId} from 'react';
+import {heroFit} from '@/lib/hero-fit';
+import type {Wardrobe} from '@/lib/clothing';
+export default function HeroWardrobe({type,clothing={},src}:{type:number;clothing?:Wardrobe;src:string}){
+ const id=useId().replace(/:/g,''),f=heroFit(type),x=f.cx,w=f.width,y=f.neck,h=f.waist-y;
+ const top=clothing.outer??clothing.top,green=!!clothing.outer||top==='sports-top',dress=top==='dress';
+ const shirt=`M ${x-w*.28} ${y} Q ${x} ${y+4} ${x+w*.28} ${y} L ${x+w*.51} ${y+3} L ${x+w*.8} ${y+h*.56} L ${x+w*.56} ${y+h*.64} L ${x+w*.4} ${y+h*.35} Q ${x+w*.52} ${y+h*.7} ${x+w*.52} ${y+h} Q ${x} ${y+h+2} ${x-w*.52} ${y+h} Q ${x-w*.52} ${y+h*.7} ${x-w*.4} ${y+h*.35} L ${x-w*.56} ${y+h*.64} L ${x-w*.8} ${y+h*.56} L ${x-w*.51} ${y+3} Z`;
+ const bottom=clothing.bottom,skirt=bottom==='skirt'||bottom==='skort';
+ return <svg className="fitted-wardrobe" viewBox="0 0 100 100" aria-hidden="true"><defs><linearGradient id={`${id}cloth`} x1="0" x2="1"><stop stopColor={green?'#174838':dress?'#678970':'#bbc8c9'}/><stop offset=".45" stopColor={green?'#3b8665':dress?'#c0d2ad':'#fffef5'}/><stop offset="1" stopColor={green?'#123e30':dress?'#74957a':'#b9c6c9'}/></linearGradient><linearGradient id={`${id}grey`}><stop stopColor="#394650"/><stop offset=".5" stopColor="#7b8790"/><stop offset="1" stopColor="#303c43"/></linearGradient><mask id={`${id}body`} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100" style={{maskType:'alpha'}}><image href={src} width="100" height="100" preserveAspectRatio="xMidYMid meet"/></mask></defs>
+ <g stroke="#203c34" strokeWidth=".45" strokeLinejoin="round">
+ <g mask={`url(#${id}body)`}>
+ {bottom&&<><path d={skirt?`M${x-w*.46},${f.waist-4} L${x+w*.46},${f.waist-4} L${x+w*.67},${f.waist+10} Q${x},${f.waist+13} ${x-w*.67},${f.waist+10}Z`:`M${x-w*.52},${f.waist-5} Q${x},${f.waist-2} ${x+w*.52},${f.waist-5} L${x+w*.65},${bottom==='trousers'?94:f.waist+7} L${x+2},${bottom==='trousers'?94:f.waist+7} L${x},${f.waist+1} L${x-2},${bottom==='trousers'?94:f.waist+7} L${x-w*.65},${bottom==='trousers'?94:f.waist+7}Z`} fill={`url(#${id}grey)`}/><path d={`M${x-w*.47},${f.waist-2} Q${x},${f.waist} ${x+w*.47},${f.waist-2}`} fill="none" stroke="#b0bab7"/></>}
+ {top&&<><path d={shirt} fill={`url(#${id}cloth)`}/><path d={`M${x-w*.29},${y+.4} L${x-2},${y+4} L${x-w*.19},${y+7}Z M${x+w*.29},${y+.4} L${x+2},${y+4} L${x+w*.19},${y+7}Z`} fill={green?'#e3e7d7':'#fff'}/><path d={`M${x},${y+4} L${x},${f.waist-1}`} fill="none" stroke={green?'#143b2b':'#9baaa6'}/>{[.3,.52,.74].map(a=><circle key={a} cx={x+.8} cy={y+h*a} r=".55" fill={green?'#d6c789':'#728780'}/>)}<path d={`M${x-w*.4},${f.waist-1} Q${x},${f.waist+1} ${x+w*.4},${f.waist-1}`} fill="none" opacity=".45"/></>}
+ {clothing.feet&&<><path d={`M${x-w},89 Q${x},87 ${x+w},89 L${x+w},99 L${x-w},99Z`} fill={clothing.feet==='trainers'?'#ecebde':'#243039'}/><path d={`M${x-w},95 L${x+w},95`} stroke={clothing.feet==='trainers'?'#285f47':'#111c22'} strokeWidth="1.5"/></>}
+ </g>
+ {dress&&<path d={`M${x-w*.48},${f.waist-3} L${x+w*.48},${f.waist-3} L${x+w*.7},${f.waist+10} Q${x},${f.waist+13} ${x-w*.7},${f.waist+10}Z`} fill={`url(#${id}cloth)`}/>}
+ {clothing.tie&&<path d={`M${x-1.8},${y+3} L${x+1.8},${y+3} L${x+1},${y+6} L${x+2.3},${y+15} L${x},${y+18} L${x-2.3},${y+15} L${x-1},${y+6}Z`} fill="#236444" stroke="#b9cb82"/>}
+ {clothing.neck&&<g><path d={`M${x-w*.3},${y+1} Q${x},${y+5} ${x+w*.3},${y+1} L${x+w*.3},${y+4} Q${x},${y+8} ${x-w*.3},${y+4}Z`} fill={clothing.neck==='sun-scarf'?'#e9b840':'#438eb8'}/><path d={`M${x+w*.18},${y+5} l2,13 l5,-2 l-3,-12Z`} fill={clothing.neck==='sun-scarf'?'#dba12b':'#377899'}/></g>}
+ {clothing.head&&<g transform={`translate(${x-13},${f.head+2})`}><path d={clothing.head==='explorer-hat'?'M0,7 Q13,-7 26,7 L24,12 L2,12Z':clothing.head==='star-cap'?'M1,9 Q13,-5 25,9 L25,13 L1,13Z':'M1,13 L0,1 L7,6 L13,-2 L19,6 L26,1 L25,13Z'} fill={clothing.head==='explorer-hat'?'#cba876':clothing.head==='star-cap'?'#4381ac':clothing.head==='silver-crown'?'#c7e1ef':'#eac45c'}/><path d="M-2,13 Q13,16 29,12" fill="none" stroke="#8d6d39" strokeWidth="2"/><circle cx="13" cy="8" r="2" fill="#72dfd5"/></g>}
+ {clothing.badge&&<g transform={`translate(${x+w*.22},${y+h*.4})`}><circle r="3.2" fill={clothing.badge==='moon-badge'?'#a6d7e6':'#f5d370'}/><path d="M0,-2 L.7,-.6 L2,-.5 L1,.5 L1.3,2 L0,1.3 L-1.3,2 L-1,.5 L-2,-.5 L-.7,-.6Z" fill="#396854"/></g>}
+ {clothing.wrist&&<g fill={clothing.wrist==='rainbow-band'?'#ebaa65':'#65c5b8'}><ellipse cx={x-w*.72} cy={f.waist-5} rx="3" ry="1.3" transform={`rotate(22 ${x-w*.72} ${f.waist-5})`}/><ellipse cx={x+w*.72} cy={f.waist-5} rx="3" ry="1.3" transform={`rotate(-22 ${x+w*.72} ${f.waist-5})`}/></g>}
+ </g></svg>
+}

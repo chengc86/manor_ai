@@ -1,4 +1,4 @@
-export const CLOTHING_SLOTS=[{id:'top',name:'Shirts & dresses'},{id:'outer',name:'Jumpers & cardigans'},{id:'bottom',name:'Trousers, shorts & skirts'},{id:'tie',name:'School tie'},{id:'feet',name:'Shoes'}] as const;
+export const CLOTHING_SLOTS=[{id:'top',name:'Shirts & dresses'},{id:'outer',name:'Jumpers & cardigans'},{id:'bottom',name:'Trousers, shorts & skirts'},{id:'tie',name:'School tie'},{id:'feet',name:'Shoes'},{id:'head',name:'Hats & crowns'},{id:'neck',name:'Scarves'},{id:'back',name:'Capes'},{id:'badge',name:'Badges'},{id:'wrist',name:'Wristbands'}] as const;
 export type ClothingSlot=typeof CLOTHING_SLOTS[number]['id'];
 export type Wardrobe=Partial<Record<ClothingSlot,string>>;
 export const CLOTHING=[
@@ -17,7 +17,21 @@ export const CLOTHING=[
 {id:'school-tie',name:'Green school tie',slot:'tie',price:20,art:12},
 {id:'school-shoes',name:'Black school shoes',slot:'feet',price:40,art:13},
 {id:'trainers',name:'Sports trainers',slot:'feet',price:60,art:14},
+{id:'gold-crown',name:'Golden crown',slot:'head',price:120,art:15},
+{id:'silver-crown',name:'Silver crown',slot:'head',price:100,art:16},
+{id:'explorer-hat',name:'Explorer hat',slot:'head',price:80,art:17},
+{id:'star-cap',name:'Blue adventure cap',slot:'head',price:60,art:18},
+{id:'sun-scarf',name:'Sunshine scarf',slot:'neck',price:60,art:19},
+{id:'sky-scarf',name:'Sky scarf',slot:'neck',price:60,art:20},
+{id:'star-cape',name:'Midnight cape',slot:'back',price:140,art:21},
+{id:'ruby-cape',name:'Ruby cape',slot:'back',price:140,art:22},
+{id:'star-badge',name:'Adventure star badge',slot:'badge',price:40,art:23},
+{id:'moon-badge',name:'Moon badge',slot:'badge',price:40,art:24},
+{id:'rainbow-band',name:'Sunset wristbands',slot:'wrist',price:40,art:25},
+{id:'mint-band',name:'Mint wristbands',slot:'wrist',price:40,art:26},
 ] as const;
 export function wear(clothing:Wardrobe,id:string):Wardrobe{const item=CLOTHING.find(c=>c.id===id);if(!item)return clothing;const next={...clothing,[item.slot]:id};if(id==='dress'){delete next.bottom;delete next.outer;delete next.tie;}else if((item.slot==='bottom'||item.slot==='outer')&&next.top==='dress')delete next.top;return next;}
 export function uniformPieces(uniform:string,gender?:string){if(uniform==='winter')return gender==='girl'?['blouse','cardigan','skirt','school-shoes']:['shirt','jumper','trousers','school-tie','school-shoes'];if(uniform==='summer')return gender==='girl'?['dress','school-shoes']:['polo','shorts','school-shoes'];if(uniform==='sports')return ['sports-top',gender==='girl'?'skort':'sports-shorts','trainers'];return [];}
 export function ensureWardrobe(p:{clothing?:Wardrobe;clothingOwned?:string[];uniforms?:string[];uniform?:string;gender?:string}){if(p.clothingOwned)return;p.clothingOwned=[...new Set((p.uniforms??[]).flatMap(u=>uniformPieces(u,p.gender)))];p.clothing={};for(const id of uniformPieces(p.uniform??'none',p.gender))if(p.clothingOwned.includes(id))p.clothing=wear(p.clothing,id);}
+
+export function clothingArt(item:{art:number}){return item.art<15?`/clothes/${item.art}.png`:`/accessories/${item.art}.svg`;}
