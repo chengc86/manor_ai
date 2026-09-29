@@ -28,3 +28,29 @@ cars, houses and toys can use separate 3D assets and attachment points.
 Three.js supports production skinned meshes and glTF loading:
 https://threejs.org/docs/pages/SkinnedMesh.html
 https://threejs.org/docs/pages/GLTFLoader.html
+
+## Local selected-hero batch
+Read the public class roster on 29 September and found 23 distinct selected hero
+IDs excluding test accounts. No student names or records are stored in source.
+First eight studies: 16 Tumble, 19 Pebble, 21 Acorn, 10 Scout, 14 Bamboo,
+15 Leo, 37 Saffron and 43 Truffle. `lib/hero-3d-catalogue.ts` retains their stable
+IDs for eventual integration. Preview only: no changes to purchases, database,
+hero selection, battle renderer or damage calculations. User explicitly asked
+that this work remain local, uncommitted and unpushed.
+
+Remaining selected IDs at this snapshot: 1,2,3,4,6,11,12,13,29,30,31,35,36,69,82.
+The initial eight still need art refinement and full animation/garment review.
+
+## Completed chosen-roster preview batch
+The user subsequently requested completion, refinement and commit/push after
+verification. The roster was rechecked: the same 23 distinct non-test selected
+hero IDs are covered. All now appear in the dressing-room catalogue. This is a
+completed preview batch, not a switch of the live battlefield to 3D.
+
+Refinements include visible iris/highlight geometry above face markings, closed
+shirt waist, wider arm clearance around skirts, distinctive species features,
+retained orbit camera during outfit changes, and shadow-resource cleanup.
+Browser verification exercised all 23 selections, 46 walk/attack selections and
+69 outfit changes without browser console errors. A contact sheet of every
+character and a rear view of the rabbit skirt were visually reviewed. Production
+build and TypeScript checks passed. No player data or economy changes.

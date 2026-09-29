@@ -1,0 +1,27 @@
+/** Chosen hero art catalogue, using existing stable hero IDs. No player records belong here. */
+export const HERO_3D_STUDIES = [
+  {id:16,name:'Tumble',skin:'capybara',kind:'Capybara'},
+  {id:19,name:'Pebble',skin:'penguin',kind:'Penguin'},
+  {id:21,name:'Acorn',skin:'deer',kind:'Red deer'},
+  {id:10,name:'Scout',skin:'raccoon',kind:'Raccoon'},
+  {id:14,name:'Bamboo',skin:'panda',kind:'Panda'},
+  {id:15,name:'Leo',skin:'lion',kind:'Lion'},
+  {id:37,name:'Saffron',skin:'tiger',kind:'Tiger cub'},
+  {id:43,name:'Truffle',skin:'pig',kind:'Piglet'},
+  {id:1,name:'Luna',skin:'cat',kind:'Cat'},
+  {id:2,name:'Flint',skin:'bear',kind:'Bear'},
+  {id:3,name:'Tempest',skin:'owl',kind:'Snowy owl'},
+  {id:4,name:'Pip',skin:'rabbit',kind:'Rabbit'},
+  {id:6,name:'Ember',skin:'dragon',kind:'Green dragon'},
+  {id:11,name:'Briar',skin:'hedgehog',kind:'Hedgehog'},
+  {id:12,name:'Hazel',skin:'squirrel',kind:'Squirrel'},
+  {id:13,name:'Brook',skin:'otter',kind:'Otter'},
+  {id:29,name:'Waddle',skin:'duck',kind:'Duck'},
+  {id:30,name:'Poppy',skin:'redpanda',kind:'Red panda'},
+  {id:31,name:'Sunny',skin:'meerkat',kind:'Meerkat'},
+  {id:35,name:'Biscuit',skin:'corgi',kind:'Corgi'},
+  {id:36,name:'Marble',skin:'snowleopard',kind:'Snow leopard'},
+  {id:69,name:'Cinder',skin:'cinder',kind:'Dragon'},
+  {id:82,name:'Glade',skin:'guardian',kind:'Moss guardian'},
+] as const;
+export type Hero3DSkin=typeof HERO_3D_STUDIES[number]['skin']|'fox'|'bear'|'rabbit';
