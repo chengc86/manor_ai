@@ -8,7 +8,7 @@ import {celebrate} from './shop-kit';
 import {HEROES} from '@/lib/heroes';
 import {equipment} from '@/lib/equipment';
 export type ShopAisle='weapons'|'items'|'clothes';
-export const SHOP_AISLES:[ShopAisle,string,string,string][]=[['weapons','Weapons','/weapons/0.png','Make one hero stronger'],['items','Power-up items','/items/stopwatch.svg','Help all your heroes'],['clothes','Clothes','/clothes/0.png','Change how you look']];
+export const SHOP_AISLES:[ShopAisle,string,string,string][]=[['weapons','Weapons','/weapons/0.png','Make one hero stronger'],['items','Power-up items','/items/stopwatch.svg','Help all your heroes'],['clothes','Clothes','/clothes/0.png','SHUS · change your look']];
 export function QuestShop({me,defenders,busy,liveBattle,action,navigate,aisle:shownAisle,onAisle}:any){
  const [ownAisle,setOwnAisle]=useState<ShopAisle>('weapons'),[heroId,setHeroId]=useState(''),aisle:ShopAisle=shownAisle??ownAisle,setAisle=onAisle??setOwnAisle;
  const selected=defenders.find((d:any)=>d.id===heroId)??defenders[0],label=(d:any)=>`${HEROES[d.type].name} #${defenders.indexOf(d)+1}`,earn=()=>navigate('practice');
