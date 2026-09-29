@@ -54,3 +54,23 @@ Browser verification exercised all 23 selections, 46 walk/attack selections and
 69 outfit changes without browser console errors. A contact sheet of every
 character and a rear view of the rabbit skirt were visually reviewed. Production
 build and TypeScript checks passed. No player data or economy changes.
+
+## Full roster integration
+All 114 selectable IDs now resolve to a model. Legacy tower IDs 7 and 8 retain
+old tower art. `hero-model.ts` owns geometry; `hero-outfit.ts` maps equipped slots.
+`HeroSprite` uses lazily generated transparent portraits from that same geometry
+through a single queued WebGL renderer with a 192-entry cache. Map movements,
+projectiles and combat rules are unchanged: these are 3D-rendered portraits on
+the 2D battlefield, not a new 3D battlefield simulation. Profile dialogs use a
+rotatable live model. Failed WebGL falls back to original character art.
+
+All 27 existing clothing items map to model geometry/materials. Unbought shoes,
+hats and clothing are not added by default; base shorts provide modest coverage.
+No schema, coin, ownership, selection or battle-state migrations are involved.
+
+Validation: full roster gallery reached 114 rendered / zero fallback portraits;
+342 model/outfit geometry combinations and all 27 individual items pass the new
+model test. Existing persistence suite passes. A synthetic 40-player GameBoard
+rendered 120 portraits (online list, camp, placed units) with zero live canvases
+in the map DOM; opening a placed hero shows the rotatable profile. The temporary
+test page is removed before shipping. Production build validated.

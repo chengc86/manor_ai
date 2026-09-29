@@ -1,7 +1,23 @@
 'use client';
 import {useState} from 'react';
-import {HERO_3D_STUDIES,type Hero3DSkin} from '../lib/hero-3d-catalogue';
-import type {RigOutfit} from './rigged-hero';
 import dynamic from 'next/dynamic';
+import {HERO_3D_STUDIES,hero3D} from '@/lib/hero-3d-catalogue';
+import {CLOTHING,CLOTHING_SLOTS,wear,type Wardrobe} from '@/lib/clothing';
+import {outfitForWardrobe} from '@/lib/hero-outfit';
+import HeroSprite from './hero-sprite';
 const Hero3D=dynamic(()=>import('./hero-3d'),{ssr:false,loading:()=> <p>Loading 3D dressing room…</p>});
-export default function WardrobeStudio(){const [skin,setSkin]=useState<Hero3DSkin>('capybara'),[motion,setMotion]=useState<'idle'|'walk'|'attack'>('idle'),[outfit,setOutfit]=useState<RigOutfit>({top:'shirt',bottom:'trousers',hat:true,scarf:false});return <section className="panel wardrobe-studio"><h2>3D dressing room · art study</h2><p>All 23 currently chosen heroes, with shaped clothing and individual character details. This preview does not change your chosen hero or spend coins.</p><div className="studio-layout"><Hero3D skin={skin} outfit={outfit} motion={motion}/><div className="studio-controls"><label>Character<select value={skin} onChange={e=>setSkin(e.target.value as typeof skin)}>{HERO_3D_STUDIES.map(h=><option key={h.id} value={h.skin}>{h.name} · {h.kind}</option>)}<option value="fox">Original fox study</option></select></label><label>Movement<select value={motion} onChange={e=>setMotion(e.target.value as typeof motion)}><option value="idle">Idle</option><option value="walk">Walk</option><option value="attack">Attack</option></select></label><label>Top<select value={outfit.top} onChange={e=>setOutfit({...outfit,top:e.target.value as RigOutfit['top']})}><option value="shirt">White shirt</option><option value="jumper">Green jumper</option><option value="none">No top</option></select></label><label>Bottom<select value={outfit.bottom} onChange={e=>setOutfit({...outfit,bottom:e.target.value as RigOutfit['bottom']})}><option value="trousers">Trousers</option><option value="dress">Dress skirt</option><option value="none">No bottoms</option></select></label><label><input type="checkbox" checked={outfit.hat} onChange={e=>setOutfit({...outfit,hat:e.target.checked})}/> Crown</label><label><input type="checkbox" checked={outfit.scarf} onChange={e=>setOutfit({...outfit,scarf:e.target.checked})}/> Scarf</label></div></div><p>These are early 3D models, not the finished hero roster. Clothing has real depth; sleeves and accessories follow the body. Existing heroes and purchases are unchanged.</p></section>}
+export default function WardrobeStudio(){
+ const [heroId,setHeroId]=useState(16),[motion,setMotion]=useState<'idle'|'walk'|'attack'>('idle');
+ const [wardrobe,setWardrobe]=useState<Wardrobe>({top:'shirt',bottom:'trousers',head:'gold-crown'});
+ const hero=hero3D(heroId)!;
+ return <section className="panel wardrobe-studio"><h2>3D dressing room</h2>
+ <p>Explore all {HERO_3D_STUDIES.length} heroes and try on clothing. Trying things here does not buy or equip them in your account.</p>
+ <div className="studio-layout"><Hero3D skin={hero.skin} outfit={outfitForWardrobe(wardrobe)} wardrobe={wardrobe} motion={motion}/>
+ <div className="studio-controls">
+ <label>Character<select value={heroId} onChange={e=>setHeroId(Number(e.target.value))}>{HERO_3D_STUDIES.map(h=><option key={h.id} value={h.id}>{h.name} · {h.kind}</option>)}</select></label>
+ <label>Movement<select value={motion} onChange={e=>setMotion(e.target.value as typeof motion)}><option value="idle">Idle</option><option value="walk">Walk</option><option value="attack">Attack</option></select></label>
+ {CLOTHING_SLOTS.map(slot=><label key={slot.id}>{slot.name}<select value={wardrobe[slot.id]??''} onChange={e=>{const id=e.target.value;setWardrobe(w=>{if(id)return wear(w,id);const next={...w};delete next[slot.id];return next;});}}><option value="">None</option>{CLOTHING.filter(c=>c.slot===slot.id).map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label>)}
+ </div></div>
+ <details className="hero-roster-preview"><summary>View all {HERO_3D_STUDIES.length} heroes wearing this outfit</summary><div className="hero-roster-grid">{HERO_3D_STUDIES.map(h=><button key={h.id} onClick={()=>setHeroId(h.id)} aria-label={`Preview ${h.name}`}><HeroSprite type={h.id} clothing={wardrobe}/><b>{h.name}</b><small>{h.kind}</small></button>)}</div></details>
+ </section>;
+}
