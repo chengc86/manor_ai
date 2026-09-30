@@ -24,7 +24,7 @@ Year 6 pupils answer an original, Atom Learning–style bank of 2,060 questions 
 
 - **Choices:** most questions have four or five, and the wrong ones come from real mistakes. Each pupil sees the choices in their own order (picture choices keep their letters while the pictures move), so a friend's "it's C" gives nothing away. Choices with a natural order, such as numbers or < = >, stay in that order.
 - **Formats:** pictures (base-10 blocks, number lines, bar models, charts, branching keys, circuits and NVR tiles), "choose two" questions and multi-page passages.
-- **Helpsheets:** every topic has a one-page helpsheet that teaches the method without giving the answer.
+- **Helpsheets:** every topic has a one-page helpsheet that teaches the method without giving the answer. Pupils open it with **Need a hint?** in the mistake notebook (or from My topics), never while answering a practice question.
 - **Earn coins:** Practise, timed Mock tests, and My topics (a mastery map with "practise my weakest topics"). Pupils can report a question that looks wrong, and the teacher sees class topic mastery and those reports.
 - **Mock test coins:** each correct answer earns its usual coins, but only when every question has an answer, whether the pupil finishes or the time runs out. A test with any question left blank still shows its marks and adds wrong answers to the notebook, but pays nothing.
 - **Old questions:** the original Year 6 questions are retired but kept, so open notebook entries and friends' hints still work.
