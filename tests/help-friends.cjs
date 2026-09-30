@@ -32,11 +32,12 @@ console.log('PASS: a wrong answer reveals neither the answer nor the explanation
 
 assert.equal((await board('b')).requests.length,0);assert.equal((await help('b',{action:'ask',question:'q1'})).status,400);
 assert.equal((await help('a',{action:'ask',question:'q2'})).status,400);
-let r=await help('a',{action:'ask',question:'q1'});assert.equal(r.status,200);assert.equal(r.body.already,undefined);assert.equal((await help('a',{action:'ask',question:'q1'})).body.already,true);
+let r=await help('a',{action:'ask',question:'q1',stuck:'constructor'});assert.equal(r.status,200);assert.equal(r.body.already,undefined);assert.equal((await W.readWorld()).w.players.a.mistakes.q1.help.stuck,undefined);assert.equal((await help('a',{action:'ask',question:'q1'})).body.already,true);
+assert.equal((await help('a',{action:'ask',question:'q1',stuck:'start'})).body.already,true);assert.equal((await W.readWorld()).w.players.a.mistakes.q1.help.stuck,'start');
 let mine=await board('a');assert.equal(mine.mine,1);assert.equal(mine.requests.length,0);
-let seen=(await board('b')).requests;assert.equal(seen.length,1);const id=seen[0].id;assert.equal(seen[0].name,'a');assert.equal(seen[0].status,'ready');assert.equal(seen[0].question.id,'q1');assert(!('answers' in seen[0].question)&&!('explanation' in seen[0].question));
+let seen=(await board('b')).requests;assert.equal(seen.length,1);const id=seen[0].id;assert.equal(seen[0].name,'a');assert.equal(seen[0].status,'ready');assert.equal(seen[0].stuck,'start');assert.equal(seen[0].question.id,'q1');assert(!('answers' in seen[0].question)&&!('explanation' in seen[0].question));
 assert.equal((await help('a',{action:'answer',id,answer})).status,400);
-console.log('PASS: only unresolved mistakes can be posted; posting is idempotent; classmates see the question without its answer; askers cannot answer their own.');
+console.log('PASS: only unresolved mistakes can be posted; posting is idempotent; classmates see the question and what the asker finds tricky, without its answer; askers cannot answer their own.');
 
 assert.equal((await sendHint('b',id)).status,400);
 const before=await coins('b');r=await help('b',{action:'answer',id,answer:'100'});assert.equal(r.status,200);assert.equal(r.body.correct,false);assert(!('answer' in r.body));assert.equal((await board('b')).requests[0].status,'resting');
@@ -45,12 +46,14 @@ console.log('PASS: helpers must answer correctly before hinting; a wrong helper 
 
 await solveCheck('c',id);assert.equal((await board('c')).requests[0].status,'unlocked');
 for(const text of [answer,`The answer is ${answer}`,'hi'])assert.equal((await help('c',{action:'hint',id,hint:crypto.randomUUID(),text})).status,400);
+for(const [text,why] of [['Stop being so stupid and multiply','kind'],['Look at www.example.com first','links'],['Ring me on 07700 900123','private']]){const bad=await help('c',{action:'hint',id,hint:crypto.randomUUID(),text});assert.equal(bad.status,400);assert.match(bad.body.error,new RegExp(why));}
 const hintId=crypto.randomUUID(),cBefore=await coins('c');r=await help('c',{action:'hint',id,hint:hintId,text:'Multiply 10 by 24. Try 10 × 20 first.'});assert.equal(r.status,200);assert.equal(r.body.reward,undefined);assert.equal(await coins('c'),cBefore);
 assert.equal((await help('c',{action:'hint',id,hint:hintId,text:'Multiply 10 by 24. Try 10 × 20 first.'})).body.duplicate,true);assert.equal(await coins('c'),cBefore);assert.equal((await sendHint('c',id)).status,400);assert.equal((await board('c')).sentHints[0].status,'waiting');
 assert.equal((await board('c')).requests[0].status,'sent');assert.equal((await board('c')).requests[0].sent,'Multiply 10 by 24. Try 10 × 20 first.');
 entry=(await notebook('a')).entries.find(m=>m.id==='q1');assert.equal(entry.help.status,'open');assert.deepEqual(entry.help.hints.map(h=>[h.name,h.text]),[['c','Multiply 10 by 24. Try 10 × 20 first.']]);assert(!('answers' in entry));
 const view=await read(await GAME.GET(request('/api/game','c')));assert.equal(view.body.me.helpChecks,undefined);
-console.log('PASS: a valid hint reaches the asker privately and pays nothing yet; answer-revealing hints are refused.');
+let news=await board('a');assert.deepEqual(news.myHints.map(h=>[h.name,h.subject]),[['c','Maths']]);assert(!('text' in news.myHints[0]));assert.deepEqual(news.retry,[]);assert.deepEqual((await board('b')).myHints,[]);
+console.log('PASS: a valid hint reaches the asker privately and pays nothing yet; answer-revealing, unkind and unsafe hints are refused; the asker is told a hint arrived.');
 
 await W.mutate(w=>{w.players.d.mistakes={q1:{attempts:1,lastWrongAt:Date.now()}};w.players.d.history.q1={correct:false,at:Date.now(),attempted:true};w.players.g.active={id:'q1',token:'token-g-q1',at:Date.now()}});
 assert.equal((await board('d')).requests[0].status,'own');assert.equal((await help('d',{action:'answer',id,answer})).status,400);
@@ -60,7 +63,7 @@ console.log('PASS: pupils cannot help with a question still in their own noteboo
 for(const uid of ['e','f']){await solveCheck(uid,id);assert.equal((await sendHint(uid,id)).status,200);}
 assert.equal((await board('g')).requests.length,0);entry=(await notebook('a')).entries.find(m=>m.id==='q1');assert.equal(entry.help.status,'full');assert.equal(entry.help.hints.length,3);assert.equal((await help('a',{action:'ask',question:'q1'})).status,400);
 const eHint=(await W.readWorld()).w.players.a.mistakes.q1.help.hints.find(h=>h.owner==='e').id;assert.equal((await help('b',{action:'remove',id,hint:eHint})).status,400);
-let teacher=await board('teacher');assert.equal(teacher.isTeacher,true);assert.equal(teacher.requests[0].hints.length,3);assert(!('owner' in teacher.requests[0].hints[0]));
+let teacher=await board('teacher');assert.equal(teacher.isTeacher,true);assert.equal(teacher.requests[0].hints.length,3);assert(!('owner' in teacher.requests[0].hints[0]));assert.equal(teacher.requests[0].stuck,'start');
 assert.equal((await help('teacher',{action:'remove',id,hint:eHint})).status,200);teacher=await board('teacher');assert.equal(teacher.requests[0].hints.find(h=>h.id===eHint).removed,true);assert.equal(teacher.requests[0].hints.find(h=>h.id===eHint).text,'');
 entry=(await notebook('a')).entries.find(m=>m.id==='q1');assert.equal(entry.help.status,'open');assert.equal(entry.help.hints.length,2);
 const eView=(await board('e')).requests[0];assert.equal(eView.status,'sent');assert.equal(eView.sent,null);assert.equal((await sendHint('e',id)).status,400);assert.equal((await board('g')).requests.length,1);
@@ -73,14 +76,15 @@ console.log('PASS: pupils can have three questions on the board at once and can 
 
 const now=Date.now;Date.now=()=>now()+25*3600000;
 assert.equal((await board('b')).requests.find(x=>x.id===id).status,'ready');await solveCheck('b',id);assert.equal((await sendHint('b',id)).status,200);
+assert.deepEqual((await board('a')).retry,[{id:'q1',subject:'Maths',hints:3}]);
 let retry=await game('a',{action:'retry_question',id:'q1'});assert.equal(retry.status,200);const again=await game('a',{action:'answer',token:retry.body.token,answer:'999'});assert.equal(again.body.correct,false);assert.deepEqual(again.body.thanked,[]);
 entry=(await notebook('a')).entries.find(m=>m.id==='q1');assert.equal(entry.attempts,2);assert.equal(entry.help.hints.length,3);assert(!('answers' in entry));
-const paidBefore=Object.fromEntries(await Promise.all(['b','c','e','f'].map(async u=>[u,await coins(u)])));assert.equal(paidBefore.c,cBefore);
-console.log('PASS: a wrong helper can retry after 24 hours; another wrong answer keeps the hints and pays no one.');
+const paidBefore=Object.fromEntries(await Promise.all(['b','c','e','f'].map(async u=>[u,await coins(u)])));assert.equal(paidBefore.c,cBefore);assert.deepEqual((await board('a')).retry,[]);
+console.log('PASS: a wrong helper can retry after 24 hours; a hinted question is offered for retry once it has rested; another wrong answer keeps the hints and pays no one.');
 
 Date.now=()=>now()+50*3600000;
 retry=await game('a',{action:'retry_question',id:'q1'});assert.equal(retry.status,200);const right=await game('a',{action:'answer',token:retry.body.token,answer});assert.equal(right.body.correct,true);assert.equal(right.body.answer,answer);assert(right.body.explanation);assert.deepEqual([...right.body.thanked].sort(),['b','c','f']);
-for(const u of ['b','c','f'])assert.equal(await coins(u),paidBefore[u]+10);assert.equal(await coins('e'),paidBefore.e);
+for(const u of ['b','c','f'])assert.equal(await coins(u),paidBefore[u]+10);assert.equal(await coins('e'),paidBefore.e);news=await board('a');assert.deepEqual([news.myHints,news.retry],[[],[]]);assert.equal((await board('c')).sentHints.find(h=>h.name==='a').status,'paid');
 entry=(await notebook('a','corrected')).entries.find(m=>m.id==='q1');assert.equal(entry.answers[0],answer);assert(entry.explanation);assert.equal(entry.help.status,'closed');assert.equal(entry.help.hints.length,3);
 assert(!(await board('b')).requests.some(x=>x.id===id));assert.equal((await sendHint('g',id)).status,400);assert.equal((await board('c')).sentHints[0].status,'paid');assert.equal((await board('e')).sentHints[0].status,'removed');
 const plain=await game('g',{action:'question',subject:'English'});assert.deepEqual((await game('g',{action:'answer',token:plain.body.token,answer:questions.find(q=>q.id===plain.body.question.id).answers[0]})).body.thanked,[]);Date.now=now;
