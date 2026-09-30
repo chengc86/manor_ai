@@ -4,13 +4,20 @@ import {GeometryBatch} from './mesh-batch';
 export function simplifyGeometry(g:THREE.BufferGeometry,detail:number):THREE.BufferGeometry{
  const s=(n:number,min:number)=>Math.max(min,Math.round(n*detail));
  if(detail>=1)return g;
- if(g instanceof THREE.SphereGeometry){const p=g.parameters;return new THREE.SphereGeometry(p.radius,s(p.widthSegments,8),s(p.heightSegments,6),p.phiStart,p.phiLength,p.thetaStart,p.thetaLength);}
+ // Shapes that were bent or tapered after construction supply their own lower-detail rebuild.
+ if(typeof g.userData.simplify==='function')return g.userData.simplify(detail) as THREE.BufferGeometry;
+ // Small, already-coarse spheres (eye highlights, buttons) may go coarser still.
+ if(g instanceof THREE.SphereGeometry){const p=g.parameters,small=p.widthSegments<=16;return new THREE.SphereGeometry(p.radius,s(p.widthSegments,small?6:8),s(p.heightSegments,small?4:6),p.phiStart,p.phiLength,p.thetaStart,p.thetaLength);}
  // Faceted cones (ears, beaks) keep their deliberate low segment counts.
  if(g instanceof THREE.ConeGeometry){const p=g.parameters;return p.radialSegments>8?new THREE.ConeGeometry(p.radius,p.height,s(p.radialSegments,8),1,p.openEnded,p.thetaStart,p.thetaLength):g;}
  if(g instanceof THREE.CylinderGeometry){const p=g.parameters;return p.radialSegments>8?new THREE.CylinderGeometry(p.radiusTop,p.radiusBottom,p.height,s(p.radialSegments,8),1,p.openEnded,p.thetaStart,p.thetaLength):g;}
  if(g instanceof THREE.CapsuleGeometry){const p=g.parameters;return new THREE.CapsuleGeometry(p.radius,p.height,s(p.capSegments,2),s(p.radialSegments,6));}
  if(g instanceof THREE.TorusGeometry){const p=g.parameters;return new THREE.TorusGeometry(p.radius,p.tube,s(p.radialSegments,4),s(p.tubularSegments,8),p.arc);}
  if(g instanceof THREE.TubeGeometry){const p=g.parameters;return new THREE.TubeGeometry(p.path,s(p.tubularSegments,6),p.radius,s(p.radialSegments,4),p.closed);}
+ // Smooth bodies and clothes: keep enough of the outline for the silhouette, fewer steps around.
+ if(g instanceof THREE.LatheGeometry){const p=g.parameters,n=Math.max(8,Math.round(p.points.length*Math.max(detail,.5)));return new THREE.LatheGeometry(Array.from({length:n},(_,i)=>p.points[Math.round(i/(n-1)*(p.points.length-1))]),s(p.segments,10),p.phiStart,p.phiLength);}
+ // Smooth bodies and clothes: keep enough of the outline for the silhouette, fewer steps around.
+ if(g instanceof THREE.LatheGeometry){const p=g.parameters,n=Math.max(8,Math.round(p.points.length*Math.max(detail,.5)));return new THREE.LatheGeometry(Array.from({length:n},(_,i)=>p.points[Math.round(i/(n-1)*(p.points.length-1))]),s(p.segments,10),p.phiStart,p.phiLength);}
  return g;
 }
 export type RigTemplate<A extends unknown[]=never[]>={

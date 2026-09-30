@@ -1,0 +1,23 @@
+/* The rides garage (Quest Shop aisle, backpack pocket and My hero). Kept out of globals.css. */
+.aisles.four{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.aisles.four{grid-template-columns:repeat(2,1fr)}}
+.garage-mirror .sprite.garage-sprite{width:132px;height:132px}
+.garage-grid{grid-template-columns:repeat(auto-fill,minmax(168px,1fr))}
+.ride-card{gap:4px}
+.ride-art{display:grid;place-items:center;width:140px;height:110px}
+.ride-art img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 5px 6px #0006);transition:transform .15s}
+.ride-art svg{width:56px;height:56px;color:#d0a300}
+button.ride-card:hover:not(:disabled) .ride-art img{transform:scale(1.06) rotate(-2deg)}
+.ride-blurb{font-size:12px;line-height:1.35;color:#b9d0bd;min-height:2.7em}
+.ride-card.is-equipped{border-color:#5fbf86;box-shadow:0 0 0 4px #5fbf8633}
+.paint-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:10px 0 4px}
+.paint-row>svg{width:20px;height:20px;color:#d0a300}
+.paint-dot{width:30px;height:30px;border-radius:50%;border:3px solid #0f3a2e;box-shadow:0 0 0 2px #3f6b56;cursor:pointer;transition:transform .12s}
+.paint-dot:hover:not(:disabled){transform:scale(1.12)}
+.paint-dot[aria-pressed=true]{box-shadow:0 0 0 3px #fffaee}
+.paint-dot:focus-visible{outline:3px solid #d0a300;outline-offset:2px}
+.empty-ride{width:72px;height:72px;color:#d0a300}
+.hero-rides{margin-top:18px}
+.hero-rides .aisle-title{margin-top:0}
+.hero-rides .aisle-title h3{display:flex;align-items:center;gap:8px}
+.hero-rides .aisle-title h3 svg{width:22px;height:22px;color:#d0a300}

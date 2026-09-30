@@ -1,6 +1,7 @@
 import {matchesYear,subjectExhausted,requireQuestionAllowed,recordRoundAnswer,readyQuestions,startRoundIfOver,QUESTION_SUBJECTS,QUESTION_REST,ROUND_SIZE} from '@/lib/question-policy';
 import {ITEMS,itemUpgradeCost,slotCost} from '@/lib/builds';
 import {CLOTHING,CLOTHING_SLOTS,wear} from '@/lib/clothing';
+import {vehicle,paint} from '@/lib/vehicles';
 import {EQUIPMENT} from '@/lib/equipment';
 import {TEAM_COLOURS,assignedColours} from '@/lib/colours';
 import {HEROES,HERO_CHANGE_COST,SELECTABLE_HERO_IDS,upgradeCost,spawnCost} from '@/lib/heroes';
@@ -16,7 +17,7 @@ const REPORT_REASONS=['answer','confusing','picture','typo','other'];
 export async function GET(req:Request){try{if(req.headers.get('X-Quest-Heroes')!=='4')return json({error:'New chapter and battle rules are ready. Refresh this page to keep playing. Your progress is safe.'},409);const uid=await user(req);let{w}=await readWorld();if(w.battle&&Date.now()-w.battle.start>=w.battle.duration)return json(await mutate(s=>view(s,uid)));return json(view(w,uid))}catch(e){console.error(e);return json({error:'The class world is unavailable. Please try again.'},503)}}
 export async function POST(req:Request){try{requireOrigin(req);if(req.headers.get('X-Quest-Heroes')!=='4')return json({error:'New chapter and battle rules are ready. Refresh this page to keep playing. Your progress is safe.'},409);const uid=await user(req);if(!uid)return json({error:'Sign in to join your class.'},401);const b:any=await req.json();if(['question','retry_question','answer','report'].includes(b.action)||String(b.action).startsWith('mock_'))if(req.headers.get('X-Quest-Questions')!=='3')return json({error:'A question display update is ready. Refresh this page before answering. Your coins and progress are safe.'},409);const result=await mutate(w=>{if(b.action==='battle'&&uid==='teacher'){beginBattle(w,b.battleVersion);return{world:view(w,uid)}}const p=w.players[uid];if(!p)throw new Error('Please sign in again.');
 if(b.action==='heartbeat'){p.lastSeen=Date.now();return{world:view(w,uid)}}
-const transactional=['recruit','move','weapon','upgrade','hero','clothing','undress','item_buy','item_equip','item_unequip','item_upgrade','item_slot'].includes(b.action);
+const transactional=['recruit','move','weapon','upgrade','hero','clothing','undress','vehicle','park','vehicle_paint','item_buy','item_equip','item_unequip','item_upgrade','item_slot'].includes(b.action);
 const body=JSON.stringify({...b,requestId:undefined});if(transactional){if(typeof b.requestId!=='string'||b.requestId.length>100||b.requestId.length<8)throw new Error('Refresh the page and try again.');const old=p.receipts?.find(r=>r.id===b.requestId);if(old){if(old.body!==body)throw new Error('This transaction reference was already used.');return{world:view(w,uid),duplicate:true};}}
 if(b.action.startsWith('item_')){if(w.battle)throw new Error('Manage items between waves.');p.itemInventory??={};p.equippedItems??=[];p.itemSlots??=2;const item=ITEMS.find(i=>i.id===b.item);const spend=(n:number)=>{if(!p.unlimitedCoins&&p.coins<n)throw new Error(`Save ${n} coins by answering questions.`);if(!p.unlimitedCoins)p.coins-=n;};
 if(b.action==='item_slot'){const cost=slotCost(p.itemSlots);if(cost===null)throw new Error('All four item slots are open.');spend(cost);p.itemSlots++;}
@@ -64,6 +65,10 @@ else if(b.action==='uniform'){throw new Error('Buy individual clothes in SHUS.')
 else if(b.action==='clothing'){const item=CLOTHING.find(c=>c.id===b.item);if(!item)throw new Error('Choose a clothing item.');p.clothingOwned??=[];if(!p.clothingOwned.includes(item.id)){if(!p.unlimitedCoins&&p.coins<item.price)throw new Error('Answer more questions to earn this item.');if(!p.unlimitedCoins)p.coins-=item.price;p.clothingOwned.push(item.id);}p.clothing=wear(p.clothing??{},item.id);}
 else if(b.action==='undress'){if(!CLOTHING_SLOTS.some(s=>s.id===b.slot))throw new Error('Choose a clothing slot.');if(p.clothing)delete p.clothing[b.slot as keyof typeof p.clothing];}
 
+// Rides are for fun only: buy once, then ride, park or repaint for free at any time.
+else if(b.action==='vehicle'){const v=vehicle(b.item);if(!v)throw new Error('Choose a ride.');p.vehiclesOwned??=[];if(!p.vehiclesOwned.includes(v.id)){if(!p.unlimitedCoins&&p.coins<v.price)throw new Error(`The ${v.name.toLowerCase()} costs ${v.price} coins. Keep answering questions to save up.`);if(!p.unlimitedCoins)p.coins-=v.price;p.vehiclesOwned.push(v.id);}p.vehicle=v.id;}
+else if(b.action==='park'){delete p.vehicle;}
+else if(b.action==='vehicle_paint'){const v=vehicle(b.item),c=paint(b.paint);if(!v||!c)throw new Error('Choose a ride and a colour.');if(!p.vehiclesOwned?.includes(v.id))throw new Error('Buy this ride first.');p.vehiclePaint={...p.vehiclePaint,[v.id]:c.id};}
 else if(b.action==='outfit'){throw new Error('Decorations are no longer available. Visit SHUS to buy a uniform.');}
 else if(b.action==='battle'){beginBattle(w,b.battleVersion);}
 else throw new Error('That action is not available.');if(transactional)p.receipts=[...(p.receipts??[]),{id:b.requestId,body}].slice(-64);return{world:view(w,uid)};});return json(result)}catch(e){return json({error:e instanceof Error?e.message:'Unable to save. Try again.'},400)}}

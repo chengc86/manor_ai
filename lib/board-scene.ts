@@ -107,10 +107,10 @@ export class BoardScene{
  private syncActors<T extends BoardHero|CampHero>(map:Map<string,HeroActor>,items:T[],spot:(item:T)=>THREE.Vector3,camp:boolean){
   const seen=new Set<string>();
   for(const item of items){
-   const look=JSON.stringify([item.type,item.clothing??null,item.uniform??null,item.gender??null,camp?'none':item.weapon??'none']);seen.add(item.id);
+   const look=JSON.stringify([item.type,item.clothing??null,item.uniform??null,item.gender??null,camp?'none':item.weapon??'none',camp?item.ride??null:null]);seen.add(item.id);
    let actor=map.get(item.id);
    if(actor&&actor.look!==look){this.release(actor);map.delete(item.id);actor=undefined;}
-   if(!actor){const {key,template}=acquireHeroTemplate({...item,weapon:camp?'none':item.weapon});actor=Object.assign(new Actor(key,template,this.characters,HERO_SCALE),{data:item,look});map.set(item.id,actor);actor.place(spot(item));actor.yaw=actor.targetYaw=camp?(actor.phase%1-.5)*.6:this.faceRoute(actor.position);}
+   if(!actor){const {key,template}=acquireHeroTemplate({...item,weapon:camp?'none':item.weapon,ride:camp?item.ride:undefined});actor=Object.assign(new Actor(key,template,this.characters,HERO_SCALE),{data:item,look});map.set(item.id,actor);actor.place(spot(item));actor.yaw=actor.targetYaw=camp?(actor.phase%1-.5)*.6:this.faceRoute(actor.position);}
    else{const p=spot(item);if(!p.equals(actor.position)){actor.place(p);actor.targetYaw=camp?actor.targetYaw:this.faceRoute(p);}}
    actor.data=item;
   }

@@ -1,17 +1,20 @@
 import * as THREE from 'three';
-import {createHeroModel,outfitForWardrobe} from './hero-model';
+import {outfitForWardrobe} from './hero-model';
+import {createRidingHero} from './hero-ride';
+import type {Ride} from './vehicles';
 import {hero3D} from './hero-3d-catalogue';
 import {uniformPieces,wear,type Wardrobe} from './clothing';
 import {bakeRig,type RigTemplate} from './rig-bake';
 import {createHeldWeapon} from './weapon-model';
 /** Battlefield heroes: the dressing-room model baked small, holding their weapon. One template per look. */
-export type HeroLook={type:number;clothing?:Wardrobe;uniform?:string;gender?:string;weapon?:string};
+/** How a hero looks on the battlefield. Rides only appear in the hero camp, never on defenders. */
+export type HeroLook={type:number;clothing?:Wardrobe;uniform?:string;gender?:string;weapon?:string;ride?:Ride};
 /** Arguments of a hero pose: time, motion and whether motion is allowed. */
 export type HeroPose=[time:number,motion:'idle'|'walk'|'attack',enabled?:boolean];
 export type HeroRig=RigTemplate<HeroPose>;
 export const HERO_DETAIL=.32;
 export function lookWardrobe(look:HeroLook):Wardrobe{return look.clothing??uniformPieces(look.uniform??'none',look.gender).reduce((w,id)=>wear(w,id),{} as Wardrobe);}
-export function heroKey(look:HeroLook){return JSON.stringify([look.type,Object.entries(lookWardrobe(look)).sort(([a],[b])=>a.localeCompare(b)),look.weapon??'none']);}
+export function heroKey(look:HeroLook){return JSON.stringify([look.type,Object.entries(lookWardrobe(look)).sort(([a],[b])=>a.localeCompare(b)),look.weapon??'none',look.ride?[look.ride.id,look.ride.paint]:null]);}
 function part(parent:THREE.Object3D,geometry:THREE.BufferGeometry,colour:number,pos:[number,number,number],scale:[number,number,number]=[1,1,1],metal=false){
  const m=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:colour,roughness:.6}));m.position.set(...pos);m.scale.set(...scale);if(metal)m.userData.metal=true;parent.add(m);return m;
 }
@@ -34,9 +37,10 @@ function towerTemplate(type:number,weapon:string):HeroRig{
 function buildTemplate(look:HeroLook):HeroRig{
  const weapon=look.weapon??'none',hero=hero3D(look.type);
  if(!hero)return towerTemplate(look.type,weapon);
- const wardrobe=lookWardrobe(look),model=createHeroModel(hero.skin,outfitForWardrobe(wardrobe),wardrobe);
- if(weapon!=='none'){const held=createHeldWeapon(weapon);held.position.set(0,-.43,.07);held.rotation.x=.12;model.parts.arms[1].add(held);}
- return bakeRig<HeroPose>(model.root,[model.parts.body,...model.parts.legs,...model.parts.arms],(t,motion,enabled=true)=>model.animate(t,motion,enabled),HERO_DETAIL);
+ const wardrobe=lookWardrobe(look),model=createRidingHero(hero.skin,outfitForWardrobe(wardrobe),wardrobe,look.ride);
+ if(weapon!=='none')model.grip.add(createHeldWeapon(weapon));
+ // The head and tail are bones too, so heroes tilt their heads and wag their tails on the battlefield.
+ return bakeRig<HeroPose>(model.root,[model.parts.body,model.parts.head,model.parts.tail,...model.parts.legs,...model.parts.arms],(t,motion,enabled=true)=>model.animate(t,motion,enabled),HERO_DETAIL);
 }
 /** Shared, reference-counted templates, so a pupil's camp hero and deployed heroes reuse one bake. */
 const cache=new Map<string,{template:HeroRig;users:number}>();

@@ -8,12 +8,13 @@ import {buildableCells,COLS,ROWS,type RouteShape} from '@/lib/board-scenery';
 import {boardTheme} from '@/lib/board-theme';
 import {HEROES} from '@/lib/heroes';
 import type {Wardrobe} from '@/lib/clothing';
+import type {Ride} from '@/lib/vehicles';
 import {SCHOOL_MAX_HP,type Battle,type simulate} from '@/lib/battle';
 /** Camera commands for the board toolbar. */
 export type BoardCamera={zoom(factor:number):void;rotate(angle:number):void;reset():void};
 type Look={type:number;clothing?:Wardrobe;uniform?:string;gender?:string};
 type Defender=Look&{id:string;cell:number;level:number;weapon?:string;colour?:string;name?:string;owner?:string};
-type Player={id:string;hero:number;clothing?:Wardrobe;uniform?:string;gender?:string;colour?:string;name:string;online?:boolean};
+type Player={id:string;hero:number;clothing?:Wardrobe;uniform?:string;gender?:string;colour?:string;name:string;online?:boolean;ride?:Ride};
 export type BoardWorld={wave:number;defenders:Defender[];players:Player[];me?:{id:string;clothing?:Wardrobe;uniform?:string;gender?:string}|null};
 type Props={world:BoardWorld;battle:Battle|null;sim:ReturnType<typeof simulate>|null;now:number;placement:{type:number;level?:number;weapon?:string}|null;range:number|null;hover:number|null;setHover:(cell:number|null)=>void;
  onPlace:(cell:number)=>void;onHero:(hero:Defender|(Player&{camp:true}))=>void;onFail:()=>void;motion:boolean;layout:RouteShape;schoolHp:number|null;ref?:Ref<BoardCamera>};
@@ -65,7 +66,7 @@ export default function Board3D({world,battle,sim,now,placement,range,hover,setH
  const deployed:Defender[]=useMemo(()=>battle?battle.fighters:world.defenders.filter(d=>d.cell>=0),[battle,world.defenders]);
  const heroes:BoardHero[]=useMemo(()=>deployed.map(d=>({id:d.id,type:d.type,cell:d.cell,level:d.level,weapon:d.weapon??(d.level?'standard':'none'),colour:d.colour??HEROES[d.type]?.colour,name:d.name??'',clothing:d.clothing,uniform:d.uniform,gender:d.gender,mine:d.owner===world.me?.id})),[deployed,world.me?.id]);
  const heroKey=JSON.stringify(heroes);
- const camp:CampHero[]=useMemo(()=>world.players.map((p,i)=>({id:p.id,slot:i,type:p.hero,clothing:p.clothing,uniform:p.uniform,gender:p.gender,colour:p.colour,name:p.name,online:!!p.online})),[world.players]);
+ const camp:CampHero[]=useMemo(()=>world.players.map((p,i)=>({id:p.id,slot:i,type:p.hero,clothing:p.clothing,uniform:p.uniform,gender:p.gender,colour:p.colour,name:p.name,online:!!p.online,ride:p.ride})),[world.players]);
  const campKey=JSON.stringify(camp);
  const occupied=useMemo(()=>new Map(deployed.map(d=>[d.cell,d])),[deployed]);
  const buildable=useMemo(()=>buildableCells(layout.cells),[layout]);

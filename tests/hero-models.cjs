@@ -1,7 +1,7 @@
 // Renderable geometry and stable-ID coverage, independent of live player data.
 const fs=require('fs'),ts=require('typescript'),assert=require('node:assert/strict');
 fs.mkdirSync('work/model-test',{recursive:true});
-for(const name of ['hero-model','hero-3d-catalogue','hero-catalogue','hero-outfit','clothing']){
+for(const name of ['hero-model','hero-kit','hero-features','hero-extras','hero-heads','hero-designs','hero-3d-catalogue','hero-catalogue','hero-outfit','clothing']){
  const output=ts.transpileModule(fs.readFileSync(`lib/${name}.ts`,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText.replace(/require\("\.\/(.*?)"\)/g,'require("./$1.cjs")');
  fs.writeFileSync(`work/model-test/${name}.cjs`,output);
 }

@@ -28,7 +28,9 @@ const CHOSEN_HEROES = [
 export type Hero3DSkin=string;
 const slug=(kind:string)=>kind.toLowerCase().replace(/[^a-z0-9]+/g,'-');
 const base=[{id:0,name:'Bramble',skin:'fox',kind:'Fox'},{id:5,name:'Rowan',skin:'badger',kind:'Badger'},{id:9,name:'Ash',skin:'wolf',kind:'Wolf'}];
-export const HERO_3D_STUDIES=[...CHOSEN_HEROES,...base,...EXTRA_HEROES.filter(h=>!CHOSEN_HEROES.some(c=>c.id===h.id)).map(h=>({...h,skin:slug(h.kind)}))].sort((a,b)=>a.id-b.id);
+// Heroes that share a kind with another hero but look different in their 2D art get their own skin.
+const DISTINCT:Record<number,string>={34:'tuxedo-cat',39:'brown-owl',70:'mint-dragon',77:'teal-alien'};
+export const HERO_3D_STUDIES=[...CHOSEN_HEROES,...base,...EXTRA_HEROES.filter(h=>!CHOSEN_HEROES.some(c=>c.id===h.id)).map(h=>({...h,skin:DISTINCT[h.id]??slug(h.kind)}))].sort((a,b)=>a.id-b.id);
 export const hero3D=(id:number)=>HERO_3D_STUDIES.find(h=>h.id===id);
 export function heroModelProfile(skin:string){
  const palette=[0x81a9b0,0xd2a76e,0xad8fb7,0x88ad7b,0xd9917c,0x8fa4cf];

@@ -80,3 +80,23 @@ The battlefield itself is now 3D ([3d-battlefield.md](3d-battlefield.md)). Board
 `createHeroModel` geometry, which now also returns its moving parts. Each look and weapon is baked once
 at lower detail into one rigidly skinned mesh that the original animation code still drives. Portraits
 and the dressing room are unchanged.
+
+## Cuter heroes and rides — 30 September 2026
+Children found the 3D heroes less cute than the 2D art, so the models were redesigned to match it:
+big heads (nearly half the height), big glossy eyes with two highlights and a lid line, open smiles,
+blush, round paws and soft studio lighting (a room reflection, neutral tone mapping, key, fill and rim
+lights in `lib/hero-stage.ts`). Every hero has its own design in `lib/hero-designs.ts`, with colours
+sampled from its 2D picture; species details are in `lib/hero-extras.ts` and the heads of robots,
+sprites and playthings (a pencil, a drum, a strawberry…) in `lib/hero-heads.ts`. Clothes are refitted
+to the new body. Plain base shorts are off, like the 2D art (`BASE_SHORTS` in `lib/hero-model.ts`).
+
+On the battlefield the head and tail are bones too, and tapered or bent shapes supply their own
+low-detail rebuild (`userData.simplify`, used by `lib/rig-bake.ts`). Bakes average about 4,800
+triangles (3,900 before); the heaviest look with a weapon stays under the 9,000 test budget.
+
+Rides (`lib/vehicles.ts`): eleven toy-sized vehicles from 150 to 1,500 coins, with eight free paints.
+They are cosmetic only and never change stats. `lib/vehicle-model.ts` builds them and says where the
+hero stands or sits and in which pose; `lib/hero-ride.ts` seats the hero. The game API has `vehicle`
+(buy once, then ride), `park` and `vehicle_paint`, all with receipts like other purchases. Rides show
+in the dressing room, on the pupil's pictures, in the profile and in the hero camp, but not on
+defenders. `tests/vehicles.cjs` covers the catalogue, every model, the camp budget and the API.
