@@ -6,16 +6,20 @@ import {Dialog,DialogContent,DialogTitle,DialogDescription} from '@/components/u
 import QuestionVisual from './question-visual';
 import {layout} from '@/lib/visual-layout';
 import HeroPortrait from './hero-portrait';
+import ReadAloud,{useReading} from './read-aloud';
+import {questionSpeech,explanationSpeech} from '@/lib/speech-text';
 // The parts of a question every screen shares: Earn coins, mock tests, the help board and the mistake notebook.
+/** A question written as a heading, with its read-aloud button (mistake notebook, helping a friend). */
+export function PromptHeading({q,readId}:{q:any;readId:string}){return <div className="prompt-row"><h3><RichText text={q.prompt}/></h3><ReadAloud id={readId} sentences={questionSpeech(q)}/></div>;}
 // Questions arrive without answers (publicQuestion); nothing here can reveal one.
 
 /** Text with **bold** and line breaks. */
 export function RichText({text}:{text:string}){return <>{text.split('\n').map((line,i)=><Fragment key={i}>{i>0&&<br/>}{line.split(/\*\*(.+?)\*\*/g).map((part,j)=>j%2?<strong key={j}>{part}</strong>:part)}</Fragment>)}</>;}
-/** Worked explanations: '- ' lines are bullets and a short line ending in ':' is a heading. */
-export function Explanation({text}:{text:string}){
+/** Worked explanations: '- ' lines are bullets and a short line ending in ':' is a heading. With readId, pupils can have it read aloud. */
+export function Explanation({text,readId}:{text:string;readId?:string}){
  const blocks:{kind:'h'|'p'|'ul';lines:string[]}[]=[];
  for(const raw of text.split('\n')){const line=raw.trim();if(!line)continue;const bullet=line.startsWith('- ');if(bullet){const last=blocks.at(-1);if(last?.kind==='ul')last.lines.push(line.slice(2));else blocks.push({kind:'ul',lines:[line.slice(2)]});}else blocks.push({kind:line.endsWith(':')&&line.length<40?'h':'p',lines:[line]});}
- return <div className="explanation">{blocks.map((b,i)=>b.kind==='ul'?<ul key={i}>{b.lines.map((l,j)=><li key={j}><RichText text={l}/></li>)}</ul>:b.kind==='h'?<h4 key={i}>{b.lines[0].slice(0,-1)}</h4>:<p key={i}><RichText text={b.lines[0]}/></p>)}</div>;
+ return <div className="explanation">{readId&&<ReadAloud id={readId} sentences={explanationSpeech(text)} label="Read it to me" className="explain-read"/>}{blocks.map((b,i)=>b.kind==='ul'?<ul key={i}>{b.lines.map((l,j)=><li key={j}><RichText text={l}/></li>)}</ul>:b.kind==='h'?<h4 key={i}>{b.lines[0].slice(0,-1)}</h4>:<p key={i}><RichText text={b.lines[0]}/></p>)}</div>;
 }
 /** A multi-page passage beside its questions. It opens on the page the question is about. */
 export function ReadingPane({reading,page=0}:{reading:{id:string;title:string;byline?:string;pages:string[]};page?:number}){
@@ -34,11 +38,12 @@ function MatchedVisual({visual}:{visual:any}){
   if(!option)return;const o=option,watch=new ResizeObserver(()=>{const w=o.viewBox.baseVal?.width;if(w)setUnit(o.getBoundingClientRect().width/w);});watch.observe(o);return()=>watch.disconnect();},[visual]);
  return <div ref={ref} className="paper q-visual"><QuestionVisual visual={visual} unit={unit}/></div>;
 }
-/** The question itself: the pupil's hero asks it in a speech bubble, then the thing to work on and any picture. */
+/** The question itself: the pupil's hero asks it in a speech bubble (and can read it aloud), then the thing to work on and any picture. */
 export function QuestionBody({q,hero,Diagram,onDiagramReady,showPrompt=true}:{q:any;hero?:{type:number;clothing?:any}|null;Diagram?:any;onDiagramReady?:(ready:boolean)=>void;showPrompt?:boolean}){
+ const readId=`q:${q.id}`,talking=useReading(readId);
  return <div className="q-body">
   {q.passage&&<blockquote className="passage">{q.passage}</blockquote>}
-  {showPrompt&&<div className="q-prompt"><span className="q-avatar" aria-hidden="true">{hero?<HeroPortrait type={hero.type} clothing={hero.clothing??{}}/>:<Sparkles/>}</span><div className="q-bubble"><RichText text={q.prompt}/></div></div>}
+  {showPrompt&&<div className={`q-prompt${talking?' talking':''}`}><span className="q-avatar" aria-hidden="true">{hero?<HeroPortrait type={hero.type} clothing={hero.clothing??{}}/>:<Sparkles/>}</span><div className="q-bubble"><RichText text={q.prompt}/><div className="bubble-tools"><ReadAloud id={readId} sentences={questionSpeech(q)}/></div></div></div>}
   {q.stimulus&&<div className="q-stimulus"><RichText text={q.stimulus}/></div>}
   {q.visual&&(q.visual.scale==='options'?<MatchedVisual visual={q.visual}/>:<div className="paper q-visual"><QuestionVisual visual={q.visual}/></div>)}
   {q.diagram&&Diagram&&<Diagram key={q.id} diagram={q.diagram} onReady={onDiagramReady}/>}

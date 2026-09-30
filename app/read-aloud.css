@@ -1,0 +1,22 @@
+/* "Read to me" buttons and the hero talking while a question is read. Kept out of globals.css.
+   The doubled class keeps the button looking the same inside boxes that style every button (such as the answer feedback). */
+.read-aloud.read-aloud{display:inline-flex;align-items:center;gap:7px;margin:0;padding:7px 14px;border-radius:999px;border:2px solid #2f7a5c;background:#1d5a45;color:#fffaee;font-size:14px;font-weight:800;line-height:1;cursor:pointer;transition:background .15s,transform .15s;white-space:nowrap}
+.read-aloud.read-aloud span{display:inline;margin:0;color:inherit;font-size:inherit;line-height:inherit}
+.read-aloud.read-aloud svg{width:18px;height:18px;flex-shrink:0}
+.read-aloud.read-aloud:hover{background:#246b52;transform:translateY(-1px)}
+.read-aloud.read-aloud:focus-visible{outline:3px solid #d0a300;outline-offset:2px}
+.read-aloud.read-aloud.reading{background:#d0a300;border-color:#d0a300;color:#1f2a24}
+.read-aloud.reading svg{animation:read-pulse 1s ease-in-out infinite}
+@keyframes read-pulse{50%{transform:scale(.8)}}
+/* Inside the hero's speech bubble: a little row under the question. */
+.q-bubble .bubble-tools{display:flex;justify-content:flex-end;margin-top:10px}
+/* Beside a question written as a heading (mistake notebook, helping a friend). */
+.prompt-row{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.prompt-row>h3{flex:1;min-width:0}
+/* At the top of a worked explanation, on its own row at the right. */
+.read-aloud.read-aloud.explain-read{display:flex;width:fit-content;margin:0 0 8px auto;padding:5px 11px;font-size:13px}
+/* The hero bobs as if speaking while its question is read. */
+.q-prompt.talking .q-avatar{animation:hero-talk .45s ease-in-out infinite alternate;border-color:#fffaee}
+@keyframes hero-talk{to{transform:translateY(-3px) scale(1.04)}}
+@media(prefers-reduced-motion:reduce){.read-aloud.reading svg,.q-prompt.talking .q-avatar{animation:none}}
+@media(max-width:600px){.read-aloud.read-aloud{padding:6px 11px;font-size:13px}.prompt-row{flex-direction:column;gap:8px}}
