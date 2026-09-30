@@ -10,9 +10,17 @@ import {mixedQuestions} from './mixed-questions';
 import {year6Questions} from './year6-expansion';
 import {questionCorrections} from './question-corrections';
 import {entranceQuestions} from './entrance-questions';
+import {bankQuestions,topicById} from './bank';
+import type {Visual} from './visual';
 // Server-only question bank. Answers are never included in question responses.
-export type Subject = 'Maths'|'English'|'Verbal reasoning'|'Non-verbal reasoning';
-export type Question = {rewardGroup?:import('./question-rewards').RewardGroup;reward?:number;id:string;subject:Subject;prompt:string;answers:string[];explanation:string;options?:string[];passage?:string;diagram?:{kind:string;items:number[]};difficulty:string};
+export type Subject = 'Maths'|'English'|'Verbal reasoning'|'Non-verbal reasoning'|'Science';
+export type Question = {rewardGroup?:import('./question-rewards').RewardGroup;reward?:number;id:string;subject:Subject;prompt:string;answers:string[];explanation:string;options?:string[];passage?:string;diagram?:{kind:string;items:number[]};difficulty:string;
+ // Atom-style bank (bank-*.ts). topic links to its helpsheet and mastery. select > 1 asks for that many options; answers lists them all.
+ topic?:string;select?:number;stimulus?:string;visual?:Visual;optionVisuals?:Visual[];reading?:{id:string;title:string;byline?:string;pages:string[]};page?:number;
+ // The original Year 6 bank is retired: it is never asked again, but stays here so notebooks, friends' hints and pending questions still work.
+ legacy?:boolean;
+ // The author fixed the choice order (< = >, numbers in order, lettered cards), so it is never shuffled per pupil.
+ fixedOrder?:boolean};
 export const questions:Question[]=[];
 function add(subject:Subject,prompt:string,answers:string[],explanation:string,extra:Partial<Question>={}){questions.push({id:`q${questions.length+1}`,subject,prompt,answers,explanation,difficulty:'Year 6',...extra})}
 for(let n=2;n<=16;n++){
@@ -77,17 +85,49 @@ add('Non-verbal reasoning','How many sides will the next shape have?',['6','six'
 add('Non-verbal reasoning','How many sides will the next shape have?',['8','eight'],'The shapes gain one side each time: pentagon (5), hexagon (6), heptagon (7), octagon (8).',{diagram:{kind:'polygon',items:[5,6,7]}});
 questions.push(...year6Questions,...mixedQuestions,...progressionQuestions,...readingExpansion,...year2Questions,...freshQuestions,...textbookQuestions,...questExpansion,...moreQuestions,...entranceQuestions);
 for(const q of questions)Object.assign(q,questionCorrections[q.id]);
+for(const q of questions)if(q.difficulty!=='Year 2')q.legacy=true;
 // Explicit choices keep open analogies from rejecting other plausible answers.
 for(const q of questions){if(q.prompt==='Complete the analogy: seed is to plant as egg is to ___.')q.options=['chick','calf','sapling','kitten'];if(q.prompt==='Complete the analogy: author is to book as composer is to ___.')q.options=['music','brush','stage','audience'];if(q.id==='y6-2026-051')q.options=['wall','river','story','tree'];if(q.id==='y6-2026-052')q.options=['school','hotel','factory','farm'];}
 for(const q of questions){q.rewardGroup=rewardGroupFor(q);q.reward=questionReward(q);}
 // Picture choices are labelled inside the diagram, so list them in label order.
 for(const q of questions)if(q.options?.every(o=>/^[A-Z]$/.test(o)))q.options.sort();
+questions.push(...bankQuestions);
+export const questionById=new Map(questions.map(q=>[q.id,q]));
 export function normalise(s:string){if(/^[.,!?;:]$/.test(s.trim()))return s.trim();return s.normalize('NFKC').replace(/[‘’]/g,"'").replace(/−/g,'-').toLowerCase().trim().replace(/[.,!?]$/,'').replace(/\s+/g,' ').replace(/\s*\/\s*/g,'/');}
-export function publicQuestion(q:Question,reward=q.reward){const {answers,explanation,...safe}=q;return {...safe,reward};}
+// Each pupil sees a question's choices in their own fixed order, so "it's C" in a hint or in chat means nothing to anyone else.
+// Picture choices keep their letters A, B, C … while the pictures move, so a pupil's letter is mapped back before marking.
+// Only the new bank is shuffled: its explanations never name a letter. Year 2 and retired questions keep their written order.
+const seed=(s:string)=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;};
+/** Display position → original option index for this pupil, or null when the order stays as written. */
+export function choiceOrder(q:Question,viewer?:string|null):number[]|null{
+ if(!viewer||!q.topic||!q.options||q.fixedOrder||(!q.optionVisuals&&q.options.every(o=>/^[A-Z]$/.test(o))))return null;
+ let s=seed(`${viewer}|${q.id}`);const rand=()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296;};
+ const order=q.options.map((_,i)=>i);for(let i=order.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[order[i],order[j]]=[order[j],order[i]];}return order;
+}
+/** What the pupil clicked, as the original options (only picture letters change). */
+export function toCanonical(q:Question,viewer:string|null|undefined,answer:string|string[]):string|string[]{const order=choiceOrder(q,viewer);if(!order||!q.optionVisuals)return answer;const map=(a:string)=>{const i=q.options!.indexOf(a);return i<0?a:q.options![order[i]];};return Array.isArray(answer)?answer.map(map):map(answer);}
+/** The original answers as this pupil sees them. */
+export function toViewer(q:Question,viewer:string|null|undefined,answers:string[]):string[]{const order=choiceOrder(q,viewer);if(!order||!q.optionVisuals)return answers;return answers.map(a=>{const i=q.options!.indexOf(a),j=order.indexOf(i);return j<0?a:q.options![j];});}
+export function publicQuestion(q:Question,reward=q.reward,viewer?:string|null){const {answers,explanation,legacy,fixedOrder,...safe}=q,topic=q.topic?topicById.get(q.topic):undefined,order=choiceOrder(q,viewer);
+ const choices=order?(q.optionVisuals?{optionVisuals:order.map(i=>q.optionVisuals![i])}:{options:order.map(i=>q.options![i])}):{};
+ return {...safe,...choices,reward,...(topic?{topicTitle:topic.title,strand:topic.strand}:{})};}
+/** A submitted answer in the form the question needs: one string, or for select > 1 that many different options. Throws a pupil-facing message otherwise. */
+export function readAnswer(q:Question,raw:unknown):string|string[]{
+ const need=q.select??1;
+ if(need>1){const picked=Array.isArray(raw)?[...new Set(raw.map(v=>String(v??'').trim()).filter(Boolean))]:[];if(picked.length!==need||picked.some(a=>a.length>300))throw new Error(`Choose ${need} answers.`);return picked;}
+ const answer=String(Array.isArray(raw)?raw[0]??'':raw??'').trim();if(!answer||answer.length>300)throw new Error('Type your answer first (up to 300 characters).');return answer;
+}
+/** How a submitted answer is written in notebooks: several choices are joined with a middle dot. */
+export const answerText=(a:string|string[])=>Array.isArray(a)?a.join(' · '):a;
 
 // A number may carry a unit only when it is the unit the question asks for: "how many <unit>", otherwise the last unit named.
 const UNITS:[RegExp,RegExp][]=[[/^(p|pence)$/,/\d+p\b|\bpence\b/g],[/^(cm|centimetres?)$/,/\bcm\b(?!²)|\bcentimetres?\b/g],[/^(m|metres?)$/,/\d ?m\b(?!²)|\bmetres?\b/g],[/^(km|kilometres?)$/,/\bkm\b(?!\/)|\bkilometres?\b(?! per)/g],[/^(mm|millimetres?)$/,/\bmm\b|\bmillimetres?\b/g],[/^(g|grams?)$/,/\d ?g\b|\bgrams?\b/g],[/^(kg|kilograms?)$/,/\bkg\b|\bkilograms?\b/g],[/^(ml|millilitres?)$/,/\bml\b|\bmillilitres?\b/g],[/^(l|litres?)$/,/\d ?l\b|\blitres?\b/g],[/^(°c?|degrees?( celsius)?)$/,/°|\bdegrees?\b/g],[/^(minutes?|mins?)$/,/\bminutes?\b/g],[/^(hours?|hrs?)$/,/\bhours?\b/g],[/^(seconds?|secs?)$/,/\bseconds?\b/g],[/^days?$/,/\bdays?\b/g],[/^years?( old)?$/,/\byears?\b/g],[/^(cm²|cm2|square centimetres?)$/,/cm²|\bsquare centimetres?\b/g],[/^(m²|m2|square metres?)$/,/\bm²|\bsquare metres?\b/g],[/^(km\/h|kph|kilometres per hour)$/,/km\/h|\bkilometres per hour\b/g]];
 function askedUnit(prompt:string){const p=prompt.toLowerCase(),how=p.match(/how many ([a-z²]+)/);if(how){const i=UNITS.findIndex(([unit])=>unit.test(how[1]));if(i>=0)return i;}let best=-1,at=-1;UNITS.forEach(([,cue],i)=>{for(const m of p.matchAll(cue))if(m.index!>=at){at=m.index!;best=i;}});return best;}
-export function answerMatches(q:Question,input:string){const value=normalise(input);if(q.answers.some(a=>normalise(a)===value))return true;if(q.subject!=='Maths')return false;const numeric=(s:string)=>{s=normalise(s);if(/pounds|£/.test(q.prompt))s=s.replace(/^£/,'');if(/what percentage|which percentage/i.test(q.prompt))s=s.replace(/%$/,'');const unit=s.match(/^([+-]?[\d.,]*\d)\s*(\D.*)$/);if(unit){const i=askedUnit(q.prompt);if(i>=0&&UNITS[i][0].test(unit[2]))s=unit[1];}if(!/^[+-]?(?:\d{1,3}(?:,\d{3})+|\d+|)(?:\.\d+)?$/.test(s)||!/[0-9]/.test(s))return null;const n=Number(s.replace(/,/g,''));return Number.isFinite(n)?n:null;};const n=numeric(input);return n!==null&&q.answers.some(a=>{const expected=numeric(a);return expected!==null&&n===expected;});}
+/** An option exactly as shown: capitals and punctuation can be the whole point of a question ("Stop!" is not "Stop."). */
+export const exactOption=(s:string)=>s.normalize('NFKC').replace(/\s+/g,' ').trim();
+export function answerMatches(q:Question,input:string|string[]){
+ // New-bank choices are clicked, not typed, so they must match exactly; typed answers and older questions stay forgiving.
+ if(q.topic&&q.options){const want=q.answers.map(exactOption);if((q.select??1)>1){const got=new Set((Array.isArray(input)?input:input.split(' · ')).map(exactOption));return got.size===want.length&&want.every(a=>got.has(a));}return want.includes(exactOption(Array.isArray(input)?input[0]??'':input));}
+ if((q.select??1)>1){const got=new Set((Array.isArray(input)?input:input.split(' · ')).map(normalise)),want=new Set(q.answers.map(normalise));return got.size===want.size&&[...want].every(a=>got.has(a));}if(Array.isArray(input))input=input[0]??'';const value=normalise(input);if(q.answers.some(a=>normalise(a)===value))return true;if(q.subject!=='Maths')return false;const numeric=(s:string)=>{s=normalise(s);if(/pounds|£/.test(q.prompt))s=s.replace(/^£/,'');if(/what percentage|which percentage/i.test(q.prompt))s=s.replace(/%$/,'');const unit=s.match(/^([+-]?[\d.,]*\d)\s*(\D.*)$/);if(unit){const i=askedUnit(q.prompt);if(i>=0&&UNITS[i][0].test(unit[2]))s=unit[1];}if(!/^[+-]?(?:\d{1,3}(?:,\d{3})+|\d+|)(?:\.\d+)?$/.test(s)||!/[0-9]/.test(s))return null;const n=Number(s.replace(/,/g,''));return Number.isFinite(n)?n:null;};const n=numeric(input);return n!==null&&q.answers.some(a=>{const expected=numeric(a);return expected!==null&&n===expected;});}
 // Friends' hints must not hand over the answer: reject the answer itself, or any distinctive accepted answer (3+ characters or a number) that the prompt does not already show.
 export function revealsAnswer(q:Question,hint:string){if(answerMatches(q,hint))return true;const text=normalise(hint),prompt=normalise(q.prompt);return q.answers.some(a=>{const value=normalise(a);if(value.length<3&&!/[0-9]/.test(value))return false;const word=new RegExp('(?<![a-z0-9]|[0-9][.,/:])'+value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?![a-z0-9]|[.,/:][0-9])');return word.test(text)&&!word.test(prompt);});}

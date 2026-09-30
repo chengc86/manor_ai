@@ -1,0 +1,30 @@
+import {combine} from './bank-kit';
+import type {EnglishPart,Audit} from './bank-english-kit';
+import {nouns} from './bank-english-nouns';
+import {verbs} from './bank-english-verbs';
+import {adjectives} from './bank-english-adjectives';
+import {adverbs} from './bank-english-adverbs';
+import {pronouns} from './bank-english-pronouns';
+import {prepositions} from './bank-english-prepositions';
+import {conjunctions} from './bank-english-conjunctions';
+import {determiners} from './bank-english-determiners';
+import {clauses} from './bank-english-clauses';
+import {tenses} from './bank-english-tenses';
+import {activePassive} from './bank-english-voice';
+import {formality} from './bank-english-formality';
+import {sentencePunctuation} from './bank-english-sentence-punctuation';
+import {commas} from './bank-english-commas';
+import {apostrophes} from './bank-english-apostrophes';
+import {speech} from './bank-english-speech';
+import {colons} from './bank-english-colons';
+import {homophones} from './bank-english-homophones';
+import {affixes} from './bank-english-affixes';
+import {vocabulary} from './bank-english-vocabulary';
+import {fiction} from './bank-english-fiction';
+import {nonFiction} from './bank-english-nonfiction';
+import {poetry} from './bank-english-poetry';
+// Atom-style original questions for this subject: see docs/design/question-bank-v2.md.
+// Each topic lives in its own lib/bank-english-<part>.ts file. englishAudit holds the notes tests/bank-english.cjs re-checks.
+const parts:EnglishPart[]=[nouns,verbs,adjectives,adverbs,pronouns,prepositions,conjunctions,determiners,clauses,tenses,activePassive,formality,sentencePunctuation,commas,apostrophes,speech,colons,homophones,affixes,vocabulary,fiction,nonFiction,poetry];
+export const englishBank=combine(...parts.map(p=>p.built));
+export const englishAudit:Audit[]=parts.flatMap(p=>p.audit);

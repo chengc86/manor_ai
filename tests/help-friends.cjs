@@ -1,4 +1,4 @@
-// Mistake answers stay hidden; friends must solve a posted question before a hint pays 10 coins. Uses an on-disk SQL database, never live pupil data.
+// Mistake answers stay hidden; friends must solve a posted question before a hint pays HELP_REWARD coins. Uses an on-disk SQL database, never live pupil data.
 const fs=require('fs'),ts=require('typescript'),assert=require('node:assert/strict'),{DatabaseSync}=require('node:sqlite'),Module=require('module');
 const dir='work/help-friends';fs.mkdirSync(dir,{recursive:true});
 const compile=(src,out)=>fs.writeFileSync(`${dir}/${out}`,ts.transpileModule(fs.readFileSync(src,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText.replace(/require\("(?:@\/lib\/|\.\/)(.*?)"\)/g,'require("./$1.cjs")'));
@@ -8,8 +8,8 @@ const file=`${dir}/test-${Date.now()}.sqlite`;let sqlite=new DatabaseSync(file);
 sqlite.exec('CREATE TABLE world(id TEXT PRIMARY KEY,revision INTEGER NOT NULL,data TEXT NOT NULL); CREATE TABLE sessions(token TEXT PRIMARY KEY,user_id TEXT,expires INTEGER);');
 const DB={prepare(sql){return {bind(...values){return {async run(){return {meta:{changes:Number(sqlite.prepare(sql).run(...values).changes)}}},async first(){return sqlite.prepare(sql).get(...values)??null}}}}}};
 const original=Module._load;Module._load=function(id,...args){if(id==='cloudflare:workers')return{env:{DB}};return original.call(this,id,...args)};
-const W=require(`../${dir}/world.cjs`),GAME=require(`../${dir}/game.cjs`),REVIEW=require(`../${dir}/review.cjs`),HELP=require(`../${dir}/help.cjs`),{questions,revealsAnswer}=require(`../${dir}/questions.cjs`);
-const request=(url,uid,body)=>new Request('https://game.test'+url,{method:body?'POST':'GET',headers:{cookie:'qg_session='+uid,origin:'https://game.test',host:'game.test','content-type':'application/json','X-Quest-Questions':'2','X-Quest-Heroes':'4'},...(body?{body:JSON.stringify(body)}:{})});
+const {HELP_REWARD,ANSWER_PENALTY}=require(`../${dir}/friend-help.cjs`),W=require(`../${dir}/world.cjs`),GAME=require(`../${dir}/game.cjs`),REVIEW=require(`../${dir}/review.cjs`),HELP=require(`../${dir}/help.cjs`),{questions,revealsAnswer}=require(`../${dir}/questions.cjs`);
+const request=(url,uid,body)=>new Request('https://game.test'+url,{method:body?'POST':'GET',headers:{cookie:'qg_session='+uid,origin:'https://game.test',host:'game.test','content-type':'application/json','X-Quest-Questions':'3','X-Quest-Heroes':'4'},...(body?{body:JSON.stringify(body)}:{})});
 const read=async r=>({status:r.status,body:await r.json()});
 const game=(uid,body)=>GAME.POST(request('/api/game',uid,{requestId:crypto.randomUUID(),...body})).then(read);
 const help=(uid,body)=>(body?HELP.POST(request('/api/help',uid,body)):HELP.GET(request('/api/help',uid))).then(read);
@@ -84,30 +84,30 @@ console.log('PASS: a wrong helper can retry after 24 hours; a hinted question is
 
 Date.now=()=>now()+50*3600000;
 retry=await game('a',{action:'retry_question',id:'q1'});assert.equal(retry.status,200);const right=await game('a',{action:'answer',token:retry.body.token,answer});assert.equal(right.body.correct,true);assert.equal(right.body.answer,answer);assert(right.body.explanation);assert.deepEqual([...right.body.thanked].sort(),['b','c','f']);
-for(const u of ['b','c','f'])assert.equal(await coins(u),paidBefore[u]+10);assert.equal(await coins('e'),paidBefore.e);news=await board('a');assert.deepEqual([news.myHints,news.retry],[[],[]]);assert.equal((await board('c')).sentHints.find(h=>h.name==='a').status,'paid');
+for(const u of ['b','c','f'])assert.equal(await coins(u),paidBefore[u]+HELP_REWARD);assert.equal(await coins('e'),paidBefore.e);news=await board('a');assert.deepEqual([news.myHints,news.retry],[[],[]]);assert.equal((await board('c')).sentHints.find(h=>h.name==='a').status,'paid');
 entry=(await notebook('a','corrected')).entries.find(m=>m.id==='q1');assert.equal(entry.answers[0],answer);assert(entry.explanation);assert.equal(entry.help.status,'closed');assert.equal(entry.help.hints.length,3);
 assert(!(await board('b')).requests.some(x=>x.id===id));assert.equal((await sendHint('g',id)).status,400);assert.equal((await board('c')).sentHints[0].status,'paid');assert.equal((await board('e')).sentHints[0].status,'removed');
-const plain=await game('g',{action:'question',subject:'English'});assert.deepEqual((await game('g',{action:'answer',token:plain.body.token,answer:questions.find(q=>q.id===plain.body.question.id).answers[0]})).body.thanked,[]);Date.now=now;
-console.log('PASS: when the asker gets it right, each helper with a standing hint earns 10 coins once; removed hints earn nothing; the answer and explanation then appear.');
+const plain=await game('g',{action:'question',subject:'English'});assert.deepEqual((await game('g',{action:'answer',token:plain.body.token,answer:(q=>q.select>1?q.answers:q.answers[0])(questions.find(q=>q.id===plain.body.question.id))})).body.thanked,[]);Date.now=now;
+console.log(`PASS: when the asker gets it right, each helper with a standing hint earns ${HELP_REWARD} coins once; removed hints earn nothing; the answer and explanation then appear.`);
 
 // A hint that gives the answer away: the teacher fines it. A paid hint also loses its reward, so giving the answer never pays.
 await W.mutate(w=>{w.players.f.coins=40});const fHint=(await W.readWorld()).w.players.a.mistakes.q1.help.hints.find(h=>h.owner==='f').id,fBefore=40;
 assert.equal((await help('b',{action:'gave_answer',id,hint:fHint})).status,400);assert.equal(await coins('f'),fBefore);
-r=await help('teacher',{action:'gave_answer',id,hint:fHint});assert.equal(r.status,200);assert.equal(r.body.name,'f');assert.equal(r.body.coins,15);assert.equal(await coins('f'),fBefore-15);
-assert.equal((await help('teacher',{action:'gave_answer',id,hint:fHint})).body.already,true);assert.equal((await help('teacher',{action:'remove',id,hint:fHint})).status,200);assert.equal(await coins('f'),fBefore-15);
-const fSent=(await board('f')).sentHints.find(h=>h.id===fHint);assert.equal(fSent.status,'answer');assert.equal(fSent.lost,15);assert(fSent.text);
-const fTeacher=(await board('teacher')).requests.find(x=>x.id===id).hints.find(h=>h.id===fHint);assert.equal(fTeacher.removed,true);assert.equal(fTeacher.gaveAnswer.coins,15);assert(fTeacher.text);
+r=await help('teacher',{action:'gave_answer',id,hint:fHint});assert.equal(r.status,200);assert.equal(r.body.name,'f');assert.equal(r.body.coins,ANSWER_PENALTY+HELP_REWARD);assert.equal(await coins('f'),fBefore-ANSWER_PENALTY-HELP_REWARD);
+assert.equal((await help('teacher',{action:'gave_answer',id,hint:fHint})).body.already,true);assert.equal((await help('teacher',{action:'remove',id,hint:fHint})).status,200);assert.equal(await coins('f'),fBefore-ANSWER_PENALTY-HELP_REWARD);
+const fSent=(await board('f')).sentHints.find(h=>h.id===fHint);assert.equal(fSent.status,'answer');assert.equal(fSent.lost,ANSWER_PENALTY+HELP_REWARD);assert(fSent.text);
+const fTeacher=(await board('teacher')).requests.find(x=>x.id===id).hints.find(h=>h.id===fHint);assert.equal(fTeacher.removed,true);assert.equal(fTeacher.gaveAnswer.coins,ANSWER_PENALTY+HELP_REWARD);assert(fTeacher.text);
 assert.deepEqual((await notebook('a','corrected')).entries.find(m=>m.id==='q1').help.hints.map(h=>h.name).sort(),['b','c']);
 const P=questions.find(q=>q.id==='q5'),ago=Date.now()-25*3600000;await W.mutate(w=>{w.players.g.mistakes={q5:{attempts:1,lastWrongAt:ago}};w.players.g.history.q5={correct:false,at:ago,attempted:true};w.players.e.coins=3;});
 assert.equal((await help('g',{action:'ask',question:'q5'})).status,200);const id5=(await board('b')).requests.find(x=>x.question.id==='q5').id,hints5={};
 for(const [uid,text] of [['b','It is fifty. Type it in numbers.'],['e','Fifty! Trust me.'],['c','Count the parts first: 3 + 5 = 8 parts.']]){assert.equal((await help(uid,{action:'answer',id:id5,answer:P.answers[0]})).body.correct,true);hints5[uid]=crypto.randomUUID();assert.equal((await help(uid,{action:'hint',id:id5,hint:hints5[uid],text})).status,200);}
-const bBefore=await coins('b');r=await help('teacher',{action:'gave_answer',id:id5,hint:hints5.b});assert.equal(r.body.coins,5);assert.equal(await coins('b'),bBefore-5);
+const bBefore=await coins('b');r=await help('teacher',{action:'gave_answer',id:id5,hint:hints5.b});assert.equal(r.body.coins,ANSWER_PENALTY);assert.equal(await coins('b'),bBefore-ANSWER_PENALTY);
 r=await help('teacher',{action:'gave_answer',id:id5,hint:hints5.e});assert.equal(r.body.coins,3);assert.equal(await coins('e'),0);
-const bCard=(await board('b')).requests.find(x=>x.id===id5);assert.equal(bCard.status,'sent');assert.equal(bCard.sent,null);assert.equal(bCard.lost,5);assert.equal((await sendHint('b',id5)).status,400);
+const bCard=(await board('b')).requests.find(x=>x.id===id5);assert.equal(bCard.status,'sent');assert.equal(bCard.sent,null);assert.equal(bCard.lost,ANSWER_PENALTY);assert.equal((await sendHint('b',id5)).status,400);
 assert.deepEqual((await notebook('g')).entries.find(m=>m.id==='q5').help.hints.map(h=>h.name),['c']);
 const cBefore5=await coins('c');retry=await game('g',{action:'retry_question',id:'q5'});assert.equal(retry.status,200);const solved=await game('g',{action:'answer',token:retry.body.token,answer:P.answers[0]});assert.equal(solved.body.correct,true);assert.deepEqual(solved.body.thanked,['c']);
-assert.equal(await coins('b'),bBefore-5);assert.equal(await coins('e'),0);assert.equal(await coins('c'),cBefore5+10);
-console.log('PASS: only the teacher can fine a hint that gave the answer away; the helper loses 5 coins (15 once paid), never below zero; fined hints are hidden from the asker and never paid; fining twice changes nothing.');
+assert.equal(await coins('b'),bBefore-ANSWER_PENALTY);assert.equal(await coins('e'),0);assert.equal(await coins('c'),cBefore5+HELP_REWARD);
+console.log(`PASS: only the teacher can fine a hint that gave the answer away; the helper loses ${ANSWER_PENALTY} coins (${ANSWER_PENALTY+HELP_REWARD} once paid), never below zero; fined hints are hidden from the asker and never paid; fining twice changes nothing.`);
 
 sqlite.close();fs.unlinkSync(file);console.log('PASS: help-a-friend flow.');
 })().catch(e=>{console.error(e);process.exitCode=1});

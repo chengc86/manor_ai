@@ -1,5 +1,5 @@
 // Shared by the help board API and the browser. Keep question data out: this file is bundled for pupils.
-export const HELP_REWARD=10,ANSWER_PENALTY=5,HINTS_PER_QUESTION=3,OPEN_HELP_REQUESTS=3,HINT_MIN=5,HINT_MAX=200,HELP_REST=86400000;
+export const HELP_REWARD=20,ANSWER_PENALTY=10,HINTS_PER_QUESTION=3,OPEN_HELP_REQUESTS=3,HINT_MIN=5,HINT_MAX=200,HELP_REST=86400000;
 // What a pupil can say is tricky when they ask. Helpers and the teacher see it. Fixed choices, so there is no free text to moderate.
 export const STUCK={meaning:'I don’t understand the question',start:'I don’t know how to start',wrong:'I don’t know where I went wrong',word:'There’s a word I don’t know'} as const;
 export type Stuck=keyof typeof STUCK;

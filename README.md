@@ -12,7 +12,24 @@ Vinext, React, Cloudflare Workers, D1 and R2. Set `TEACHER_PASSWORD` in local `.
 
 ## Questions
 
-2,636 original multiple-choice, short-answer and reading-comprehension questions (Year 6 and Year 2) cover Maths, English comprehension, verbal reasoning and non-verbal reasoning. Correct questions are retired per pupil. Incorrect and skipped questions wait at least 24 hours. Wrong answers never reveal the answer or explanation until the pupil gets the question right; instead they can post it to the Help a friend board, where classmates who first answer it correctly can send a hint. A helper earns 10 coins when their friend then gets the question right, and loses 5 if the teacher finds a hint that gives the answer away ([details](docs/design/help-a-friend.md)). Maths answers may include the unit the question asks for, such as "22 cm" or "45p". There is no pupil upload library. The teacher supplies textbook photos in the Codex conversation; reviewed, original questions can then be added to the bank. The latest expansion adds 200 11+ entrance-exam questions ([details](docs/design/entrance-questions.md)), and every question was re-checked in the [September 2026 audit](docs/design/question-audit-2026-09-26.md). Stable IDs keep existing pupil histories valid.
+Year 6 pupils answer an original, Atom Learning–style bank of 2,060 questions in 106 topics ([details](docs/design/question-bank-v2.md)):
+
+| Subject | Questions |
+|---|---|
+| Maths | 760 |
+| English, including 9 original stories, texts and poems | 432 |
+| Verbal reasoning | 420 |
+| Non-verbal reasoning | 240 |
+| Science (new) | 208 |
+
+- **Choices:** most questions have four or five, and the wrong ones come from real mistakes. Each pupil sees the choices in their own order (picture choices keep their letters while the pictures move), so a friend's "it's C" gives nothing away. Choices with a natural order, such as numbers or < = >, stay in that order.
+- **Formats:** pictures (base-10 blocks, number lines, bar models, charts, branching keys, circuits and NVR tiles), "choose two" questions and multi-page passages.
+- **Helpsheets:** every topic has a one-page helpsheet that teaches the method without giving the answer.
+- **Earn coins:** Practise, timed Mock tests, and My topics (a mastery map with "practise my weakest topics"). Pupils can report a question that looks wrong, and the teacher sees class topic mastery and those reports.
+- **Mock test coins:** each correct answer earns its usual coins, but only when every question has an answer, whether the pupil finishes or the time runs out. A test with any question left blank still shows its marks and adds wrong answers to the notebook, but pays nothing.
+- **Old questions:** the original Year 6 questions are retired but kept, so open notebook entries and friends' hints still work.
+
+The 327-question Year 2 bank is unchanged. Correct questions are retired per pupil. Incorrect and skipped questions wait at least 24 hours. Wrong answers never reveal the answer or explanation until the pupil gets the question right; instead they can post it to the Help a friend board, where classmates who first answer it correctly can send a hint. A helper earns 20 coins when their friend then gets the question right, and loses 10 if the teacher finds a hint that gives the answer away ([details](docs/design/help-a-friend.md)). Typed Maths answers (Year 2) may include the unit the question asks for, such as "22 cm" or "45p"; clicked choices must match exactly. There is no pupil upload library. The retired Year 6 bank included 200 11+ entrance-exam questions ([details](docs/design/entrance-questions.md)) and was re-checked in the [September 2026 audit](docs/design/question-audit-2026-09-26.md). Stable IDs keep existing pupil histories valid: new bank questions are `v2-<topic>-<nn>` and are only ever appended.
 
 ## Art references
 
