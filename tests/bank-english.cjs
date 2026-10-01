@@ -14,9 +14,12 @@ const single=(q)=>q.answers.length===1?q.answers[0]:null;
 // ---- Topics and counts --------------------------------------------------------------------------------------------
 const GRAMMAR=['en-nouns','en-verbs','en-adjectives','en-adverbs','en-pronouns','en-prepositions','en-conjunctions','en-determiners','en-clauses','en-tenses','en-active-passive','en-formality','en-sentence-punctuation','en-commas','en-apostrophes','en-speech','en-colons-semicolons','en-homophones','en-prefixes-suffixes','en-vocabulary'];
 const READING={'en-fiction':4,'en-non-fiction':3,'en-poetry':2};
+// SATs-style topics (lib/bank-english-sats-*.ts): minimum questions per topic. Their passages follow the same page rules below.
+const SATS={'en-sats-grammar':20,'en-sats-punctuation':20,'en-sats-spelling':20,'en-sats-reading':24};
+for(const [id,min] of Object.entries(SATS)){const n=qs.filter(q=>q.topic===id).length;if(n<min)fail(id,`${n} questions, expected at least ${min}`);}
 for(const id of GRAMMAR){const n=qs.filter(q=>q.topic===id).length;if(n<18)fail(id,`${n} questions, expected at least 18`);}
 for(const [id,texts] of Object.entries(READING)){const n=qs.filter(q=>q.topic===id).length;if(n<texts*8)fail(id,`${n} questions, expected at least ${texts*8}`);}
-for(const t of topics)if(![...GRAMMAR,...Object.keys(READING)].includes(t.id))fail(t.id,'unexpected topic');
+for(const t of topics)if(![...GRAMMAR,...Object.keys(READING),...Object.keys(SATS)].includes(t.id))fail(t.id,'unexpected topic');
 if(qs.length<400)fail('English',`${qs.length} questions, target 400`);
 
 // ---- Every question ---------------------------------------------------------------------------------------------------
@@ -46,7 +49,7 @@ for(const q of qs.filter(q=>q.reading)){
  if(!/^An original (story|poem|information text|leaflet|diary) written for Manor Quest$/.test(r.byline??''))fail(q.id,`byline "${r.byline}"`);
 }
 for(const [id,t] of texts){
- const poem=t.topic==='en-poetry',words=t.reading.pages.map(p=>p.split(/\s+/).filter(Boolean).length);
+ const poem=t.topic==='en-poetry'||/poem/.test(id),words=t.reading.pages.map(p=>p.split(/\s+/).filter(Boolean).length);
  if(poem?(t.reading.pages.length<1||t.reading.pages.length>2||words.some(n=>n<40||n>200)):(t.reading.pages.length!==3||words.some(n=>n<120||n>200)))fail(id,`page lengths ${words} (${poem?'a poem has 1–2 pages':'prose has 3 pages of 120–200 words'})`);
  if(t.qs.length!==8)fail(id,`${t.qs.length} questions, expected 8`);
  if(new Set(t.qs.map(q=>q.page)).size<t.reading.pages.length)fail(id,'some page has no questions');
@@ -202,6 +205,127 @@ function sentenceType(s){const w=s.trim().split(/\s+/),first=w[0].toLowerCase().
 Object.assign(CHECK,{
  sentenceType(a,q){const t=sentenceType(q.stimulus);if(t!==single(q))fail(q.id,`"${q.stimulus}" is a ${t}, answer ${q.answers}`);},
  sentenceTypeOptions(a,q){const hits=q.options.filter(o=>sentenceType(o)===a.target);if(hits.length!==1||hits[0]!==single(q))fail(q.id,`${a.target} options: ${hits}, answer ${q.answers}`);},
+});
+
+// SATs practice (lib/bank-english-sats-*.ts): the test's own word lists and rules for subjects and objects, modal verbs,
+// relative pronouns, fronted adverbials, clauses, standard English, the subjunctive, formal words, synonyms, punctuation
+// functions, bullet points and the Year 5/6 spelling words. ---------------------------------------------------------------
+const SATS_WORDS=new Set(['necessary','embarrass','accommodate','definitely','separate','occasionally','rhythm','mischievous','conscience','environment','government','parliament','privilege','recommend','sincerely','vegetable','yacht','foreign','immediately','exaggerate','apparent','bruise','cemetery','committee','correspond','desperate','dictionary','equipment','familiar','guarantee','hindrance','interrupt','leisure','lightning','marvellous','muscle','neighbour','nuisance','persuade','physical','programme','queue','restaurant','sacrifice','secretary','shoulder','signature','soldier','stomach','sufficient','suggest','symbol','system','temperature','thorough','twelfth','variety','vehicle',
+ 'delicious','ambitious','cautious','nutritious','infectious','spacious','precious','conscious','vicious','gracious','anxious','special','official','artificial','partial','essential','financial','confidential','substantial','initial','social','crucial','independence','obedience','patience','innocence','tolerance','assistance','appearance','observance','hesitant','confident','obedient','patient','independent','tolerant','decent','frequent','innocent','important','dependable','adorable','considerable','enjoyable','reasonable','understandable','horrible','possible','terrible','visible','sensible','incredible','responsible','edible','legible','audible','preferred','preferring','referred','transferred','transferring','reference','preference','conference','offered','offering','suffered','beautiful','argument','beginning','forgetting','knowledge','island','doubt','lamb','thistle','wrist','gnome','honest','whistle','knee','autumn','wrestle','answer','climb','thumb','column','receipt','cupboard','bristle','believe','achieve','receive','ceiling','deceive','perceive','chief','field','piece','niece','thief','friend','weird','seize','protein','caffeine','height','weigh','eight']);
+const SILENT={knowledge:'k',island:'s',doubt:'b',lamb:'b',thistle:'t',wrist:'w',gnome:'g',honest:'h',solemn:'n',whistle:'t',knee:'k',autumn:'n',wrestle:'w',answer:'w',climb:'b',thumb:'b',column:'n',receipt:'p',cupboard:'p',bristle:'t'};
+SATS_WORDS.add('solemn');
+const SATS_HOMOPHONES=[...HOMOPHONES,['principal','principle'],['desert','dessert'],['bare','bear'],['steal','steel'],['guessed','guest'],['morning','mourning'],['serial','cereal']];
+const SATS_CONTRACTION={'could not':"couldn't",'it is':"it's",'she will':"she'll",'we have':"we've",'does not':"doesn't",'i would':"I'd",'cannot':"can't",'you are':"you're",'there is':"there's",'let us':"let's"};
+const IRREGULAR_PLURAL={child:'children',mouse:'mice',tooth:'teeth',foot:'feet',sheep:'sheep',person:'people',goose:'geese',man:'men',woman:'women'};
+const F_TO_VES=['shelf','leaf','loaf','wolf','knife','half','calf','thief','wife','life','elf','scarf'],O_ES=['potato','tomato','hero','echo','volcano'];
+function pluralOf(s){if(IRREGULAR_PLURAL[s])return IRREGULAR_PLURAL[s];if(F_TO_VES.includes(s))return s.replace(/fe?$/,'ves');if(O_ES.includes(s))return s+'es';if(/[^aeiou]y$/.test(s))return s.slice(0,-1)+'ies';if(/(s|x|z|ch|sh)$/.test(s))return s+'es';return s+'s';}
+const MODALS=['can','could','may','might','must','shall','should','will','would','ought'];
+const MODAL_MEANING={possibility:['might','may','could'],certainty:['will','must','shall'],obligation:['must','should','ought'],ability:['can','could']};
+const RELATIVE=['who','which','that','whose','whom'],PEOPLE=['teacher','gardener','girl','boy','friend','cousin','man','woman','doctor','pupil','farmer','baker','neighbour','guide','coach','lady','aunt','uncle','child','children','people','hero','heroes'];
+const REL_VERBS=['won','lives','runs','made','is','was','has','had','sat','sang','owns','grew','mended','taught','painted','keeps','plays','crosses','stands','works','sells','bakes','helped','rescued'];
+const FRONTED_STARTS=['after','before','during','later','soon','suddenly','slowly','quietly','carefully','sadly','without','with','in','on','at','under','beneath','behind','beyond','across','every','last','next','all','as','once','just','early','yesterday','outside','inside','far','high','deep','much','many','long','minutes','moments','hours','meanwhile','however','eventually','finally','first','then','luckily','by','from','that','this','one','two','three'];
+const SUBORD=['because','although','though','when','whenever','while','if','unless','until','after','before','since','as','once','so','even','whereas','where','wherever','in'];
+const CO=['and','but','or','so','nor','yet'];
+const NONSTANDARD=[/\b(we|they|you) was\b/i,/\b(i|we|you|they|he|she) (done|seen|gone)\b/i,/\b(?!Has\b|Have\b|Had\b|Was\b|Were\b|Is\b|Are\b|Been\b)[A-Z][a-z]+ (done|seen|gone)\b/,/\b(could|should|would|might|must) of\b/i,/\bthem [a-z]+s\b/i,/\b(didn't|don't|never|can't|couldn't|won't|haven't|hasn't|isn't|wasn't) [a-z' ]*\b(nothing|nowhere|nobody|no one|none)\b/i,/\bain't\b/i,/\b(he|she|it) don't\b/i,/\b(we|they|you) (is|has)\b/i,/\bI is\b/,/\bmore (better|worse|bigger|smaller|faster|slower|taller|shorter|easier|harder)\b/i,/\bmost (biggest|best|fastest|smallest)\b/i,/\b(goed|runned|writed|gived|taked|catched|bringed|doed|thinked|buyed|teached|comed|swimmed|hitted)\b/i,/\b(have|has|had) (did|went|saw|ate|wrote|took|ran|came|sang|drank|began|broke|chose|drove|fell|flew|forgot|gave|grew|knew|rode|rang|spoke|swam|threw|wore)\b/i,/\b(me|him|her|them|us) (and|or) (i|me|him|her|them|us|[a-z]+) (went|was|were|are|like|played|have|had)\b/i,/^(me|him|her|them|us) (and [a-z]+ )?(went|was|were|are|like|played)/i,/\b(that|this) (there|here)\b/i,/^us (was|were|are|is)\b/i];
+const BASE_VERBS=['be','wear','go','stay','arrive','bring','leave','attend','wait','remain','finish','hand','keep','take','come','sit','meet','listen','practise','return','rest','stand','write','read','help','start','stop','walk','run','tidy','send','pay'];
+const subjunctiveOf=(s)=>/\b(if|wish|wished|as though|as if)\b[^.,;]*\b(i|he|she|it|[a-z]+) were\b/i.test(s)||new RegExp(`\\b(insist|insists|insisted|suggest|suggests|suggested|recommend|recommends|recommended|demand|demands|demanded|request|requests|requested|propose|proposed|ask|asked|essential|vital|important|necessary|crucial) that (?:[a-z]+ ){1,3}(?:${BASE_VERBS.join('|')})\\b`,'i').test(s);
+const SATS_PAST=new Set(['rang','hurried','ran','walked','sang','ate','went','saw','came','jumped','laughed','shouted','played','waited','opened','closed','cheered','scored','finished','started','wrote','read','made','took','gave','found','lost','won','fell','sat','stood','left','arrived','rested','packed','carried','crossed','climbed','thanked','marched']);
+const SATS_PRESENT=new Set(['rings','hurry','hurries','runs','run','walks','walk','sings','sing','eats','eat','goes','go','sees','see','comes','come','jumps','jump','laughs','laugh','shouts','shout','plays','play','waits','wait','opens','open','closes','close','cheers','cheer','scores','score','finishes','finish','starts','start','writes','write','reads','makes','make','takes','take','gives','give','finds','find','loses','lose','wins','win','falls','fall','sits','sit','stands','stand','leaves','leave','arrives','arrive','rests','rest','packs','pack','carries','carry','crosses','cross','climbs','climb','thanks','thank','marches','march']);
+const satsTime=(p)=>{const w=p.toLowerCase().split(/\s+/),f=w[0];if(f==='will'||f==='shall')return 'future';if(['was','were','had','did'].includes(f)||(w.length===1&&SATS_PAST.has(f)))return 'past';if(['is','are','am','has','have','does','do'].includes(f)||(w.length===1&&SATS_PRESENT.has(f)))return 'present';return 'unknown';};
+const FORMAL={buy:['purchase'],ask:['request','enquire'],help:['assist'],get:['receive','obtain'],'find out':['discover'],start:['commence','begin'],need:['require'],'put off':['postpone'],'think about':['consider'],kids:['children'],tell:['inform'],'loads of':['numerous','many'],sorry:['apologise'],about:['approximately'],let:['permit','allow'],try:['attempt'],end:['conclude'],'go up':['rise','increase'],big:['large','considerable'],fix:['repair']};
+const SYN={enormous:['huge','gigantic','massive','vast','immense'],ancient:['old','aged','antique'],begin:['start','commence'],brave:['courageous','fearless','bold'],quick:['fast','rapid','swift','speedy'],afraid:['scared','frightened','terrified']};
+const ANT={ancient:['modern','new','recent'],enormous:['tiny','minute','small'],brave:['cowardly','timid'],quick:['slow'],generous:['mean','selfish'],noisy:['quiet','silent']};
+const LY_ADJ=['friendly','lonely','lovely','silly','ugly','early','daily','likely','lively','jolly','elderly','curly'];
+const ADVERBS={time:['soon','later','now','often','always','never','already','still','yet','afterwards','sometimes','earlier','recently','today','immediately','then','finally'],place:['here','there','everywhere','upstairs','downstairs','outside','inside','nearby','away','abroad','indoors','outdoors','somewhere','underneath','overhead','ahead','home']};
+const mannerAdverb=(w)=>(/ly$/.test(w)&&!LY_ADJ.includes(w))||['well','fast','hard'].includes(w);
+const COMMA_KEY={fronted:/fronted adverbial/i,list:/\blist\b/i,parenthesis:/extra information|parenthesis/i,address:/spoken to|being addressed|talking to/i,subordinate:/subordinate clause/i};
+const MARK_KEY={list:/\blist\b/i,explanation:/explain|explanation|reason/i,clauses:/two (closely linked |linked )?(main )?clauses|join/i,extra:/extra information|parenthesis/i,afterthought:/afterthought|surprise|pause|dramatic/i};
+const esc=(s)=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const {NAMES:KIT_NAMES}=require(path.join(dir,'bank-kit.cjs'));
+const wrongOf=(q)=>q.options.filter(o=>!q.answers.includes(o));
+const inText=(s,w)=>new RegExp(`(^|[^A-Za-z'])${esc(w)}(?=$|[^A-Za-z'])`).test(s);
+Object.assign(CHECK,{
+ subjectObject(a,q){const toks=checkTags(a,q),isV=(t)=>is(t.tag,'verb');const v0=toks.findIndex(isV);if(v0<0)return fail(q.id,'no verb in the tagged sentence');
+  let v1=v0;while(v1+1<toks.length&&(isV(toks[v1+1])||(toks[v1+1].tag==='adv'&&toks[v1+2]&&isV(toks[v1+2]))))v1++;
+  let s0=0;for(let i=v0-1;i>=0;i--)if(toks[i].w===','){s0=i+1;break;}
+  const subj=toks.slice(s0,v0).filter(t=>!PUNCT.test(t.w));while(subj.length&&subj[0].tag==='adv')subj.shift();
+  const NP=(t)=>['det','adj','noun','pron'].some(c=>is(t.tag,c));let o1=v1+1;while(o1<toks.length&&NP(toks[o1]))o1++;const obj=toks.slice(v1+1,o1);
+  const want=a.role==='subject'?subj:obj,phrase=plain(want);if(!want.length)return fail(q.id,`no ${a.role} found by the tags`);
+  if(phrase.toLowerCase()!==(single(q)??'').toLowerCase())fail(q.id,`${a.role} by the tags is "${phrase}", answer ${q.answers}`);
+  for(const o of q.options)if(!q.stimulus.includes(o))fail(q.id,`option "${o}" is not in the sentence`);},
+ nounPhrase(a,q){const toks=checkTags(a,q),NP=(t)=>['det','adj','noun','prep'].some(c=>is(t.tag,c));const spans=[];let i=0;
+  while(i<toks.length){if(!NP(toks[i])){i++;continue;}let j=i;while(j<toks.length&&NP(toks[j]))j++;const span=toks.slice(i,j);while(span.length&&span[0].tag==='prep')span.shift();if(span.length)spans.push(span);i=j;}
+  const expanded=spans.filter(s=>s.some(t=>is(t.tag,'noun'))&&s.some(t=>is(t.tag,'adj')||t.tag==='prep')).map(plain);
+  if(expanded.length!==1||expanded[0].toLowerCase()!==(single(q)??'').toLowerCase())fail(q.id,`expanded noun phrases by the tags: ${expanded}, answer ${q.answers}`);},
+ wordClass(a,q){for(const o of q.options){const t=a.tagged[o];if(!t){fail(q.id,`no tagged sentence for "${o}"`);continue;}const toks=parse(t);if(plain(toks)!==o)fail(q.id,`"${o}" is not the tagged sentence "${plain(toks)}"`);
+  for(const tok of toks){if(PUNCT.test(tok.w))continue;if(!CLASSES.includes(tok.tag))fail(q.id,`"${tok.w}" has unknown class "${tok.tag}"`);const f=FIXED[tok.w.toLowerCase()];if(f&&!is(tok.tag,f)&&!(f==='prep'&&tok.tag==='other'))fail(q.id,`"${tok.w}" tagged ${tok.tag}, expected ${f}`);}
+  const hits=toks.filter(tok=>tok.w.toLowerCase()===a.word);if(hits.length!==1){fail(q.id,`"${a.word}" appears ${hits.length} times in "${o}"`);continue;}
+  const match=is(hits[0].tag,a.cls);if(match!==(o===single(q)))fail(q.id,`"${a.word}" is tagged ${hits[0].tag} in "${o}"`);}},
+ modal(a,q){const modalOf=(o)=>o.toLowerCase().split(/[^a-z']+/).find(x=>MODALS.includes(x));
+  if(a.meaning){const set=MODAL_MEANING[a.meaning];if(!set)return fail(q.id,`unknown modal meaning ${a.meaning}`);for(const o of q.options)if(!modalOf(o))fail(q.id,`"${o}" has no modal verb`);
+   const hits=q.options.filter(o=>set.includes(modalOf(o)));if(hits.length!==1||hits[0]!==single(q))fail(q.id,`${a.meaning} options: ${hits}, answer ${q.answers}`);}
+  else{for(const x of q.answers)if(!MODALS.includes(x.toLowerCase()))fail(q.id,`"${x}" is not a modal verb`);for(const o of q.options){if(!inText(q.stimulus,o))fail(q.id,`"${o}" is not in the sentence`);if(!q.answers.includes(o)&&MODALS.includes(o.toLowerCase()))fail(q.id,`"${o}" is also a modal verb`);}}},
+ relative(a,q){const ans=single(q)??'';
+  if(a.full){if(q.stimulus.replace('___',ans)!==a.full)fail(q.id,`"${q.stimulus}" filled with ${ans} is not "${a.full}"`);const gap=q.stimulus.indexOf('___');
+   const before=q.stimulus.slice(0,gap).trim().split(' ').pop().toLowerCase(),after=(a.full.slice(gap+ans.length).trim().split(' ')[0]??'').replace(/[^a-z]/gi,'').toLowerCase();
+   const person=PEOPLE.includes(before)||KIT_NAMES.map(n=>n.toLowerCase()).includes(before);const ok=REL_VERBS.includes(after)?(person?['who','that']:['which','that']):['whose'];
+   if(!ok.includes(ans))fail(q.id,`by the test's rule the gap takes ${ok}, answer ${ans}`);for(const o of wrongOf(q))if(ok.includes(o))fail(q.id,`"${o}" also fits the gap`);}
+  else if(a.clause){if(!RELATIVE.includes(ans.split(' ')[0].toLowerCase()))fail(q.id,`"${ans}" does not start with a relative pronoun`);if(!new RegExp(esc(ans)+'[,.]').test(q.stimulus))fail(q.id,'the clause does not run to a comma or full stop');
+   for(const o of wrongOf(q))if(RELATIVE.includes(o.split(' ')[0].toLowerCase())&&new RegExp(esc(o)+'[,.]').test(q.stimulus))fail(q.id,`"${o}" is also a relative clause`);}
+  else{if(!RELATIVE.includes(ans.toLowerCase()))fail(q.id,`"${ans}" is not a relative pronoun`);for(const o of q.options){if(!inText(q.stimulus,o))fail(q.id,`"${o}" is not in the sentence`);if(!q.answers.includes(o)&&RELATIVE.includes(o.toLowerCase()))fail(q.id,`"${o}" is also a relative pronoun`);}}},
+ fronted(a,q){const ans=single(q)??'',first=ans.split(' ')[0].toLowerCase();if(!FRONTED_STARTS.includes(first))fail(q.id,`"${ans}" does not start with an adverbial word the test knows`);
+  if(!q.stimulus.startsWith(ans+','))fail(q.id,'the adverbial is not at the front followed by a comma');for(const o of wrongOf(q))if(q.stimulus.startsWith(o+','))fail(q.id,`"${o}" is also at the front`);},
+ clause(a,q){const s=q.stimulus,sub=a.sub;if(!s.includes(sub))return fail(q.id,`"${sub}" is not in the sentence`);if(!SUBORD.includes(sub.split(' ')[0].toLowerCase()))fail(q.id,`"${sub}" does not start with a subordinating conjunction`);
+  const main=s.replace(sub,'').replace(/[,.!?]/g,'').replace(/\s+/g,' ').trim(),want=a.role==='main'?main:sub;if(!main)fail(q.id,'no main clause left');
+  if((single(q)??'').toLowerCase()!==want.toLowerCase())fail(q.id,`${a.role} clause is "${want}", answer ${q.answers}`);for(const o of wrongOf(q))if(o.toLowerCase()===want.toLowerCase())fail(q.id,`"${o}" is also the ${a.role} clause`);},
+ conjType(a,q){const set=a.type==='co'?CO:SUBORD;for(const x of q.answers)if(!set.includes(x.toLowerCase()))fail(q.id,`"${x}" is not a ${a.type} conjunction the test knows`);
+  for(const o of q.options){if(!inText(q.stimulus,o))fail(q.id,`"${o}" is not in the sentence`);if(!q.answers.includes(o)&&set.includes(o.toLowerCase()))fail(q.id,`"${o}" is also a ${a.type} conjunction`);}},
+ consistent(a,q){for(const o of q.options){const ps=a.phrases[o];if(!ps){fail(q.id,`no verb phrases for "${o}"`);continue;}for(const p of ps)if(!o.includes(p))fail(q.id,`"${p}" is not in "${o}"`);
+  const times=new Set(ps.map(satsTime));if(times.has('unknown'))fail(q.id,`unknown tense in ${ps}`);const ok=times.size===1;if(ok!==(o===single(q)))fail(q.id,`"${o}" ${ok?'is':'is not'} consistent`);}},
+ standard(a,q){const fill=(o)=>a.full?q.stimulus.replace('___',o):o,bad=(s)=>NONSTANDARD.some(r=>r.test(s));if(a.full&&fill(single(q))!==a.full)fail(q.id,`"${q.stimulus}" filled with ${q.answers} is not "${a.full}"`);
+  if(bad(fill(single(q))))fail(q.id,'the answer breaks a standard English rule the test knows');for(const o of wrongOf(q))if(!bad(fill(o)))fail(q.id,`"${fill(o)}" breaks no rule the test knows`);},
+ subjunctive(a,q){const fill=(o)=>a.full?q.stimulus.replace('___',o):o;if(a.full&&fill(single(q))!==a.full)fail(q.id,`"${q.stimulus}" filled with ${q.answers} is not "${a.full}"`);
+  if(!subjunctiveOf(fill(single(q))))fail(q.id,'the answer is not a subjunctive form the test knows');for(const o of wrongOf(q))if(subjunctiveOf(fill(o)))fail(q.id,`"${fill(o)}" is also subjunctive`);},
+ formal(a,q){const set=FORMAL[a.informal];if(!set)return fail(q.id,`no formal words for ${a.informal}`);if(!inText(q.stimulus,a.informal))fail(q.id,`"${a.informal}" is not in the sentence`);
+  if(!set.includes(single(q)))fail(q.id,`${q.answers} is not a formal word for ${a.informal}`);const all=new Set(Object.values(FORMAL).flat());for(const o of wrongOf(q))if(all.has(o))fail(q.id,`"${o}" is also a formal word`);},
+ synonym(a,q){const set=SYN[a.word];if(!set)return fail(q.id,`no synonyms for ${a.word}`);if(!inText(q.stimulus,a.word))fail(q.id,`"${a.word}" is not in the sentence`);if(!set.includes(single(q)))fail(q.id,`${q.answers} is not a synonym of ${a.word}`);for(const o of wrongOf(q))if(set.includes(o))fail(q.id,`"${o}" is also a synonym`);},
+ antonym(a,q){const set=ANT[a.word];if(!set)return fail(q.id,`no antonyms for ${a.word}`);if(!inText(q.stimulus,a.word))fail(q.id,`"${a.word}" is not in the sentence`);if(!set.includes(single(q)))fail(q.id,`${q.answers} is not an antonym of ${a.word}`);for(const o of wrongOf(q))if(set.includes(o))fail(q.id,`"${o}" is also an antonym`);},
+ advType(a,q){const isType=(x)=>a.type==='manner'?mannerAdverb(x):(ADVERBS[a.type]??[]).includes(x);if(!isType(single(q)))fail(q.id,`${q.answers} is not an adverb of ${a.type} the test knows`);
+  for(const o of q.options){if(!inText(q.stimulus,o))fail(q.id,`"${o}" is not in the sentence`);if(!q.answers.includes(o)&&isType(o))fail(q.id,`"${o}" is also an adverb of ${a.type}`);}},
+ parenthesis(a,q){const toks=checkTags(a,q),words=toks.filter(t=>!PUNCT.test(t.w));
+  const find=(s)=>{const n=s.split(' ').length;for(let i=0;i+n<=words.length;i++)if(plain(words.slice(i,i+n))===s)return [i,i+n];return null;};
+  const judge=(s)=>{const sp=find(s);if(!sp)return 'not in the sentence';const [i,j]=sp;if(i===0||j===words.length)return 'includes the start or the end of the sentence';
+   const span=words.slice(i,j),rest=[...words.slice(0,i),...words.slice(j)],v=rest.findIndex(t=>is(t.tag,'verb'));if(v<0)return 'leaves no verb';
+   if(!rest.slice(0,v).some(t=>is(t.tag,'noun')||is(t.tag,'pron')))return 'leaves no subject before the verb';
+   if(span.some((t,k)=>k>0&&is(t.tag,'verb'))&&!is(span[0].tag,'pron.rel'))return 'contains a verb but does not begin with a relative pronoun';
+   if(!['pron.rel','det','adj','verb','adv','prep'].some(c=>is(span[0].tag,c)))return 'does not begin like extra information';
+   if(!(is(words[i-1].tag,'noun')||is(words[i-1].tag,'pron')))return 'does not follow a noun';return null;};
+  const r=judge(single(q)??'');if(r)fail(q.id,`"${q.answers}": ${r}`);for(const o of wrongOf(q))if(!judge(o))fail(q.id,`"${o}" could also be the extra information`);},
+ markRole(a,q){const s=q.stimulus,m=a.mark;if(!s.includes(m))return fail(q.id,`no ${m} in the sentence`);let role;
+  if(m===':')role=/,[^:]* (and|or) /.test(s.slice(s.indexOf(':')+1))?'list':'explanation';else if(m===';')role=(s.match(/;/g)??[]).length>=2?'list':'clauses';else if(m==='–')role=(s.match(/–/g)??[]).length===2?'extra':'afterthought';else if(m==='(')role='extra';else return fail(q.id,`unknown mark ${m}`);
+  if(!MARK_KEY[role].test(single(q)??''))fail(q.id,`the ${m} is used for ${role}, answer ${q.answers}`);for(const o of wrongOf(q))if(MARK_KEY[role].test(o))fail(q.id,`"${o}" also describes ${role}`);},
+ commaWhy(a,q){const s=q.stimulus;let ok=false;
+  if(a.reason==='fronted')ok=s.startsWith(a.adverbial+',')&&FRONTED_STARTS.includes(a.adverbial.split(' ')[0].toLowerCase())&&!/\b(i|we|you|he|she|they|it)\b/i.test(a.adverbial);
+  else if(a.reason==='subordinate')ok=s.startsWith(a.clause+',')&&SUBORD.includes(a.clause.split(' ')[0].toLowerCase());
+  else if(a.reason==='list')ok=a.items.length>=3&&s.includes(a.items.slice(0,-1).join(', ')+' and '+a.items.at(-1));
+  else if(a.reason==='parenthesis'){const rest=s.replace(', '+a.extra+',',' ').replace(/\s+/g,' ');ok=s.includes(', '+a.extra+',')&&/^[A-Z]/.test(rest)&&/[.!?]$/.test(rest);}
+  else if(a.reason==='address')ok=KIT_NAMES.includes(a.name)&&new RegExp(`(^|, )${a.name}(,|[.?!]$)`).test(s);
+  else return fail(q.id,`unknown comma reason ${a.reason}`);
+  if(!ok)fail(q.id,`the sentence does not show a ${a.reason} comma as the note says`);if(!COMMA_KEY[a.reason].test(single(q)??''))fail(q.id,`answer ${q.answers} does not describe a ${a.reason} comma`);for(const o of wrongOf(q))if(COMMA_KEY[a.reason].test(o))fail(q.id,`"${o}" also describes a ${a.reason} comma`);},
+ bullets(a,q){const consistent=(o)=>{const items=o.split('•').map(x=>x.trim()).filter(Boolean);if(items.length<2)return false;return items.every(x=>/^[A-Z]/.test(x)&&/\.$/.test(x))||items.every(x=>/^[a-z]/.test(x)&&!/[.;,]$/.test(x));};
+  if(!consistent(single(q)??''))fail(q.id,'the answer is not a consistent list');for(const o of wrongOf(q))if(consistent(o))fail(q.id,`"${o}" is also consistent`);},
+ satsContraction(a,q){const c=SATS_CONTRACTION[a.full.toLowerCase()];if(!c)fail(q.id,`no contraction for ${a.full}`);else if((single(q)??'').toLowerCase()!==c.toLowerCase())fail(q.id,`contraction of ${a.full} is ${c}, answer ${q.answers}`);},
+ satsSpelling(a,q){if(single(q)!==a.word||!SATS_WORDS.has(a.word))fail(q.id,`${q.answers} is not the listed spelling ${a.word}`);for(const o of wrongOf(q))if(SATS_WORDS.has(o)||WORDS.has(o))fail(q.id,`"${o}" is also a real word`);},
+ satsEnding(a,q){const made=a.stem+(single(q)??'').replace('-','');if(made!==a.word||!SATS_WORDS.has(made))fail(q.id,`${a.stem} + ${q.answers} = ${made}`);for(const o of wrongOf(q)){const x=a.stem+o.replace('-','');if(SATS_WORDS.has(x)||WORDS.has(x))fail(q.id,`option ${o} also makes a real word`);}},
+ satsSuffix(a,q){const made=addSuffix(a.root,a.suffix,a.rule);if(made!==single(q))fail(q.id,`${a.root} + ${a.suffix} (${a.rule}) = ${made}, answer ${q.answers}`);if(!SATS_WORDS.has(made))fail(q.id,`${made} is not in the test's word list`);for(const o of wrongOf(q))if(SATS_WORDS.has(o)||WORDS.has(o))fail(q.id,`"${o}" is also a real word`);},
+ silent(a,q){if(single(q)!==a.word||!SATS_WORDS.has(a.word))fail(q.id,`${q.answers} is not the listed spelling ${a.word}`);if(SILENT[a.word]!==a.letter)fail(q.id,`the silent letter of ${a.word} is ${SILENT[a.word]}, note says ${a.letter}`);
+  const dropped=a.word.replace(a.letter,'');if(!wrongOf(q).includes(dropped))fail(q.id,`the spelling without the silent letter (${dropped}) is not among the wrong options`);for(const o of wrongOf(q))if(SATS_WORDS.has(o)||WORDS.has(o))fail(q.id,`"${o}" is also a real word`);},
+ ieRule(a,q){const word=a.word;if(single(q)!==word||!SATS_WORDS.has(word))fail(q.id,`${q.answers} is not the listed spelling ${word}`);const m=/(c?)(ie|ei)/.exec(word);if(!m)return fail(q.id,`${word} has no ie or ei`);
+  const expected=m[1]==='c'?'ei':'ie';if(!['weird','seize','protein','caffeine','height','weigh','eight','their','foreign','leisure','neighbour'].includes(word)&&m[2]!==expected)fail(q.id,`${word} breaks the i-before-e rule`);
+  const swapped=word.replace(m[2],m[2]==='ie'?'ei':'ie');if(!wrongOf(q).includes(swapped))fail(q.id,`the swapped spelling (${swapped}) is not among the wrong options`);for(const o of wrongOf(q))if(SATS_WORDS.has(o)||WORDS.has(o))fail(q.id,`"${o}" is also a real word`);},
+ plural(a,q){const p=pluralOf(a.singular);if(single(q)!==p)fail(q.id,`plural of ${a.singular} is ${p}, answer ${q.answers}`);if(!new RegExp(`\\b${esc(a.singular)}\\b`).test(q.prompt))fail(q.id,`the prompt does not name ${a.singular}`);for(const o of wrongOf(q))if(o===p)fail(q.id,'the plural appears twice');},
+ satsGap(a,q){if(q.stimulus.replace('___',single(q))!==a.full)fail(q.id,`"${q.stimulus}" filled with ${q.answers} is not "${a.full}"`);const set=SATS_HOMOPHONES.find(s=>s.includes(single(q).toLowerCase()));
+  if(!set)fail(q.id,`${q.answers} is not in the test's homophone list`);else if(!q.options.some(o=>o!==single(q)&&set.includes(o.toLowerCase())))fail(q.id,'no homophone among the wrong options');},
 });
 
 for(const a of englishAudit){const q=byId.get(a.id);if(!q)continue;const check=CHECK[a.kind];if(!check){fail(a.id,`unknown audit kind ${a.kind}`);continue;}try{check(a,q);}catch(e){fail(a.id,`${a.kind} check crashed: ${e.message}`);}}

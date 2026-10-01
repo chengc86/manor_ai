@@ -23,8 +23,12 @@ import {vocabulary} from './bank-english-vocabulary';
 import {fiction} from './bank-english-fiction';
 import {nonFiction} from './bank-english-nonfiction';
 import {poetry} from './bank-english-poetry';
+import {satsGrammar} from './bank-english-sats-grammar';
+import {satsPunctuation} from './bank-english-sats-punctuation';
+import {satsSpelling} from './bank-english-sats-spelling';
+import {satsReading} from './bank-english-sats-reading';
 // Atom-style original questions for this subject: see docs/design/question-bank-v2.md.
 // Each topic lives in its own lib/bank-english-<part>.ts file. englishAudit holds the notes tests/bank-english.cjs re-checks.
-const parts:EnglishPart[]=[nouns,verbs,adjectives,adverbs,pronouns,prepositions,conjunctions,determiners,clauses,tenses,activePassive,formality,sentencePunctuation,commas,apostrophes,speech,colons,homophones,affixes,vocabulary,fiction,nonFiction,poetry];
+const parts:EnglishPart[]=[nouns,verbs,adjectives,adverbs,pronouns,prepositions,conjunctions,determiners,clauses,tenses,activePassive,formality,sentencePunctuation,commas,apostrophes,speech,colons,homophones,affixes,vocabulary,fiction,nonFiction,poetry,satsGrammar,satsPunctuation,satsSpelling,satsReading];
 export const englishBank=combine(...parts.map(p=>p.built));
 export const englishAudit:Audit[]=parts.flatMap(p=>p.audit);

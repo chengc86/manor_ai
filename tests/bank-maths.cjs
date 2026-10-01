@@ -369,6 +369,35 @@ const CHECK={
 /** "1 hour 35 minutes", "95 minutes", "2 hours" → minutes. */
 function durMinutes(s){let t=0,any=false;for(const m of String(s).matchAll(/(\d+)\s*(hours?|h\b|minutes?|min\b)/g)){t+=Number(m[1])*(/^h/.test(m[2])?60:1);any=true;}return any?R(t):null;}
 
+// ── SATs practice strand (lib/bank-maths-sats.ts): kinds that the strand added.
+Object.assign(CHECK,{
+ /** Digit cards arranged into the four-digit number closest to a target: every arrangement is tried. */
+ cardsNearest(q,a){const ds=q.visual.cards.map(c=>Number(c.text));if(JSON.stringify(ds)!==JSON.stringify(a.digits))fail(q,'digit cards differ');
+  const target=Number(q.prompt.match(/closest to \*\*([\d,]+)\*\*/)[1].replace(/,/g,''));if(target!==a.target)fail(q,'target differs from audit');
+  const perms=xs=>xs.length<2?[xs]:xs.flatMap((x,i)=>perms([...xs.slice(0,i),...xs.slice(i+1)]).map(p=>[x,...p]));
+  const all=[...new Set(perms(ds).filter(p=>p[0]!==0).map(p=>Number(p.join(''))))].sort((x,y)=>Math.abs(x-target)-Math.abs(y-target));
+  if(Math.abs(all[0]-target)===Math.abs(all[1]-target))fail(q,'two arrangements are equally close');expectValue(q,R(all[0]));},
+ /** A start time plus a duration, both read from the prompt; the answer is a 24-hour time. */
+ timeEnd(q,a){const m=q.prompt.match(/starts at (\d\d):(\d\d) and lasts ((?:\d+ hours?)?(?: ?\d+ minutes)?)\./);if(!m)return fail(q,'cannot read the start time and duration');
+  const start=Number(m[1])*60+Number(m[2]),mins=Number(durMinutes(m[3]).n);if(`${m[1]}:${m[2]}`!==a.start||mins!==a.mins)fail(q,'prompt differs from audit');
+  const end=(start+mins)%1440,want=`${String(Math.floor(end/60)).padStart(2,'0')}:${String(end%60).padStart(2,'0')}`;expectText(q,want);
+  for(const o of q.options)if(!/^\d\d:\d\d$/.test(o)||Number(o.slice(3))>59||Number(o.slice(0,2))>23)fail(q,`option ${o} is not a valid time`);},
+ /** The best estimate: the option closest to the exact value, which must be unique. */
+ closest(q,a){const {v,literals}=evaluate(a.e),missing=literalsShown(q,literals);if(missing.length)fail(q,`numbers ${missing.map(show)} are not shown`);
+  const vs=q.options.map(val);if(vs.some(x=>!x))return fail(q,'cannot read an option');const d=vs.map(x=>{const t=sub(x,v);return t.n<0n?R(-t.n,t.d):t;});
+  const best=d.reduce((m,x)=>cmp(x,m)<0?x:m);if(d.filter(x=>eq(x,best)).length!==1)fail(q,'two options are equally close');expectText(q,q.options[d.findIndex(x=>eq(x,best))]);},
+ /** Statements about a number: each option names a property the test evaluates itself; exactly one must hold. */
+ props(q,a){const n=Number(q.prompt.match(/\*\*(\d+)\*\*/)[1]);if(n!==a.n)fail(q,'number differs from audit');
+  const prime=x=>{if(x<2)return false;for(let k=2;k*k<=x;k++)if(x%k===0)return false;return true;},factors=x=>{let c=0;for(let k=1;k<=x;k++)if(x%k===0)c++;return c;};
+  const holds=key=>{const [kind,arg]=key.split(':');const k=Number(arg);
+   switch(kind){case 'square':return Number.isInteger(Math.sqrt(n));case 'cube':return Math.round(Math.cbrt(n))**3===n;case 'prime':return prime(n);case 'even':return n%2===0;case 'odd':return n%2===1;
+    case 'multiple':return n%k===0;case 'factor':return k%n===0;case 'oddFactors':return factors(n)%2===1;default:throw new Error('unknown property '+key);}};
+  for(const o of q.options){const key=a.props[o];if(!key){fail(q,`no property for "${o}"`);continue;}
+   const m=o.match(/(multiple|factor) of (\d+)/);if(m&&key!==`${m[1]}:${m[2]}`)fail(q,`"${o}" is audited as ${key}`);
+   if(/square/.test(o)&&key!=='square'||/cube/.test(o)&&key!=='cube'||/prime/.test(o)&&key!=='prime'||/odd number of factors/.test(o)&&key!=='oddFactors')fail(q,`"${o}" is audited as ${key}`);}
+  exactlyOne(q,o=>holds(a.props[o]),'true statement');},
+});
+
 // ── Run.
 for(const q of qs){
  const a=mathsAudit[q.id];counts[a?.k??'none']=(counts[a?.k??'none']??0)+1;

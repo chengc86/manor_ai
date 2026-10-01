@@ -12,7 +12,7 @@ Vinext, React, Cloudflare Workers, D1 and R2. Set `TEACHER_PASSWORD` in local `.
 
 ## Questions
 
-Year 6 pupils answer an original, Atom Learning–style bank of 2,060 questions in 106 topics ([details](docs/design/question-bank-v2.md)):
+Year 6 pupils answer an original, Atom Learning–style bank of 2,276 questions in 116 topics, including a SATs practice strand modelled on the 2022–2025 KS2 papers ([details](docs/design/question-bank-v2.md)):
 
 | Subject | Questions |
 |---|---|

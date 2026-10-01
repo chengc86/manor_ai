@@ -84,12 +84,12 @@ The Year 6 questions are replaced by an original bank in the style of Atom Learn
 
 ## Delivered (30 September 2026)
 
-The bank has 2,060 questions in 106 topics, with no template problems. The whole subject set builds in well under a second.
+The bank had 2,060 questions in 106 topics on 30 September, with no template problems; the SATs practice strand below took it to 2,276 questions in 116 topics on 1 October. The whole subject set builds in well under a second.
 
 | Subject | Questions | Topics | Independent check (`tests/bank-<subject>.cjs`) |
 |---|---|---|---|
-| Maths | 760 | 38 | Every answer re-solved with its own arithmetic, fraction, Roman-numeral and net-folding code, and readers that take values from the pictures. Catches all 152 deliberately swapped answers. |
-| English | 432 | 23 | Word-class tags, corrected texts, punctuation linters, verb tables, spelling rules and passage evidence. Catches all 15 planted mistakes. |
+| Maths | 760 (880 with SATs practice) | 38 (44) | Every answer re-solved with its own arithmetic, fraction, Roman-numeral and net-folding code, and readers that take values from the pictures. Catches all 152 deliberately swapped answers. |
+| English | 432 (528 with SATs practice) | 23 (27) | Word-class tags, corrected texts, punctuation linters, verb tables, spelling rules and passage evidence. Catches all 15 planted mistakes. |
 | Verbal reasoning | 420 | 21 | Codes, sequences, logic and letter sums brute-forced; word puzzles checked against its own ~5,000-word lexicon. Catches all 21 injected faults. |
 | Non-verbal reasoning | 240 | 12 | Every rule re-derived from the drawings themselves (turns, mirrors, folding in all 24 cube positions, hidden-shape search). Exactly one option fits. |
 | Science | 208 | 12 | Keys walked, circuits solved by nodal analysis, table and graph answers recomputed. Catches all 26 planted errors. |
@@ -109,6 +109,25 @@ The first read-through listed questions that were defensible only as simplificat
 **Kept on purpose** (standard in 11+ papers, not arguable): angle diagrams marked "not drawn to scale", chart readings halfway between gridlines, imperial conversions that say "about", and deliberately hard challenge questions (mirror letter codes, cube nets).
 
 **Picture fixes found while checking:** a hidden-shape question's shape is drawn at exactly the scale of its options on every screen (`scale: 'options'`), so "the same size" is true on a phone too; transform-order examples sit in two columns so they stay large on a phone; picture choices carry a solid letter badge that reads clearly on the white picture.
+
+## SATs practice strand (1 October 2026)
+
+The teacher asked for more questions, using the bank as the style guide and the KS2 SATs papers as the model. Both subjects gained a **SATs practice** strand, written in the forms of the papers sat from 2022 onwards (there were no tests in 2020 or 2021, and the earlier papers were not used): Maths Paper 1 arithmetic and Papers 2 and 3 reasoning, English grammar, punctuation and spelling Paper 1 and the Paper 2 spelling test, and the reading paper. **Nothing is copied**: the papers (via [satspapersguide.co.uk](https://www.satspapersguide.co.uk/ks2-year-6-sats/ks2-year-6-sats-papers/) and published breakdowns of the 2024 and 2025 papers) were used only to learn the question *forms*, the content-domain mix and the difficulty curve. Every number, sentence, passage and poem here was written for Manor Quest.
+
+| Topic | Questions | What it practises |
+|---|---|---|
+| `ma-sats-arithmetic` SATs arithmetic: whole numbers | 20 | Paper 1 forms, half with the answer box first (☐ = 5,583 + 50): column addition and subtraction, short multiplication and division, × and ÷ by 10, 100 and 1,000, long multiplication (4-digit × 2-digit) and long division (÷ 2-digit), order of operations with indices. |
+| `ma-sats-arithmetic-fdp` SATs arithmetic: fractions, decimals and percentages | 20 | Fractions with different denominators, mixed numbers with an exchange, fraction × fraction, fraction ÷ whole, mixed number × whole, percentages of amounts (43% of 900, 99% of 600), decimals (0.35 + 3.9, 12 − 4.39, 7.3 × 12, ÷ 100, × 1,000), fractions of amounts. |
+| `ma-sats-missing-numbers` SATs reasoning: missing numbers and digit puzzles | 20 | Missing numbers in all four operations (672 ÷ ☐ = 28), think-of-a-number worked backwards, digit cards (greatest even, smallest odd, closest to a target), sum-and-difference and "three consecutive numbers" puzzles, a missing digit in a column calculation. |
+| `ma-sats-word-problems` SATs reasoning: multi-step problems | 20 | Two- and three-step problems: change from a note, pack savings, coaches needed (round up), eggs left over (remainder), full pages (round down), scaling recipes and prices, seats left, savings minus spending, fraction and percentage shares, sale prices. |
+| `ma-sats-measures` SATs reasoning: measures and geometry | 20 | L-shape perimeter and area with two sides to deduce, missing angles (straight line, point, triangle, quadrilateral, isosceles), end times and durations, mixed-unit conversions in context, triangle area, map scales, a rectangle's width from its perimeter. |
+| `ma-sats-number-facts` SATs reasoning: number properties and statements | 20 | Primes against near-prime traps, squares and cubes, common multiples, factors of one number but not another, the largest or smallest of mixed fractions, decimals and percentages, which number rounds to a given value, best estimates, and "which statement about 72 is true". |
+| `en-sats-grammar` SATs grammar: words and sentences | 24 | Subject and object, modal verbs, relative pronouns and clauses, fronted adverbials, expanded noun phrases, main and subordinate clauses, conjunction types, present perfect and tense consistency, standard English, the subjunctive, formal vocabulary, synonyms and antonyms, determiners, adverb types, word class by use, sentence types. |
+| `en-sats-punctuation` SATs punctuation | 24 | Pairs of commas, brackets and dashes, semicolons and colons (and their functions), hyphens that change meaning, apostrophes for possession and contraction, direct speech, commas after fronted adverbials and in lists, commas that change meaning, counting missing marks, consistent bullet points, INCORRECTLY questions on cards. |
+| `en-sats-spelling` SATs spelling | 24 | The Paper 2 test as multiple choice: the correct spelling against plausible misspellings of Year 5/6 word-list words, endings (-cious/-tious, -cial/-tial, -ance/-ence, -able/-ible), silent letters, i before e, homophones and near-homophones, plurals and suffix rules. |
+| `en-sats-reading` SATs reading comprehension | 24 | Three original texts (a story, "The Lamp Room"; an information text, "Canals: The Water Roads"; a poem, "The Night Visitor") with eight questions each across the content domains: retrieval, inference with quoted evidence, vocabulary in context, language effects, structure, summary, prediction, and a "select the two" question per text. |
+
+**Checks.** The Maths test gained four solvers (`cardsNearest` tries every arrangement of the cards, `timeEnd` re-adds the duration read from the prompt, `closest` finds the unique nearest option to the exact value, `props` evaluates every statement about the number with its own code); the other questions use the existing `box`, `expr`, `digitCards`, `which`, `extreme`, `roundsTo` and `rectilinear` kinds. The English test gained its own word lists and rules for subjects and objects, modal verbs and their meanings, relative pronouns and clauses, fronted adverbials, main and subordinate clauses, conjunction types, tense consistency, non-standard forms, the subjunctive, formal words, synonyms and antonyms, adverb types, parenthesis, the functions of colons, semicolons, dashes and commas, bullet-point consistency, and a Year 5/6 spelling list with silent letters, i-before-e, plural and suffix rules (every wrong spelling is checked against both word lists, so no wrong option is a real word). Topic IDs and question IDs follow the usual scheme, so everything can be appended to later; the Year 2 bank, the retired Year 6 bank and the pupil records are untouched.
 
 ## Topics and targets
 
