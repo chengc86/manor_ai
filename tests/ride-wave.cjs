@@ -1,5 +1,6 @@
-// A hero on a ride is drawn on the 3D map and, during a wave, rides themself to a useful square
-// along the same rounded route monsters use. Dearer rides are faster. Never uses live pupil data.
+// A hero on a ride is drawn on the 3D map and, during a wave, rides themself to a useful grass square.
+// The journey is an orthogonal polyline of grass squares, drawn with the same rounded corners as a route.
+// It never steps on the monster path. Dearer rides are faster. A purchase belongs to one hero. Never uses live pupil data.
 const fs=require('fs'),ts=require('typescript'),assert=require('node:assert/strict'),{DatabaseSync}=require('node:sqlite'),Module=require('module');
 const dir='work/ride-wave';fs.mkdirSync(dir,{recursive:true});
 const compile=(src,out)=>fs.writeFileSync(`${dir}/${out}`,ts.transpileModule(fs.readFileSync(src,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText.replace(/require\("(?:@\/lib\/|\.\/)(.*?)"\)/g,'require("./$1.cjs")'));
@@ -18,13 +19,17 @@ const open=[];for(let c=0;c<COLS*18;c++)if(isBuildable(c,1,2))open.push(c);
 const ordered=[];for(const p of layout.path){const c=Math.floor(p.y)*COLS+Math.floor(p.x);if(ordered.at(-1)!==c)ordered.push(c);}
 const beside=ordered[Math.floor(ordered.length*.35)];
 const near=[beside-1,beside+1,beside-COLS,beside+COLS].find(c=>isBuildable(c,1,2));
-const far=open.find(c=>{const cells=rideCells(c,near);return cells&&cells.length>=3&&cells.length<ordered.length*.3&&distToPath(c)>3;});
-assert(near!==undefined&&far!==undefined,'a ride needs an open square beside the path and one further away');
-const steps=rideCells(far,near);
+const grassPath=cells=>cells&&cells.every(c=>!layout.cells.has(c)&&isBuildable(c,1,2));
+const far=open.find(c=>{const cells=rideCells(c,near,layout.cells);return grassPath(cells)&&cells.length>=3&&distToPath(c)>2.2;});
+assert(near!==undefined&&far!==undefined,'a ride needs an open grass square beside the path and one further away on the grass');
+const steps=rideCells(far,near,layout.cells);
 assert(steps[0]===far&&steps.at(-1)===near);
 assert(steps.every((c,i)=>i===0||Math.abs(c-steps[i-1])===1||Math.abs(c-steps[i-1])===COLS));
-assert.equal(rideCells(far,14*COLS+21),null,'the manor footprint is not a riding square');
-assert.equal(planRide({wave:1,rideMoves:[]},'h',far,14*COLS+21,0),null);
+assert(grassPath(steps),'the ride stays on grass and never steps on the monster route');
+assert.equal(rideCells(far,ordered[Math.floor(ordered.length/2)],layout.cells),null,'a route square is not a destination');
+assert.equal(rideCells(far,14*COLS+21,layout.cells),null,'the manor footprint is not a riding square');
+assert.equal(planRide({wave:1,route:layout.waypoints,rideMoves:[]},'h',far,14*COLS+21,0),null);
+assert.equal(planRide({wave:1,route:layout.waypoints,rideMoves:[]},'h',far,ordered[4],0),null,'planning onto the monster route is refused');
 
 const points=steps.map(cellPoint);
 const battle={rulesVersion:5,seed:7,start:1_000_000,wave:1,route:layout.waypoints,duration:B.rules(1).duration,power:0,target:0,contributors:1,fighters:[],rideMoves:[{id:'h',at:1_000_000,points,ride:'bicycle'}]};
@@ -53,8 +58,10 @@ const quietBattle={...battle,fighters:[],rideMoves:[]};
 const rowOf=cell=>Math.floor(cell/COLS),pathIndex=cell=>{const p=cellPoint(cell);let best=0,bd=1e9;layout.path.forEach((q,i)=>{const d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;best=i;}});return best;};
 const upper=open.find(c=>rowOf(c)<=4&&distToPath(c)>1.2&&distToPath(c)<4);
 assert(upper!==undefined,'need a square near the top of the route');
-const plans=autoRidePlan(quietBattle,[{id:'h',cell:upper,owner:'a'},{id:'stand',cell:near,owner:'b'}],owner=>owner==='a'?'fire-engine':undefined,()=>2.4,2);
+const onGrass=plans=>plans.every(p=>grassPath(p.move.points.map(pt=>Math.floor(pt.y)*COLS+Math.floor(pt.x))));
+const plans=autoRidePlan(quietBattle,[{id:'h',cell:upper,owner:'a'},{id:'stand',cell:near,owner:'b'}],d=>d.owner==='a'?'fire-engine':undefined,()=>2.4,2);
 assert(plans.length>=4,'a riding hero keeps taking new squares through the wave');
+assert(onGrass(plans),'auto-ride hops and the squares between them stay off the monster route');
 assert.equal(plans[0].move.ride,'fire-engine');assert.equal(plans[0].move.at,quietBattle.start);
 assert(plans.at(-1).move.at>quietBattle.start+15000,'the journey is still going well after the opening ride');
 assert.notEqual(plans[0].to,upper);assert.notEqual(plans[0].to,near);assert(isBuildable(plans[0].to,1,2));
@@ -66,9 +73,12 @@ const positions=plans.map(p=>p.to);assert(new Set(positions).size>=3,'they do no
 const besidePlans=autoRidePlan(quietBattle,[{id:'h',cell:near,owner:'a'}],()=>'car',()=>1.8,2);
 assert(besidePlans.length>=3);assert.notEqual(besidePlans[0].to,near);
 const other=open.find(c=>c!==upper&&c!==near&&rowOf(c)>=8);
-const pair=autoRidePlan(quietBattle,[{id:'a1',cell:upper,owner:'a'},{id:'b1',cell:other,owner:'b'}],()=>'scooter',()=>2.2,2);
+const pair=autoRidePlan(quietBattle,[{id:'a1',cell:upper,owner:'a',vehicle:'scooter'},{id:'b1',cell:other,owner:'b',vehicle:'scooter'}],d=>d.vehicle,()=>2.2,2);
 const firstA=pair.find(p=>p.id==='a1'),firstB=pair.find(p=>p.id==='b1');
 assert(firstA&&firstB&&firstA.to!==firstB.to,'two riders do not claim the same first square');
+assert(onGrass(pair)&&onGrass(besidePlans));
+const shared=autoRidePlan(quietBattle,[{id:'rider',cell:upper,owner:'a',vehicle:'bicycle'},{id:'walker',cell:other,owner:'a'}],d=>d.vehicle,()=>2.2,2);
+assert(shared.length>=3&&shared.every(p=>p.id==='rider'),'a second hero of the same pupil does not use the one purchased ride');
 console.log(`PASS: from row ${rowOf(upper)} the first hop is row ${rowOf(plans[0].to)} (path square ${pathIndex(plans[0].to)}), then ${plans.length} hops follow the monsters.`);
 
 const stats={...buildStats(2,1,'standard',{}),damage:50000,range:1.2,cooldown:.2,critChance:0};
@@ -106,21 +116,27 @@ sqlite.exec('CREATE TABLE world(id TEXT PRIMARY KEY,revision INTEGER NOT NULL,da
 const DB={prepare(sql){return {bind(...values){return {async run(){return {meta:{changes:Number(sqlite.prepare(sql).run(...values).changes)}}},async first(){return sqlite.prepare(sql).get(...values)??null}}}}}};
 const original=Module._load;Module._load=function(id,...args){if(id==='cloudflare:workers')return{env:{DB}};return original.call(this,id,...args)};
 const W=lib('world'),GAME=lib('game');
-const post=(uid,body)=>GAME.POST(new Request('https://game.test/api/game',{method:'POST',headers:{cookie:'qg_session='+uid,origin:'https://game.test',host:'game.test','content-type':'application/json','X-Quest-Heroes':'6'},body:JSON.stringify({requestId:crypto.randomUUID(),...body})})).then(async r=>({status:r.status,body:await r.json()}));
+const post=(uid,body)=>GAME.POST(new Request('https://game.test/api/game',{method:'POST',headers:{cookie:'qg_session='+uid,origin:'https://game.test',host:'game.test','content-type':'application/json','X-Quest-Heroes':'7'},body:JSON.stringify({requestId:crypto.randomUUID(),...body})})).then(async r=>({status:r.status,body:await r.json()}));
 (async()=>{
  sqlite.prepare('INSERT INTO sessions VALUES (?,?,?)').run(await W.sha('a'),'a',Date.now()+86400000);
  await W.mutate(w=>{w.players.a={...W.newPlayer('Ada'),coins:5000,hero:2,heroLocked:true,lastSeen:Date.now()};});
+ const secondCell=open.find(c=>c!==far&&c!==near&&distToPath(c)>2);
  let r=await post('a',{action:'recruit',type:2,cell:far});assert.equal(r.status,200);
  const defender=r.body.world.defenders.find(d=>d.owner==='a');
+ r=await post('a',{action:'recruit',type:2,cell:secondCell});assert.equal(r.status,200);
+ const walker=r.body.world.defenders.find(d=>d.owner==='a'&&d.id!==defender.id);
  r=await post('a',{action:'battle',battleVersion:r.body.world.battleVersion});assert.equal(r.status,200);assert(r.body.world.battle);
- r=await post('a',{action:'move',id:defender.id,cell:near});assert.equal(r.status,400);assert.match(r.body.error,/Wait for the shared wave/);
+ r=await post('a',{action:'move',id:defender.id,cell:near});assert.equal(r.status,400);assert.match(r.body.error,/Only the hero with a ride/);
  assert.equal((await W.readWorld()).w.battle.rideMoves,undefined);
- r=await post('a',{action:'vehicle',item:'scooter'});assert.equal(r.status,200);assert.deepEqual(r.body.world.me.ride,{id:'scooter',paint:'red'});
+ r=await post('a',{action:'vehicle',item:'scooter',id:defender.id});assert.equal(r.status,200);assert.equal(r.body.world.defenders.find(d=>d.id===defender.id).vehicle,'scooter');assert.equal(r.body.world.defenders.find(d=>d.id===walker.id).vehicle,undefined);assert.deepEqual(r.body.world.defenders.find(d=>d.id===defender.id).ride,{id:'scooter',paint:'red'});
+ r=await post('a',{action:'move',id:walker.id,cell:near});assert.equal(r.status,400);assert.match(r.body.error,/Only the hero with a ride/,'the other hero cannot use the same purchase');
  r=await post('a',{action:'move',id:defender.id,cell:beside});assert.equal(r.status,400);assert.match(r.body.error,/open square beside the path/);
  r=await post('a',{action:'move',id:defender.id,cell:near});assert.equal(r.status,200);
  const saved=(await W.readWorld()).w,fight=saved.battle,moved=saved.defenders.find(d=>d.id===defender.id),hero=fight.fighters.find(f=>f.id===defender.id);
  assert.equal(hero.cell,far,'the wave still replays from the square the hero started on');
+ assert(fight.rideMoves.every(m=>m.id===defender.id),'only the hero who was given the ride gets orders');
  assert.equal(fight.rideMoves[0].id,defender.id);assert.equal(fight.rideMoves[0].ride,'scooter');assert.deepEqual(fight.rideMoves[0].points,points);
+ assert(fight.rideMoves.every(m=>m.points.every(pt=>!layout.cells.has(Math.floor(pt.y)*COLS+Math.floor(pt.x)))),'the manual journey stays on the grass');
  assert(fight.rideMoves.length>1,'after the chosen square they keep riding');
  const arrived=riderState(fight,defender.id,hero.cell,fight.rideMoves[1].at);
  assert.equal(arrived.cell,near);assert.equal(arrived.moving,false);
@@ -129,12 +145,13 @@ const post=(uid,body)=>GAME.POST(new Request('https://game.test/api/game',{metho
  const hand=again.find(m=>Math.hypot(m.points.at(-1).x-cellPoint(far).x,m.points.at(-1).y-cellPoint(far).y)<1e-6);
  assert(hand&&again.some(m=>m.at>hand.at),'a manual order still uses the route, then the hero carries on');
  const version=(await W.readWorld()).w.battleVersion;
- await W.mutate(w=>{w.battle=null;w.players.a.vehicle='fire-engine';const d=w.defenders.find(d=>d.owner==='a');d.cell=far;});
+ await W.mutate(w=>{w.battle=null;const p=w.players.a;p.vehiclesOwned=[...new Set([...(p.vehiclesOwned??[]),'fire-engine'])];delete p.vehicle;for(const d of w.defenders){if(d.id===defender.id){d.vehicle='fire-engine';d.cell=far;}else if(d.owner==='a'){delete d.vehicle;d.cell=secondCell;}}});
  r=await post('a',{action:'battle',battleVersion:version});assert.equal(r.status,200);
  const auto=(await W.readWorld()).w,autoFight=auto.battle,autoHero=autoFight.fighters.find(f=>f.id===defender.id),autoDef=auto.defenders.find(d=>d.id===defender.id);
  assert.equal(autoHero.cell,far,'the wave still replays from the square the hero started on');
  assert.notEqual(autoDef.cell,far,'the hero leaves that square without a manual order');
- assert(autoFight.rideMoves.length>=3);assert.equal(autoFight.rideMoves[0].ride,'fire-engine');assert.equal(autoFight.rideMoves[0].at,autoFight.start);
+ assert(autoFight.rideMoves.length>=3);assert(autoFight.rideMoves.every(m=>m.id===defender.id));assert.equal(auto.defenders.find(d=>d.id===walker.id).cell,secondCell);assert.equal(autoFight.rideMoves[0].ride,'fire-engine');assert.equal(autoFight.rideMoves[0].at,autoFight.start);
+ assert(autoFight.rideMoves.every(m=>m.points.every(pt=>!layout.cells.has(Math.floor(pt.y)*COLS+Math.floor(pt.x)))));
  assert(autoFight.rideMoves.at(-1).at>autoFight.start+12000);
  const moving=riderState(autoFight,defender.id,autoHero.cell,autoFight.start+6000);
  assert.notEqual(moving.cell,far);

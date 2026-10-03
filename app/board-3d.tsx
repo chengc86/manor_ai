@@ -13,10 +13,10 @@ import {SCHOOL_MAX_HP,type Battle,type simulate} from '@/lib/battle';
 /** Camera commands for the board toolbar. */
 export type BoardCamera={zoom(factor:number):void;rotate(angle:number):void;reset():void};
 type Look={type:number;clothing?:Wardrobe;uniform?:string;gender?:string};
-type Defender=Look&{id:string;cell:number;level:number;weapon?:string;colour?:string;name?:string;owner?:string};
+type Defender=Look&{id:string;cell:number;level:number;weapon?:string;colour?:string;name?:string;owner?:string;ride?:Ride};
 type Player={id:string;hero:number;clothing?:Wardrobe;uniform?:string;gender?:string;colour?:string;name:string;online?:boolean;ride?:Ride};
 export type BoardWorld={wave:number;defenders:Defender[];players:Player[];me?:{id:string;clothing?:Wardrobe;uniform?:string;gender?:string}|null};
-type Props={world:BoardWorld;battle:Battle|null;sim:ReturnType<typeof simulate>|null;now:number;placement:{type:number;level?:number;weapon?:string}|null;range:number|null;hover:number|null;setHover:(cell:number|null)=>void;
+type Props={world:BoardWorld;battle:Battle|null;sim:ReturnType<typeof simulate>|null;now:number;placement:{type:number;level?:number;weapon?:string;ride?:Ride}|null;range:number|null;hover:number|null;setHover:(cell:number|null)=>void;
  onPlace:(cell:number)=>void;onHero:(hero:Defender|(Player&{camp:true}))=>void;onFail:()=>void;motion:boolean;layout:RouteShape;schoolHp:number|null;ref?:Ref<BoardCamera>};
 type Engine={scene:BoardScene;pickAt(x:number,y:number):ReturnType<BoardScene['pick']>;camera:BoardCamera};
 const TARGET=new THREE.Vector3(COLS/2,0,ROWS/2+.2),POLAR=.74;
@@ -64,15 +64,15 @@ export default function Board3D({world,battle,sim,now,placement,range,hover,setH
  useImperativeHandle(ref,()=>({zoom:f=>engine.current?.camera.zoom(f),rotate:a=>engine.current?.camera.rotate(a),reset:()=>engine.current?.camera.reset()}),[]);
  const wave=battle?.wave??world.wave,theme=useMemo(()=>boardTheme(wave),[wave]);
  const deployed:Defender[]=useMemo(()=>battle?battle.fighters:world.defenders.filter(d=>d.cell>=0),[battle,world.defenders]);
- const rideByOwner=useMemo(()=>new Map(world.players.map(p=>[p.id,p.ride])),[world.players]);
- const heroes:BoardHero[]=useMemo(()=>deployed.map(d=>({id:d.id,type:d.type,cell:d.cell,level:d.level,weapon:d.weapon??(d.level?'standard':'none'),colour:d.colour??HEROES[d.type]?.colour,name:d.name??'',clothing:d.clothing,uniform:d.uniform,gender:d.gender,mine:d.owner===world.me?.id,ride:d.owner?rideByOwner.get(d.owner):undefined})),[deployed,world.me?.id,rideByOwner]);
+ const rideByHero=useMemo(()=>new Map(world.defenders.filter(d=>d.ride).map(d=>[d.id,d.ride!])),[world.defenders]);
+ const heroes:BoardHero[]=useMemo(()=>deployed.map(d=>({id:d.id,type:d.type,cell:d.cell,level:d.level,weapon:d.weapon??(d.level?'standard':'none'),colour:d.colour??HEROES[d.type]?.colour,name:d.name??'',clothing:d.clothing,uniform:d.uniform,gender:d.gender,mine:d.owner===world.me?.id,ride:d.ride??rideByHero.get(d.id)})),[deployed,world.me?.id,rideByHero]);
  const heroKey=JSON.stringify(heroes);
  const camp:CampHero[]=useMemo(()=>world.players.map((p,i)=>({id:p.id,slot:i,type:p.hero,clothing:p.clothing,uniform:p.uniform,gender:p.gender,colour:p.colour,name:p.name,online:!!p.online,ride:p.ride})),[world.players]);
  const campKey=JSON.stringify(camp);
  const occupied=useMemo(()=>new Map((battle?world.defenders:deployed).filter(d=>d.cell>=0).map(d=>[d.cell,d])),[battle,deployed,world.defenders]);
  const buildable=useMemo(()=>buildableCells(layout.cells),[layout]);
  const empty=useMemo(()=>[...buildable].filter(c=>!occupied.has(c)),[buildable,occupied]);
- const me=world.me,ghost=placement&&me?{type:placement.type,clothing:me.clothing,uniform:me.uniform,gender:me.gender,weapon:placement.weapon??(placement.level?'standard':'none'),ride:rideByOwner.get(me.id)}:null;
+ const me=world.me,ghost=placement&&me?{type:placement.type,clothing:me.clothing,uniform:me.uniform,gender:me.gender,weapon:placement.weapon??(placement.level?'standard':'none'),ride:placement.ride}:null;
  const placementKey=JSON.stringify([!!placement,empty,hover,range,ghost]);
  useEffect(()=>{
   const container=host.current,labelHost=labelsRef.current;if(!container||!labelHost)return;

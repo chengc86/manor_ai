@@ -1,6 +1,7 @@
 /**
- * Rides pupils can buy and show off with their hero: in the dressing room, on their picture, in the hero camp
- * and on the 3D map. During a wave a hero on a ride keeps moving toward the monsters. A dearer ride is faster.
+ * Rides pupils can buy and show off: in the dressing room, on their picture, in the hero camp
+ * and on the 3D map. Each purchase lives in the pupil's garage and is assigned to one hero.
+ * During a wave that hero keeps moving toward the monsters, on the grass. A dearer ride is faster.
  * Damage, range and the other battle stats stay the same.
  * Stable ids: append only, never rename.
  */
@@ -28,11 +29,15 @@ export const PAINTS=[
 export type PaintId=typeof PAINTS[number]['id'];
 export const vehicle=(id?:string|null)=>VEHICLES.find(v=>v.id===id);
 export const paint=(id?:string|null)=>PAINTS.find(p=>p.id===id);
-/** What a pupil is riding, with its paint, as sent to classmates' screens; nothing when they walk. */
+/** A ride with its paint, as sent to classmates' screens. */
 export type Ride={id:VehicleId;paint:PaintId};
+export function rideLook(id?:string|null,paints?:Record<string,string>):Ride|undefined{
+ const v=vehicle(id);if(!v)return undefined;
+ return {id:v.id,paint:(paint(paints?.[v.id])?.id??v.paint) as PaintId};
+}
+/** @deprecated Shared pupil ride. Assignments now live on one hero; this remains for older saves. */
 export function rideOf(p:{vehicle?:string;vehiclePaint?:Record<string,string>}):Ride|undefined{
- const v=vehicle(p.vehicle);if(!v)return undefined;
- return {id:v.id,paint:(paint(p.vehiclePaint?.[v.id])?.id??v.paint) as PaintId};
+ return rideLook(p.vehicle,p.vehiclePaint);
 }
 /**
  * Cells per second along a ride order. Catalogue price is the quality, so a dearer ride is quicker.
