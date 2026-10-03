@@ -64,14 +64,15 @@ export default function Board3D({world,battle,sim,now,placement,range,hover,setH
  useImperativeHandle(ref,()=>({zoom:f=>engine.current?.camera.zoom(f),rotate:a=>engine.current?.camera.rotate(a),reset:()=>engine.current?.camera.reset()}),[]);
  const wave=battle?.wave??world.wave,theme=useMemo(()=>boardTheme(wave),[wave]);
  const deployed:Defender[]=useMemo(()=>battle?battle.fighters:world.defenders.filter(d=>d.cell>=0),[battle,world.defenders]);
- const heroes:BoardHero[]=useMemo(()=>deployed.map(d=>({id:d.id,type:d.type,cell:d.cell,level:d.level,weapon:d.weapon??(d.level?'standard':'none'),colour:d.colour??HEROES[d.type]?.colour,name:d.name??'',clothing:d.clothing,uniform:d.uniform,gender:d.gender,mine:d.owner===world.me?.id})),[deployed,world.me?.id]);
+ const rideByOwner=useMemo(()=>new Map(world.players.map(p=>[p.id,p.ride])),[world.players]);
+ const heroes:BoardHero[]=useMemo(()=>deployed.map(d=>({id:d.id,type:d.type,cell:d.cell,level:d.level,weapon:d.weapon??(d.level?'standard':'none'),colour:d.colour??HEROES[d.type]?.colour,name:d.name??'',clothing:d.clothing,uniform:d.uniform,gender:d.gender,mine:d.owner===world.me?.id,ride:d.owner?rideByOwner.get(d.owner):undefined})),[deployed,world.me?.id,rideByOwner]);
  const heroKey=JSON.stringify(heroes);
  const camp:CampHero[]=useMemo(()=>world.players.map((p,i)=>({id:p.id,slot:i,type:p.hero,clothing:p.clothing,uniform:p.uniform,gender:p.gender,colour:p.colour,name:p.name,online:!!p.online,ride:p.ride})),[world.players]);
  const campKey=JSON.stringify(camp);
- const occupied=useMemo(()=>new Map(deployed.map(d=>[d.cell,d])),[deployed]);
+ const occupied=useMemo(()=>new Map((battle?world.defenders:deployed).filter(d=>d.cell>=0).map(d=>[d.cell,d])),[battle,deployed,world.defenders]);
  const buildable=useMemo(()=>buildableCells(layout.cells),[layout]);
  const empty=useMemo(()=>[...buildable].filter(c=>!occupied.has(c)),[buildable,occupied]);
- const me=world.me,ghost=placement&&me?{type:placement.type,clothing:me.clothing,uniform:me.uniform,gender:me.gender,weapon:placement.weapon??(placement.level?'standard':'none')}:null;
+ const me=world.me,ghost=placement&&me?{type:placement.type,clothing:me.clothing,uniform:me.uniform,gender:me.gender,weapon:placement.weapon??(placement.level?'standard':'none'),ride:rideByOwner.get(me.id)}:null;
  const placementKey=JSON.stringify([!!placement,empty,hover,range,ghost]);
  useEffect(()=>{
   const container=host.current,labelHost=labelsRef.current;if(!container||!labelHost)return;
@@ -143,8 +144,9 @@ export default function Board3D({world,battle,sim,now,placement,range,hover,setH
  useEffect(()=>{engine.current?.scene.setHeroes(heroes);},[heroKey]);
  // eslint-disable-next-line react-hooks/exhaustive-deps
  useEffect(()=>{engine.current?.scene.setCamp(camp);},[campKey]);
+ const rideKey=battle?.rideMoves?.map(m=>m.id+'@'+m.at).join('|')??'';
  // eslint-disable-next-line react-hooks/exhaustive-deps
- useEffect(()=>{engine.current?.scene.setBattle(battle,sim??undefined);},[battle?.start,battle?.wave]);
+ useEffect(()=>{engine.current?.scene.setBattle(battle,sim??undefined);},[battle?.start,battle?.wave,rideKey]);
  // eslint-disable-next-line react-hooks/exhaustive-deps
  useEffect(()=>{engine.current?.scene.setPlacement({active:!!placement,empty,hover,range,ghost});},[placementKey]);
  useEffect(()=>{const id=hover!==null?occupied.get(hover)?.id??null:null;engine.current?.scene.setHovered(id??live.current.hoverId);},[hover,occupied]);
@@ -160,7 +162,7 @@ export default function Board3D({world,battle,sim,now,placement,range,hover,setH
   if(e.buttons||frameRequest.current)return;const {clientX,clientY}=e;
   frameRequest.current=requestAnimationFrame(()=>{frameRequest.current=0;const pick=engine.current?.pickAt(clientX,clientY)??null,s=engine.current?.scene;
    const campId=pick?.kind==='camp'?pick.id:null,hero=pick?.kind==='hero'?heroes.find(h=>h.id===pick.id):null;live.current.hoverId=campId;
-   const cell=hero?hero.cell:pick?.kind==='cell'&&buildable.has(pick.cell)?pick.cell:null;
+   const cell=hero?(world.defenders.find(d=>d.id===hero.id)?.cell??hero.cell):pick?.kind==='cell'&&buildable.has(pick.cell)?pick.cell:null;
    s?.setHovered(hero?.id??campId??(cell!==null?occupied.get(cell)?.id??null:null));
    if(cell!==hover)setHover(cell);
    if(host.current)host.current.style.cursor=pick&&(pick.kind!=='cell'||buildable.has(pick.cell))?'pointer':'grab';});

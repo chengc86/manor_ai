@@ -7,7 +7,7 @@ import {uniformPieces,wear,type Wardrobe} from './clothing';
 import {bakeRig,type RigTemplate} from './rig-bake';
 import {createHeldWeapon} from './weapon-model';
 /** Battlefield heroes: the dressing-room model baked small, holding their weapon. One template per look. */
-/** How a hero looks on the battlefield. Rides only appear in the hero camp, never on defenders. */
+/** How a hero looks on the battlefield. A ride shows in the camp and on that hero's defenders. */
 export type HeroLook={type:number;clothing?:Wardrobe;uniform?:string;gender?:string;weapon?:string;ride?:Ride};
 /** Arguments of a hero pose: time, motion and whether motion is allowed. */
 export type HeroPose=[time:number,motion:'idle'|'walk'|'attack',enabled?:boolean];

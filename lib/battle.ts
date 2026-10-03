@@ -1,4 +1,5 @@
 import {mapLayout,routeLayout} from './map-layout';
+import {visualHeading,visualPosition,type RoutePoint} from './route-visual';
 import {enemyFor,enemyDamage} from './enemies';
 import {buildStats,type ItemLoadout} from './builds';
 import type {Wardrobe} from './clothing';
@@ -16,8 +17,44 @@ export function cellPoint(cell:number){return{x:cell%COLS+.5,y:Math.floor(cell/C
 export function percent(cell:number){const p=cellPoint(cell);return{x:p.x/COLS*100,y:p.y/ROWS*100}}
 export function pathPosition(progress:number,wave=1,version=4,route?:number[][]){const path=(route?routeLayout(route):mapLayout(wave,version)).path;const t=Math.max(0,Math.min(path.length-1,progress*(path.length-1))),i=Math.min(path.length-2,Math.floor(t)),f=t-i;return{x:path[i].x+(path[i+1].x-path[i].x)*f,y:path[i].y+(path[i+1].y-path[i].y)*f}}
 export type Fighter=ItemLoadout & {stats?:ReturnType<typeof buildStats>;id:string;type:number;level:number;weapon?:string;cell:number;name:string;gender?:'boy'|'girl';uniform?:string;clothing?:Wardrobe;outfit?:string;colour?:string;owner?:string};
-export type Battle={start:number;duration:number;wave:number;rulesVersion?:number;seed?:number;route?:number[][];power:number;target:number;contributors:number;fighters:Fighter[]};
+/** One order to ride a hero to a new square during a wave. `points` is the polyline, in the same form as a monster route. */
+export type RideMove={id:string;at:number;points:RoutePoint[]};
+export type Battle={start:number;duration:number;wave:number;rulesVersion?:number;seed?:number;route?:number[][];power:number;target:number;contributors:number;fighters:Fighter[];rideMoves?:RideMove[]};
 export function battleLayout(battle:Battle,version=battle.rulesVersion??1){return battle.route?routeLayout(battle.route):mapLayout(battle.wave,version)}
+/** Squares a ride may cross, including the monster path, so it can move between the lawns the path divides. */
+function rideCanCross(cell:number){return Number.isInteger(cell)&&cell>=COLS*2&&cell<COLS*(ROWS-1)&&cell%COLS>0&&cell%COLS<COLS-1&&!(cell%COLS>=20&&Math.floor(cell/COLS)>=14);}
+/** Orthogonal steps from one square to another. Null when the square cannot be reached. */
+export function rideCells(from:number,to:number):number[]|null{
+ if(!rideCanCross(from)||!rideCanCross(to))return null;if(from===to)return [from];
+ const prev=new Map<number,number>([[from,-1]]),q=[from];
+ for(let i=0;i<q.length;i++){const c=q[i];for(const n of [c-1,c+1,c-COLS,c+COLS]){if(!rideCanCross(n)||prev.has(n))continue;prev.set(n,c);if(n===to){const path=[to];let p=c;while(p!==-1){path.push(p);p=prev.get(p)!;}return path.reverse();}q.push(n);}}
+ return null;
+}
+/** Cells per second: the same pace monsters walk along this wave's route. */
+export function waveCellSpeed(battle:Battle){const path=battleLayout(battle).path;return Math.max(.4,(path.length-1)/rules(battle.wave).travel);}
+function alongRide(points:RoutePoint[],distance:number){
+ const span=Math.max(1,points.length-1),clamped=Math.max(0,Math.min(span,distance)),progress=clamped/span,p=visualPosition(progress,points);
+ return {x:p.x,y:p.y,cell:Math.floor(p.y)*COLS+Math.floor(p.x),moving:clamped<span-1e-3,yaw:visualHeading(Math.min(.999,Math.max(0,progress)),points)};
+}
+/**
+ * Where a hero is during a wave. With no ride orders they stay on their square. Orders replay along the same
+ * rounded route monsters use (`visualPosition`), at the wave's cell speed, so every client draws one journey.
+ */
+export function riderState(battle:Battle,id:string,startCell:number,now:number){
+ const origin=cellPoint(startCell),still={x:origin.x,y:origin.y,cell:startCell,moving:false,yaw:0};
+ const moves=(battle.rideMoves??[]).filter(m=>m.id===id&&m.points?.length).sort((a,b)=>a.at-b.at);
+ if(!moves.length||now<=moves[0].at)return still;
+ const speed=waveCellSpeed(battle);let state=still;
+ for(let i=0;i<moves.length;i++){const m=moves[i];if(now<=m.at)break;const until=Math.min(now,i+1<moves.length?moves[i+1].at:now);
+  if(m.points.length<2){const p=m.points[0];state={x:p.x,y:p.y,cell:Math.floor(p.y)*COLS+Math.floor(p.x),moving:false,yaw:state.yaw};continue;}
+  state=alongRide(m.points,(until-m.at)/1000*speed);}
+ return state;
+}
+/** The polyline for a new ride order, starting where the hero is now. A one-point line stops them where they stand. */
+export function planRide(battle:Battle,id:string,startCell:number,to:number,now:number):RoutePoint[]|null{
+ const from=riderState(battle,id,startCell,now).cell;if(from===to)return [cellPoint(to)];
+ const cells=rideCells(from,to);return cells?cells.map(cellPoint):null;
+}
 export function rules(wave:number,version=3){const chapter=chapterFor(wave);const count=version===1?Math.min(30,8+Math.floor((wave-1)/2)):Math.min(48,18+Math.floor((wave-1)/2));const travel=Math.max(23,32-(chapter.number-1)*.45);const spawn=Math.max(.8,1.25-(chapter.number-1)*.015);return{count,hp:Math.round((version===1?50+10*(wave-1):version===2?180+28*(wave-1)+Math.pow(wave-1,1.35)*3:180*(1+.035*(wave-1)))*(chapter.elite?1.25:1)),spawn,travel,duration:(travel*3.5+3+(count-1)*spawn)*1000,boss:chapter.boss,elite:chapter.elite};}
 export function monsterHealth(wave:number,index:number,version=3){const rule=rules(wave,version);return Math.round(rule.hp*(rule.boss&&index===rule.count-1?4:1)*enemyFor(wave,index,version).hp)}
 export const SCHOOL_MAX_HP=100;
@@ -67,6 +104,7 @@ function roll(seed:number,id:string,shot:number){let h=(seed^shot)>>>0;for(let i
 function modernSimulate(battle:Battle){
  const version=battle.rulesVersion??3,rule=rules(battle.wave,3),count=rule.count,types=Array.from({length:count},(_,i)=>enemyFor(battle.wave,i,version)),hp=Array.from({length:count},(_,i)=>monsterHealth(battle.wave,i,version)),deathAt:(number|null)[]=Array(count).fill(null),progress=Array(count).fill(0),tracks:number[][]=Array.from({length:count},()=>[]),events:Hit[]=[];
  const stats=battle.fighters.map(f=>f.stats??buildStats(f.type,f.level,f.weapon,f)),nextShot=Array(stats.length).fill(0),shots=Array(stats.length).fill(0),centres=battle.fighters.map(f=>cellPoint(f.cell));
+ const riding=new Set((battle.rideMoves??[]).filter(m=>m.points?.length).map(m=>m.id));
  const frozen=Array(count).fill(0),immune=Array(count).fill(0),slowEnd=Array(count).fill(0),slow=Array(count).fill(0),markEnd=Array(count).fill(0),mark=Array(count).fill(0),markOwner=Array(count).fill(''),pushed=Array(count).fill(0),slowOwner=Array(count).fill(''),frozenOwner=Array(count).fill('');
  const paints:Map<string,{damage:number;until:number;fighter:number;next:number}>[]=Array.from({length:count},()=>new Map());
  const contributions:Record<string,Contribution>={};const owner=(i:number)=>battle.fighters[i].owner??battle.fighters[i].id;const credit=(id:string)=>contributions[id]??=( {kills:0,damage:0,controlSeconds:0,assistedDamage:0});
@@ -83,7 +121,7 @@ function modernSimulate(battle:Battle){
  if(usesSchoolHealth&&schoolHealth===0){if(tick%2===0)for(let m=0;m<count;m++)tracks[m].push(progress[m]);endedAt=t;break;}
  const living=progress.map((p,m)=>({m,progress:p,p:pathPosition(p,battle.wave,version,battle.route)})).filter(o=>hp[o.m]>0&&o.progress>=0&&o.progress<1);
  battle.fighters.forEach((f,i)=>{
- const s=stats[i];if(!s.damage||t+1e-8<nextShot[i])return;const centre=centres[i],candidates=living.filter(o=>hp[o.m]>0&&Math.hypot(o.p.x-centre.x,o.p.y-centre.y)<=s.range).sort((a,b)=>b.progress-a.progress||a.m-b.m);
+ const s=stats[i];if(!s.damage||t+1e-8<nextShot[i])return;const centre=riding.has(f.id)?riderState(battle,f.id,f.cell,battle.start+t*1000):centres[i],candidates=living.filter(o=>hp[o.m]>0&&Math.hypot(o.p.x-centre.x,o.p.y-centre.y)<=s.range).sort((a,b)=>b.progress-a.progress||a.m-b.m);
  if(!candidates.length){nextShot[i]=t;return;}const hits=candidates.slice(0,s.targets),impact=hits[0].p;
  if(s.splash){for(const o of living.filter(o=>hp[o.m]>0).sort((a,b)=>Math.hypot(a.p.x-impact.x,a.p.y-impact.y)-Math.hypot(b.p.x-impact.x,b.p.y-impact.y)||a.m-b.m))if(hits.length<6&&!hits.some(h=>h.m===o.m)&&Math.hypot(o.p.x-impact.x,o.p.y-impact.y)<=s.splash)hits.push(o);}
  else if(s.chain){let last=hits[0];while(hits.length<Math.min(5,s.chain)){const o=living.filter(o=>hp[o.m]>0&&!hits.some(h=>h.m===o.m)&&Math.hypot(o.p.x-last.p.x,o.p.y-last.p.y)<=3).sort((a,b)=>Math.hypot(a.p.x-last.p.x,a.p.y-last.p.y)-Math.hypot(b.p.x-last.p.x,b.p.y-last.p.y)||a.m-b.m)[0];if(!o)break;hits.push(o);last=o;}}

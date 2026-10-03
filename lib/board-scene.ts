@@ -7,7 +7,7 @@ import {createMonsterModel,createCrown,MONSTER_LOOKS} from './monster-model';
 import {BattleEffects,WeatherEffects} from './board-effects';
 import {PROJECTILE_FLIGHT} from './weapon-model';
 import {visualPosition,visualHeading} from './route-visual';
-import {monsterProgress,monsterHealth,battleLayout,simulate,type Battle,type Hit} from './battle';
+import {monsterProgress,monsterHealth,battleLayout,riderState,simulate,type Battle,type Hit} from './battle';
 import {enemyFor,type EnemyKind} from './enemies';
 import {HEROES} from './heroes';
 import {WEAPON_BASE,buildStats} from './builds';
@@ -49,7 +49,7 @@ type MonsterActor=Actor<MonsterPose>&{kind:string};
 /** Monster templates are baked once per kind and shared by every wave. */
 const monsterTemplates=new Map<string,{template:RigTemplate<MonsterPose>;height:number}>();
 function monsterTemplate(id:string){let t=monsterTemplates.get(id);if(!t){const m=createMonsterModel(id);t={template:bakeRig<MonsterPose>(m.root,m.parts,(phase,time)=>m.animate(phase,time),.5),height:m.height};monsterTemplates.set(id,t);}return t;}
-type Prepared={battle:Battle;sim:Sim;path:{x:number;y:number}[];kinds:EnemyKind[];maxHp:number[];damageAt:{at:number;total:number}[][];hits:Hit[][];events:Hit[];primary:Set<Hit>;boss:number;fighters:{centre:THREE.Vector3;weapon:string;melee:boolean;splash:number;colour:THREE.Color}[]};
+type Prepared={battle:Battle;moveKey:string;sim:Sim;path:{x:number;y:number}[];kinds:EnemyKind[];maxHp:number[];damageAt:{at:number;total:number}[][];hits:Hit[][];events:Hit[];primary:Set<Hit>;boss:number;fighters:{centre:THREE.Vector3;weapon:string;melee:boolean;splash:number;colour:THREE.Color}[]};
 const colourOf=(e:Hit,fallback:THREE.Color)=>e.freeze?new THREE.Color(0x9eeeff):e.slow?new THREE.Color(0xa9ed6f):e.mark?new THREE.Color(0xff91c5):e.dot?new THREE.Color(0xef82df):fallback;
 export class BoardScene{
  scene=new THREE.Scene();hemi=new THREE.HemisphereLight();sun=new THREE.DirectionalLight();
@@ -107,10 +107,10 @@ export class BoardScene{
  private syncActors<T extends BoardHero|CampHero>(map:Map<string,HeroActor>,items:T[],spot:(item:T)=>THREE.Vector3,camp:boolean){
   const seen=new Set<string>();
   for(const item of items){
-   const look=JSON.stringify([item.type,item.clothing??null,item.uniform??null,item.gender??null,camp?'none':item.weapon??'none',camp?item.ride??null:null]);seen.add(item.id);
+   const look=JSON.stringify([item.type,item.clothing??null,item.uniform??null,item.gender??null,camp?'none':item.weapon??'none',item.ride??null]);seen.add(item.id);
    let actor=map.get(item.id);
    if(actor&&actor.look!==look){this.release(actor);map.delete(item.id);actor=undefined;}
-   if(!actor){const {key,template}=acquireHeroTemplate({...item,weapon:camp?'none':item.weapon,ride:camp?item.ride:undefined});actor=Object.assign(new Actor(key,template,this.characters,HERO_SCALE),{data:item,look});map.set(item.id,actor);actor.place(spot(item));actor.yaw=actor.targetYaw=camp?(actor.phase%1-.5)*.6:this.faceRoute(actor.position);}
+   if(!actor){const {key,template}=acquireHeroTemplate({...item,weapon:camp?'none':item.weapon,ride:item.ride});actor=Object.assign(new Actor(key,template,this.characters,HERO_SCALE),{data:item,look});map.set(item.id,actor);actor.place(spot(item));actor.yaw=actor.targetYaw=camp?(actor.phase%1-.5)*.6:this.faceRoute(actor.position);}
    else{const p=spot(item);if(!p.equals(actor.position)){actor.place(p);actor.targetYaw=camp?actor.targetYaw:this.faceRoute(p);}}
    actor.data=item;
   }
@@ -131,8 +131,10 @@ export class BoardScene{
  /** Prepares per-battle lookups once, so each frame only reads them. Pass the simulation if it is already computed. */
  setBattle(battle:Battle|null,sim?:Sim){
   if(!battle){if(this.prepared){for(const [,m] of this.monsters)this.stash(m);this.monsters.clear();}this.prepared=null;return;}
-  if(this.prepared?.battle.start===battle.start&&this.prepared.battle.wave===battle.wave)return;
-  for(const [,m] of this.monsters)this.stash(m);this.monsters.clear();
+  const moveKey=JSON.stringify(battle.rideMoves??[]);
+  const sameWave=this.prepared?.battle.start===battle.start&&this.prepared.battle.wave===battle.wave;
+  if(sameWave&&this.prepared!.moveKey===moveKey)return;
+  if(!sameWave){for(const [,m] of this.monsters)this.stash(m);this.monsters.clear();}
   const s=sim??simulate(battle),path=battleLayout(battle).path,version=battle.rulesVersion??1;
   const events=[...s.events].sort((a,b)=>a.at-b.at),hits:Hit[][]=Array.from({length:s.count},()=>[]);for(const e of events)hits[e.monster]?.push(e);
   // The first target of each shot carries the splash ring; the others only sparkle.
@@ -140,7 +142,7 @@ export class BoardScene{
   const damageAt=hits.map(list=>{let total=0;return list.map(e=>({at:e.at+.25,total:total+=e.damage})).sort((a,b)=>a.at-b.at);});
   const fighters=battle.fighters.map(f=>{const weapon=f.weapon??(f.level?'standard':'none');let splash=0;try{splash=(f.stats??buildStats(f.type,f.level,weapon,f)).splash??0;}catch{splash=0;}
    return {centre:cellCentre(f.cell),weapon,melee:WEAPON_BASE[weapon]?.category==='str',splash,colour:new THREE.Color(HEROES[f.type]?.colour??'#ffe396')};});
-  this.prepared={battle,sim:s,path,events,hits,damageAt,fighters,primary,boss:s.rule.boss?s.count-1:-1,
+  this.prepared={battle,moveKey,sim:s,path,events,hits,damageAt,fighters,primary,boss:s.rule.boss?s.count-1:-1,
    kinds:Array.from({length:s.count},(_,i)=>enemyFor(battle.wave,i,version)),maxHp:Array.from({length:s.count},(_,i)=>monsterHealth(battle.wave,i,version))};
  }
  private stash(m:MonsterActor){m.inst.root.visible=false;const list=this.spare.get(m.kind)??[];list.push(m);this.spare.set(m.kind,list);}
@@ -178,10 +180,12 @@ export class BoardScene{
   const fighterIndex=new Map(p?.battle.fighters.map((f,i)=>[f.id,i])??[]);
   for(const [id,a] of this.actors){
    const hero=a.data as BoardHero,fi=fighterIndex.get(id),swing=fi!==undefined?attacking.get(fi):undefined;
+   let riding=false;
+   if(p&&fi!==undefined){const ride=riderState(p.battle,id,hero.cell,o.battleNow),pos=new THREE.Vector3(ride.x,0,ride.y);if(pos.distanceToSquared(a.position)>1e-8)a.place(pos);if(ride.moving&&!swing)a.targetYaw=ride.yaw;riding=ride.moving;}
    if(swing)a.targetYaw=Math.atan2(swing.point.x-a.position.x,swing.point.y-a.position.z);
-   a.turn(dt);a.inst.pose(o.time+a.phase,swing?'attack':'idle',o.motion);
+   a.turn(dt);a.inst.pose(o.time+a.phase,swing?'attack':riding?'walk':'idle',o.motion);
    const hover=this.hovered===id;setEmissive(a.materials,hover?HOVER:swing?SWING:NONE);
-   shadow(a.position,.36);
+   shadow(a.position,hero.ride ? .52 : .36);
    if(ringCount<this.rings.instanceMatrix.count){this.rings.setMatrixAt(ringCount,shadowM.compose(new THREE.Vector3(a.position.x,.035,a.position.z),q,new THREE.Vector3(1,1,1)));this.rings.setColorAt(ringCount++,new THREE.Color(hero.colour??'#ffe396'));}
    if(o.labels){labels.push({key:'lv'+id,kind:'level',text:String(hero.level),position:a.position.clone().setY(a.top+.08),tone:[hero.level>=10?'legend':hero.level>=6?'master':'',hero.mine?'mine':''].filter(Boolean).join(' ')});
     if(hover)labels.push({key:'nm'+id,kind:'name',text:hero.name,position:a.position.clone().setY(a.top+.42)});}
@@ -190,11 +194,11 @@ export class BoardScene{
    if(o.labels&&this.hovered===id)labels.push({key:'cn'+id,kind:'name',text:`${c.name} · ${c.online?'online':'offline'}`,position:a.position.clone().setY(a.top+.3)});}
   // Placement helpers.
   const pl=this.placement,hoverEmpty=pl.hover!==null&&pl.empty.includes(pl.hover);
-  this.hoverTile.visible=!p&&hoverEmpty;if(this.hoverTile.visible){const c=cellCentre(pl.hover!);this.hoverTile.position.set(c.x,.04,c.z);(this.hoverTile.material as THREE.MeshBasicMaterial).opacity=.45+.15*Math.sin(o.time*5);}
+  this.hoverTile.visible=hoverEmpty&&(!p||pl.active);if(this.hoverTile.visible){const c=cellCentre(pl.hover!);this.hoverTile.position.set(c.x,.04,c.z);(this.hoverTile.material as THREE.MeshBasicMaterial).opacity=.45+.15*Math.sin(o.time*5);}
   (this.tiles.material as THREE.MeshBasicMaterial).opacity=.6+.18*Math.sin(o.time*3);
-  const hoveredHero=this.hovered?this.actors.get(this.hovered):undefined,rangeAt=!p&&pl.range?(hoveredHero?.position??(hoverEmpty?cellCentre(pl.hover!):null)):null;
+  const hoveredHero=this.hovered?this.actors.get(this.hovered):undefined,rangeAt=pl.range&&(!p||pl.active)?(hoveredHero?.position??(hoverEmpty?cellCentre(pl.hover!):null)):null;
   this.rangeRing.visible=this.rangeFill.visible=!!rangeAt;if(rangeAt){for(const m of [this.rangeRing,this.rangeFill]){m.position.set(rangeAt.x,.045,rangeAt.z);m.scale.setScalar(pl.range!);}}
-  if(this.ghost){this.ghost.inst.root.visible=!p&&hoverEmpty;this.ghost.inst.pose(o.time,'idle',o.motion);}
+  if(this.ghost){this.ghost.inst.root.visible=hoverEmpty&&(!p||pl.active);this.ghost.inst.pose(o.time,'idle',o.motion);}
   // Battle: monsters, projectiles and effects, all read from the shared simulation.
   if(p){
    const {sim,path}=p,cellsLong=path.length-1;
@@ -236,7 +240,7 @@ export class BoardScene{
    for(const e of active){
     const f=p.fighters[e.fighter];if(!f)continue;const dtE=elapsed-e.at,to=new THREE.Vector3(e.point.x,.32,e.point.y),c=colourOf(e,f.colour);
     if(e.dot){if(dtE<.4)for(let k=0;k<3;k++)fx.sparks.add(to.x+Math.sin(k*2.1+dtE*9)*.18,.3+dtE*1.4+k*.08,to.z+Math.cos(k*2.1)*.18,.16,c,1-dtE/.4);continue;}
-    const actor=this.actors.get(p.battle.fighters[e.fighter].id),from=(actor?.position??f.centre).clone().setY(.52);
+    const fighter=p.battle.fighters[e.fighter],shot=riderState(p.battle,fighter.id,fighter.cell,p.battle.start+e.at*1000),from=new THREE.Vector3(shot.x,.52,shot.y);
     if(f.melee){if(dtE<.35){const yaw=Math.atan2(to.x-from.x,to.z-from.z);fx.slash(from.clone().setY(.45).addScaledVector(new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw)),.35),yaw+(dtE/.35-.5)*1.2,1+dtE*1.2,c,.85*(1-dtE/.35));}}
     else if(dtE<.25){
      const t=dtE/.25,flight=PROJECTILE_FLIGHT[f.weapon]??PROJECTILE_FLIGHT.standard,dist=from.distanceTo(to),arc=flight.arc*dist;
