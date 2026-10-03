@@ -24,7 +24,7 @@ export function RidePicture({id,paint}:{id:VehicleId;paint?:string}){
 }
 /**
  * The garage: every ride with its picture and price. Tapping a ride buys it the first time and hops on; tapping the ride
- * you are on parks it. Rides can be repainted for free. During a wave the hero rides to a useful square; a dearer ride is faster. Powers stay the same.
+ * you are on parks it. Rides can be repainted for free. During a wave the hero keeps riding toward the monsters; a dearer ride is faster. Powers stay the same.
  */
 /** The parts of the signed-in pupil the garage reads. */
 type Rider={name:string;coins:number;unlimitedCoins?:boolean;hero:number;heroLocked?:boolean;gender?:string;uniform?:string;outfit?:string;clothing?:Wardrobe;vehiclesOwned?:string[];vehicle?:string;vehiclePaint?:Record<string,string>};
@@ -36,7 +36,7 @@ export default function Garage({me,busy,action,mode='shop',onShop,mirror=true}:{
  return <section className="garage">
   <div className={`mirror garage-mirror ${mirror?'':'no-picture'}`}>{!mirror?null:me.heroLocked?<Sprite type={me.hero} gender={me.gender} uniform={me.uniform} clothing={me.clothing} outfit={me.outfit} ride={ride} className="garage-sprite"/>:<Car aria-hidden="true"/>}
    <div><b>{current?`Riding: ${current.name}`:mode==='shop'?'Rides for your hero':`${me.name}’s garage`}</b>
-   <p>{current?'Tap a colour to repaint it for free, or tap your ride again to park it. During a wave this hero rides to a square that covers the path. A dearer ride is faster.':mode==='shop'?'Tap a ride to buy it and hop on. You pay once, then riding is always free. In a wave your hero rides to a useful square on their own. A dearer ride is faster. Powers stay the same.':`${owned.length} of ${VEHICLES.length} rides collected. Tap one to ride it.`}</p>
+   <p>{current?'Tap a colour to repaint it for free, or tap your ride again to park it. During a wave this hero keeps riding toward the monsters. A dearer ride is faster.':mode==='shop'?'Tap a ride to buy it and hop on. You pay once, then riding is always free. In a wave your hero keeps riding toward the monsters. A dearer ride is faster. Powers stay the same.':`${owned.length} of ${VEHICLES.length} rides collected. Tap one to ride it.`}</p>
    {current&&<div className="paint-row" role="group" aria-label={`Paint your ${current.name.toLowerCase()}`}><Palette aria-hidden="true"/>{PAINTS.map(p=><button key={p.id} className="paint-dot" style={{background:`#${p.hex.toString(16).padStart(6,'0')}`}} aria-label={p.name} aria-pressed={ride?.paint===p.id} disabled={busy} onClick={()=>repaint(p.id)}/>)}</div>}
    {mode==='backpack'&&onShop&&<button className="quiet-button" onClick={onShop}>Find more rides in the shop <ArrowRight aria-hidden="true"/></button>}</div></div>
   {mode==='backpack'&&!owned.length&&<div className="empty-note"><Bike aria-hidden="true" className="empty-ride"/><p>No rides yet. Earn some coins, then visit the rides aisle in the shop.</p></div>}

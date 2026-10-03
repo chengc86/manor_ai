@@ -56,35 +56,89 @@ export function planRide(battle:Battle,id:string,startCell:number,to:number,now:
  const from=riderState(battle,id,startCell,now).cell;if(from===to)return [cellPoint(to)];
  const cells=rideCells(from,to);return cells?cells.map(cellPoint):null;
 }
-/** How many squares of this wave's route a hero can hit from `cell`. */
-function pathCover(battle:Battle,cell:number,range:number){
- const p=cellPoint(cell);let n=0;for(const q of battleLayout(battle).path)if(Math.hypot(q.x-p.x,q.y-p.y)<=range+1e-6)n++;return n;
-}
+const RIDE_WINDOW=8,RIDE_LEAD=6;
 /**
- * An empty square that helps the fight: the one that covers the most of the monster route within this hero's range.
- * A shorter ride wins a tie, so they spend more of the wave shooting. Never the square they already stand on.
+ * Where monsters will be if nobody slows them. Counting path squares pulled every hero into the lower folds, where the
+ * route doubles back, and then they stopped. This clock is monster-time instead: a square scores only while monsters
+ * are actually inside range, with the next few seconds counting more than a fold at the end of the route.
  */
-export function chooseRideSquare(battle:Battle,startCell:number,range:number,occupied:ReadonlySet<number>,routeFrom?:number):number|null{
- const reach=Math.max(1.2,range);let best:{cell:number;cover:number;steps:number}|null=null;
- for(let cell=COLS*2;cell<COLS*(ROWS-1);cell++){
-  if(cell===startCell||occupied.has(cell)||!isBuildable(cell,battle.wave,routeFrom))continue;
-  const steps=rideCells(startCell,cell);if(!steps||steps.length<2)continue;
-  const cover=pathCover(battle,cell,reach);if(cover<1)continue;
-  if(!best||cover>best.cover||(cover===best.cover&&(steps.length<best.steps||(steps.length===best.steps&&cell<best.cell))))best={cell,cover,steps:steps.length};
- }
- return best?.cell??null;
+function monsterFrames(battle:Battle){
+ const rule=rules(battle.wave,3),version=battle.rulesVersion??5,dt=.5,end=rule.duration/1000;
+ const kinds=Array.from({length:rule.count},(_,m)=>enemyFor(battle.wave,m,version)),frames:{t:number;pts:RoutePoint[]}[]=[];
+ for(let t=0;t<=end;t+=dt){const pts:RoutePoint[]=[];
+  for(let m=0;m<rule.count;m++){const spawn=m*rule.spawn;if(t<spawn)continue;const progress=(t-spawn)/rule.travel*kinds[m].speed;if(progress<0||progress>=1)continue;pts.push(pathPosition(progress,battle.wave,version,battle.route));}
+  frames.push({t:+t.toFixed(2),pts});}
+ return {dt,frames,end};
+}
+function monsterSeconds(sample:ReturnType<typeof monsterFrames>,cell:number,range:number,origin:number,t0:number,t1:number){
+ if(t1-t0<.4)return 0;const p=cellPoint(cell),r2=range*range;let score=0;
+ const i0=Math.max(0,Math.floor(t0/sample.dt)),i1=Math.min(sample.frames.length,Math.ceil(t1/sample.dt));
+ for(let i=i0;i<i1;i++){const f=sample.frames[i];if(f.t<t0||f.t>=t1)continue;const w=Math.exp(-(f.t-origin)/8);
+  for(const q of f.pts){const dx=q.x-p.x,dy=q.y-p.y;if(dx*dx+dy*dy<=r2)score+=sample.dt*w;}}
+ return score;
+}
+function reachable(from:number,maxSteps:number){
+ const dist=new Map<number,number>([[from,0]]),q=[from];
+ for(let i=0;i<q.length;i++){const c=q[i],d=dist.get(c)!;if(d>=maxSteps)continue;for(const n of [c-1,c+1,c-COLS,c+COLS]){if(!rideCanCross(n)||dist.has(n))continue;dist.set(n,d+1);q.push(n);}}
+ return dist;
+}
+/** The next square that keeps more monsters in range than staying still. A nearer ride wins a tie. No row is preferred. */
+function nextRideHop(battle:Battle,sample:ReturnType<typeof monsterFrames>,from:number,range:number,speed:number,t:number,blocked:ReadonlySet<number>,routeFrom?:number){
+ const reach=Math.max(1.2,range),maxSteps=Math.max(3,Math.min(18,Math.ceil(speed*6)));
+ const dist=reachable(from,maxSteps);
+ const search=(windowStart:number)=>{
+  let best:{cell:number;steps:number;score:number}|null=null;
+  for(const [cell,steps] of dist){if(!steps||blocked.has(cell)||!isBuildable(cell,battle.wave,routeFrom))continue;
+   const arrival=t+steps/speed,fromT=Math.max(arrival,windowStart),toT=windowStart+RIDE_WINDOW;if(fromT>=toT-.4)continue;
+   const score=monsterSeconds(sample,cell,reach,windowStart,fromT,toT);if(score<=0)continue;
+   if(!best||score>best.score+1e-6||(Math.abs(score-best.score)<=1e-6&&steps<best.steps))best={cell,steps,score};}
+  return best;
+ };
+ const stay=monsterSeconds(sample,from,reach,t,t,t+RIDE_WINDOW),local=search(t);
+ if(local&&local.score>stay+.35)return local;
+ const ahead=t+RIDE_LEAD,future=search(ahead),stayAhead=monsterSeconds(sample,from,reach,ahead,ahead,ahead+RIDE_WINDOW);
+ if(future&&future.score>stayAhead+.35)return future;
+ return null;
 }
 /**
- * One ride order per deployed hero who is on a ride, chosen when the wave starts. Shorter range goes first so those
- * heroes claim the squares beside the path. Each destination is taken, and the square they leave becomes free.
+ * Ride orders for the rest of the wave, starting at `departAt`. Each hop goes where the upcoming monsters will be in
+ * range for longer. When that spot stops being the best one, the next order leaves for the following stretch.
+ */
+export function continueRide(battle:Battle,id:string,from:number,ride:string,range:number,departAt:number,blocked:ReadonlySet<number>,routeFrom?:number){
+ const sample=monsterFrames(battle),speed=rideCellSpeed(ride)||rideCellSpeed(VEHICLES[0].id),plans:{id:string;to:number;move:RideMove}[]=[];
+ let cell=from,t=Math.max(0,(departAt-battle.start)/1000),guard=0,lastAt=departAt-1;
+ while(t<sample.end-1&&guard++<80){
+  const hop=nextRideHop(battle,sample,cell,range,speed,t,blocked,routeFrom);
+  if(!hop){t+=2;continue;}
+  const cells=rideCells(cell,hop.cell);if(!cells||cells.length<2){t+=2;continue;}
+  const at=Math.max(lastAt+1,battle.start+Math.round(t*1000));
+  plans.push({id,to:hop.cell,move:{id,at,points:cells.map(cellPoint),ride}});
+  cell=hop.cell;lastAt=at;t+=Math.max(.45,hop.steps/speed);
+ }
+ return plans;
+}
+/**
+ * When a wave starts, every deployed hero on a ride is given the whole journey. Shorter range chooses first.
+ * Heroes on foot keep their square. The square a rider finishes on is the last hop.
  */
 export function autoRidePlan(battle:Battle,defenders:{id:string;cell:number;owner:string}[],rideFor:(owner:string)=>string|undefined,rangeFor:(id:string)=>number,routeFrom?:number){
- const occupied=new Set(defenders.filter(d=>d.cell>=0).map(d=>d.cell));
- const riders=defenders.filter(d=>d.cell>=0&&rideFor(d.owner)).sort((a,b)=>rangeFor(a.id)-rangeFor(b.id)||a.id.localeCompare(b.id));
- const plans:{id:string;to:number;move:RideMove}[]=[];
- for(const d of riders){const ride=rideFor(d.owner)!;const to=chooseRideSquare(battle,d.cell,rangeFor(d.id),occupied,routeFrom);if(to==null)continue;
-  const points=planRide(battle,d.id,d.cell,to,battle.start);if(!points||points.length<2)continue;
-  plans.push({id:d.id,to,move:{id:d.id,at:battle.start,points,ride}});occupied.delete(d.cell);occupied.add(to);}
+ const sample=monsterFrames(battle),reserved=new Map<number,number>();
+ for(const d of defenders)if(d.cell>=0&&!rideFor(d.owner))reserved.set(d.cell,Infinity);
+ const riders=defenders.filter(d=>d.cell>=0&&rideFor(d.owner)).map(d=>({id:d.id,cell:d.cell,ride:rideFor(d.owner)!,range:rangeFor(d.id),t:0,lastAt:battle.start-1})).sort((a,b)=>a.range-b.range||a.id.localeCompare(b.id));
+ const plans:{id:string;to:number;move:RideMove}[]=[];let guard=0;
+ while(riders.some(s=>s.t<sample.end-1)&&guard++<riders.length*80){
+  riders.sort((a,b)=>a.t-b.t||a.range-b.range||a.id.localeCompare(b.id));
+  const s=riders.find(s=>s.t<sample.end-1);if(!s)break;
+  const speed=rideCellSpeed(s.ride)||rideCellSpeed(VEHICLES[0].id);
+  const blocked=new Set<number>();for(const [cell,until] of reserved)if(until>s.t)blocked.add(cell);
+  const hop=nextRideHop(battle,sample,s.cell,s.range,speed,s.t,blocked,routeFrom);
+  if(!hop){s.t+=2;continue;}
+  const cells=rideCells(s.cell,hop.cell);if(!cells||cells.length<2){s.t+=2;continue;}
+  const at=Math.max(s.lastAt+1,battle.start+Math.round(s.t*1000));
+  plans.push({id:s.id,to:hop.cell,move:{id:s.id,at,points:cells.map(cellPoint),ride:s.ride}});
+  reserved.set(hop.cell,s.t+hop.steps/speed+RIDE_WINDOW/2);
+  s.cell=hop.cell;s.lastAt=at;s.t+=Math.max(.45,hop.steps/speed);
+ }
  return plans;
 }
 export function rules(wave:number,version=3){const chapter=chapterFor(wave);const count=version===1?Math.min(30,8+Math.floor((wave-1)/2)):Math.min(48,18+Math.floor((wave-1)/2));const travel=Math.max(23,32-(chapter.number-1)*.45);const spawn=Math.max(.8,1.25-(chapter.number-1)*.015);return{count,hp:Math.round((version===1?50+10*(wave-1):version===2?180+28*(wave-1)+Math.pow(wave-1,1.35)*3:180*(1+.035*(wave-1)))*(chapter.elite?1.25:1)),spawn,travel,duration:(travel*3.5+3+(count-1)*spawn)*1000,boss:chapter.boss,elite:chapter.elite};}
