@@ -1,6 +1,6 @@
 /**
  * Rides pupils can buy and show off with their hero: in the dressing room, on their picture, in the hero camp
- * and on the 3D map. During a wave a hero on a ride sets off for a useful square. A dearer ride is faster.
+ * and on the 3D map. During a wave a hero on a ride keeps moving toward the monsters. A dearer ride is faster.
  * Damage, range and the other battle stats stay the same.
  * Stable ids: append only, never rename.
  */
