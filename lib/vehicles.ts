@@ -1,6 +1,7 @@
 /**
  * Rides pupils can buy and show off with their hero: in the dressing room, on their picture, in the hero camp
- * and on the 3D map. During a wave a hero on a ride can move across the map. Rides never change battle stats.
+ * and on the 3D map. During a wave a hero on a ride sets off for a useful square. A dearer ride is faster.
+ * Damage, range and the other battle stats stay the same.
  * Stable ids: append only, never rename.
  */
 /** How the hero rides: standing on a board, holding a scooter's handlebar, pedalling, or sitting behind a wheel. */
@@ -32,4 +33,13 @@ export type Ride={id:VehicleId;paint:PaintId};
 export function rideOf(p:{vehicle?:string;vehiclePaint?:Record<string,string>}):Ride|undefined{
  const v=vehicle(p.vehicle);if(!v)return undefined;
  return {id:v.id,paint:(paint(p.vehiclePaint?.[v.id])?.id??v.paint) as PaintId};
+}
+/**
+ * Cells per second along a ride order. Catalogue price is the quality, so a dearer ride is quicker.
+ * This pace belongs to the ride. It is not how fast monsters walk the wave.
+ */
+export function rideCellSpeed(id?:string|null):number{
+ const v=vehicle(id);if(!v)return 0;
+ const low=VEHICLES[0].price,high=VEHICLES[VEHICLES.length-1].price,t=high===low?1:(v.price-low)/(high-low);
+ return 1.4+t*3.2;
 }
