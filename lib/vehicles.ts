@@ -1,6 +1,7 @@
 /**
- * Rides pupils can buy and show off with their hero: in the dressing room, on their picture and in the hero camp.
- * Purely for fun: rides never change battle stats. Stable ids: append only, never rename.
+ * Rides pupils can buy and show off with their hero: in the dressing room, on their picture, in the hero camp
+ * and on the 3D map. During a wave a hero on a ride can move across the map. Rides never change battle stats.
+ * Stable ids: append only, never rename.
  */
 /** How the hero rides: standing on a board, holding a scooter's handlebar, pedalling, or sitting behind a wheel. */
 export type RidePose='board'|'scoot'|'pedal'|'seat';

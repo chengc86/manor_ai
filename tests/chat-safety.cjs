@@ -39,7 +39,7 @@ r=await say('a','Ready for the next wave!');assert.equal(r.status,200);r=await s
 let pupil=await room('a');assert.deepEqual(pupil.messages.map(m=>m.text),['Ready for the next wave!','Revise with https://www.bbc.co.uk/bitesize tonight.']);assert.equal(pupil.warnings,6);assert.equal(pupil.flags,undefined);
 assert.equal((await room('b')).warnings,0);assert.equal((await room('b')).flags,undefined);
 const teacher=await room('teacher');assert.equal(teacher.flags.length,6);assert.equal(teacher.flags[0].text,'stfu');assert.equal(teacher.flags[0].name,'a');assert.deepEqual(teacher.flags.map(f=>f.warning?`warning ${f.warning}`:`-${f.coins}`),['-0','-5','-10','-10','warning 2','warning 1']);assert.equal(teacher.warnings,undefined);
-const view=await read(await GAME.GET(new Request('https://game.test/api/game',{headers:{cookie:'qg_session=b','X-Quest-Heroes':'4'}})));assert.equal(view.status,200);assert(view.body.players.every(p=>!('chatConduct' in p)));
+const view=await read(await GAME.GET(new Request('https://game.test/api/game',{headers:{cookie:'qg_session=b','X-Quest-Heroes':'5'}})));assert.equal(view.status,200);assert(view.body.players.every(p=>!('chatConduct' in p)));
 console.log('PASS: blocked messages never reach the chat; the teacher is not filtered and sees every blocked message with its outcome; pupils see only their own warning count.');
 
 const now=Date.now;Date.now=()=>now()+7*86400000;await W.mutate(w=>{w.players.a.coins=30});
