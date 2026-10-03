@@ -64,6 +64,25 @@ const me=async uid=>(await W.readWorld()).w.players[uid];
  // A saved pupil-wide ride is given to one hero, not copied onto every hero.
  await W.mutate(w=>{w.players.c={...W.newPlayer('Cara'),coins:0,hero:0,heroLocked:true,vehiclesOwned:['tricycle'],vehicle:'tricycle'};w.defenders.push({id:'c1',owner:'c',type:0,level:0,cell:grass[2],weapon:'none',weapons:[]},{id:'c2',owner:'c',type:0,level:0,cell:grass[3],weapon:'none',weapons:[]});});
  const mig=(await W.readWorld()).w;assert.equal(mig.players.c.vehicle,undefined);assert.equal(mig.defenders.find(d=>d.id==='c1').vehicle,'tricycle');assert.equal(mig.defenders.find(d=>d.id==='c2').vehicle,undefined);
+ // Rides already sitting on more than one hero are cut back to one. The earliest hero on the map keeps that purchase.
+ const hero=(id,cell,vehicle)=>({id,owner:'dup',type:0,level:0,weapon:'none',weapons:[],cell,vehicle});
+ await W.mutate(w=>{w.players.dup={...W.newPlayer('Dup'),coins:0,hero:0,heroLocked:true,vehiclesOwned:['skateboard','scooter','bicycle','car']};
+  w.defenders.push(hero('r1',-1,'skateboard'),hero('r2',grass[4],'skateboard'),hero('r3',grass[5],'scooter'),hero('r4',grass[11],'bicycle'),hero('r5',grass[10],'bicycle'),hero('r6',-1,'car'),hero('r7',-1,'car'));
+  w.battle={rulesVersion:5,seed:1,start:Date.now(),wave:1,duration:1e12,power:0,target:1,contributors:0,fighters:[{id:'r4',type:0,level:0,cell:grass[6],name:'Dup'},{id:'r5',type:0,level:0,cell:grass[7],name:'Dup'}],rideMoves:[{id:'r4',at:Date.now(),points:[{x:1.5,y:2.5},{x:2.5,y:2.5}],ride:'bicycle'},{id:'r5',at:Date.now(),points:[{x:3.5,y:2.5},{x:4.5,y:2.5}],ride:'bicycle'}]};});
+ const cut=(await W.readWorld()).w,rideOfId=id=>cut.defenders.find(d=>d.id===id);
+ assert.equal(rideOfId('r1').vehicle,undefined,'the reserve copy of a ride that is also on the map is removed');
+ assert.equal(rideOfId('r2').vehicle,'skateboard','the hero on the map keeps the skateboard');
+ assert.equal(rideOfId('r3').vehicle,'scooter');
+ assert.equal(rideOfId('r4').vehicle,'bicycle','when several heroes on the map share a ride, the earliest keeps it');
+ assert.equal(rideOfId('r5').vehicle,undefined);
+ assert.equal(rideOfId('r5').cell,grass[7],'a hero who loses the shared ride returns to the square they started the wave on');
+ assert.equal(rideOfId('r4').cell,grass[11]);
+ assert.deepEqual(cut.battle.rideMoves.map(m=>m.id),['r4']);
+ assert.equal(rideOfId('r6').vehicle,'car','when every copy is in reserve, the earliest hero keeps it');
+ assert.equal(rideOfId('r7').vehicle,undefined);
+ assert.equal(cut.defenders.filter(d=>d.owner==='dup'&&d.vehicle==='skateboard').length,1);
+ assert.equal(cut.defenders.filter(d=>d.owner==='dup'&&d.vehicle==='bicycle').length,1);
+ assert.equal(cut.defenders.filter(d=>d.owner==='dup'&&d.vehicle==='car').length,1);
  // Test accounts with unlimited coins can try everything without spending.
  await W.mutate(w=>{w.players.b.unlimitedCoins=true;});r=await post('b',{action:'vehicle',item:'fire-engine'});assert.equal(r.status,200);assert.equal((await me('b')).coins,100);assert.deepEqual((await me('b')).vehiclesOwned,['fire-engine']);assert.equal((await me('b')).vehicle,undefined);
  console.log('PASS: a ride is bought once, assigned to one hero, replaced on that hero without being shared, and classmates see that hero\'s ride.');
