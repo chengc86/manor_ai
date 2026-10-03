@@ -5,6 +5,7 @@ import {buildStats,type ItemLoadout} from './builds';
 import type {Wardrobe} from './clothing';
 import {chapterFor} from './chapters';
 import {HEROES,legacyHeroStats} from './heroes';
+import {VEHICLES,rideCellSpeed} from './vehicles';
 // Pure, deterministic battle rules shared by the server and the animated board.
 export const COLS=24,ROWS=18,CELL=60;
 export const WAYPOINTS=[[0,3],[20,3],[20,6],[3,6],[3,10],[18,10],[18,14],[7,14],[7,16],[20,16]];
@@ -18,7 +19,7 @@ export function percent(cell:number){const p=cellPoint(cell);return{x:p.x/COLS*1
 export function pathPosition(progress:number,wave=1,version=4,route?:number[][]){const path=(route?routeLayout(route):mapLayout(wave,version)).path;const t=Math.max(0,Math.min(path.length-1,progress*(path.length-1))),i=Math.min(path.length-2,Math.floor(t)),f=t-i;return{x:path[i].x+(path[i+1].x-path[i].x)*f,y:path[i].y+(path[i+1].y-path[i].y)*f}}
 export type Fighter=ItemLoadout & {stats?:ReturnType<typeof buildStats>;id:string;type:number;level:number;weapon?:string;cell:number;name:string;gender?:'boy'|'girl';uniform?:string;clothing?:Wardrobe;outfit?:string;colour?:string;owner?:string};
 /** One order to ride a hero to a new square during a wave. `points` is the polyline, in the same form as a monster route. */
-export type RideMove={id:string;at:number;points:RoutePoint[]};
+export type RideMove={id:string;at:number;points:RoutePoint[];ride?:string};
 export type Battle={start:number;duration:number;wave:number;rulesVersion?:number;seed?:number;route?:number[][];power:number;target:number;contributors:number;fighters:Fighter[];rideMoves?:RideMove[]};
 export function battleLayout(battle:Battle,version=battle.rulesVersion??1){return battle.route?routeLayout(battle.route):mapLayout(battle.wave,version)}
 /** Squares a ride may cross, including the monster path, so it can move between the lawns the path divides. */
@@ -30,7 +31,7 @@ export function rideCells(from:number,to:number):number[]|null{
  for(let i=0;i<q.length;i++){const c=q[i];for(const n of [c-1,c+1,c-COLS,c+COLS]){if(!rideCanCross(n)||prev.has(n))continue;prev.set(n,c);if(n===to){const path=[to];let p=c;while(p!==-1){path.push(p);p=prev.get(p)!;}return path.reverse();}q.push(n);}}
  return null;
 }
-/** Cells per second: the same pace monsters walk along this wave's route. */
+/** Cells per second monsters need to finish this wave's route in its travel time. Rides do not use this pace. */
 export function waveCellSpeed(battle:Battle){const path=battleLayout(battle).path;return Math.max(.4,(path.length-1)/rules(battle.wave).travel);}
 function alongRide(points:RoutePoint[],distance:number){
  const span=Math.max(1,points.length-1),clamped=Math.max(0,Math.min(span,distance)),progress=clamped/span,p=visualPosition(progress,points);
@@ -38,22 +39,53 @@ function alongRide(points:RoutePoint[],distance:number){
 }
 /**
  * Where a hero is during a wave. With no ride orders they stay on their square. Orders replay along the same
- * rounded route monsters use (`visualPosition`), at the wave's cell speed, so every client draws one journey.
+ * rounded route monsters use (`visualPosition`), at that ride's own pace, so every client draws one journey.
  */
 export function riderState(battle:Battle,id:string,startCell:number,now:number){
  const origin=cellPoint(startCell),still={x:origin.x,y:origin.y,cell:startCell,moving:false,yaw:0};
  const moves=(battle.rideMoves??[]).filter(m=>m.id===id&&m.points?.length).sort((a,b)=>a.at-b.at);
  if(!moves.length||now<=moves[0].at)return still;
- const speed=waveCellSpeed(battle);let state=still;
+ let state=still;
  for(let i=0;i<moves.length;i++){const m=moves[i];if(now<=m.at)break;const until=Math.min(now,i+1<moves.length?moves[i+1].at:now);
   if(m.points.length<2){const p=m.points[0];state={x:p.x,y:p.y,cell:Math.floor(p.y)*COLS+Math.floor(p.x),moving:false,yaw:state.yaw};continue;}
-  state=alongRide(m.points,(until-m.at)/1000*speed);}
+  state=alongRide(m.points,(until-m.at)/1000*(rideCellSpeed(m.ride)||rideCellSpeed(VEHICLES[0].id)));}
  return state;
 }
 /** The polyline for a new ride order, starting where the hero is now. A one-point line stops them where they stand. */
 export function planRide(battle:Battle,id:string,startCell:number,to:number,now:number):RoutePoint[]|null{
  const from=riderState(battle,id,startCell,now).cell;if(from===to)return [cellPoint(to)];
  const cells=rideCells(from,to);return cells?cells.map(cellPoint):null;
+}
+/** How many squares of this wave's route a hero can hit from `cell`. */
+function pathCover(battle:Battle,cell:number,range:number){
+ const p=cellPoint(cell);let n=0;for(const q of battleLayout(battle).path)if(Math.hypot(q.x-p.x,q.y-p.y)<=range+1e-6)n++;return n;
+}
+/**
+ * An empty square that helps the fight: the one that covers the most of the monster route within this hero's range.
+ * A shorter ride wins a tie, so they spend more of the wave shooting. Never the square they already stand on.
+ */
+export function chooseRideSquare(battle:Battle,startCell:number,range:number,occupied:ReadonlySet<number>,routeFrom?:number):number|null{
+ const reach=Math.max(1.2,range);let best:{cell:number;cover:number;steps:number}|null=null;
+ for(let cell=COLS*2;cell<COLS*(ROWS-1);cell++){
+  if(cell===startCell||occupied.has(cell)||!isBuildable(cell,battle.wave,routeFrom))continue;
+  const steps=rideCells(startCell,cell);if(!steps||steps.length<2)continue;
+  const cover=pathCover(battle,cell,reach);if(cover<1)continue;
+  if(!best||cover>best.cover||(cover===best.cover&&(steps.length<best.steps||(steps.length===best.steps&&cell<best.cell))))best={cell,cover,steps:steps.length};
+ }
+ return best?.cell??null;
+}
+/**
+ * One ride order per deployed hero who is on a ride, chosen when the wave starts. Shorter range goes first so those
+ * heroes claim the squares beside the path. Each destination is taken, and the square they leave becomes free.
+ */
+export function autoRidePlan(battle:Battle,defenders:{id:string;cell:number;owner:string}[],rideFor:(owner:string)=>string|undefined,rangeFor:(id:string)=>number,routeFrom?:number){
+ const occupied=new Set(defenders.filter(d=>d.cell>=0).map(d=>d.cell));
+ const riders=defenders.filter(d=>d.cell>=0&&rideFor(d.owner)).sort((a,b)=>rangeFor(a.id)-rangeFor(b.id)||a.id.localeCompare(b.id));
+ const plans:{id:string;to:number;move:RideMove}[]=[];
+ for(const d of riders){const ride=rideFor(d.owner)!;const to=chooseRideSquare(battle,d.cell,rangeFor(d.id),occupied,routeFrom);if(to==null)continue;
+  const points=planRide(battle,d.id,d.cell,to,battle.start);if(!points||points.length<2)continue;
+  plans.push({id:d.id,to,move:{id:d.id,at:battle.start,points,ride}});occupied.delete(d.cell);occupied.add(to);}
+ return plans;
 }
 export function rules(wave:number,version=3){const chapter=chapterFor(wave);const count=version===1?Math.min(30,8+Math.floor((wave-1)/2)):Math.min(48,18+Math.floor((wave-1)/2));const travel=Math.max(23,32-(chapter.number-1)*.45);const spawn=Math.max(.8,1.25-(chapter.number-1)*.015);return{count,hp:Math.round((version===1?50+10*(wave-1):version===2?180+28*(wave-1)+Math.pow(wave-1,1.35)*3:180*(1+.035*(wave-1)))*(chapter.elite?1.25:1)),spawn,travel,duration:(travel*3.5+3+(count-1)*spawn)*1000,boss:chapter.boss,elite:chapter.elite};}
 export function monsterHealth(wave:number,index:number,version=3){const rule=rules(wave,version);return Math.round(rule.hp*(rule.boss&&index===rule.count-1?4:1)*enemyFor(wave,index,version).hp)}

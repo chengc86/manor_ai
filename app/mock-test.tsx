@@ -8,7 +8,7 @@ import {AskFriend} from './help-friends';
 import {mockSize,MOCK_COOLDOWN} from '@/lib/mock-config';
 // Timed mock tests: answer in any order, flag questions to come back to, and see the marks together at the end.
 const SUBJECTS=['Maths','English','Verbal reasoning','Non-verbal reasoning','Science'];
-async function call(body:any){const r=await fetch('/api/game',{method:'POST',headers:{'Content-Type':'application/json','X-Quest-Questions':'3','X-Quest-Heroes':'5'},body:JSON.stringify(body)}),d:any=await r.json();if(!r.ok)throw Error(d.error??'Something went wrong. Please try again.');return d;}
+async function call(body:any){const r=await fetch('/api/game',{method:'POST',headers:{'Content-Type':'application/json','X-Quest-Questions':'3','X-Quest-Heroes':'6'},body:JSON.stringify(body)}),d:any=await r.json();if(!r.ok)throw Error(d.error??'Something went wrong. Please try again.');return d;}
 const mmss=(ms:number)=>{const s=Math.max(0,Math.ceil(ms/1000));return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;};
 const when=(t:number)=>new Date(t).toLocaleString('en-GB',{weekday:'short',hour:'2-digit',minute:'2-digit'});
 export function MockTests({me,offset,hero,online,onFinished}:{me:any;offset:number;hero:{type:number;clothing?:any}|null;online?:number;onFinished:(world:any)=>void}){
