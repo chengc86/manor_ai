@@ -23,4 +23,4 @@ export function QuestShop({me,defenders,busy,liveBattle,action,navigate,aisle:sh
  :<div className="empty-note"><img src="/weapons/0.png" alt=""/><h3>Place a hero first</h3><p>Weapons belong to a hero on the map. Choose your hero, place it in the class world, then come back to arm it.</p><button className="primary" onClick={()=>navigate(me.heroLocked?'world':'hero')}>{me.heroLocked?'Go to the class world':'Choose my hero'}</button></div>)}
  {aisle==='items'&&<ItemShop me={me} busy={busy} liveBattle={liveBattle} action={action} defenders={defenders} onEarn={earn}/>}
  {aisle==='clothes'&&<ClothesRack me={me} busy={busy} action={action}/>}
- {aisle==='rides'&&<Garage me={me} busy={busy} action={action}/>}</section>}
+ {aisle==='rides'&&<Garage me={me} defenders={defenders} heroId={selected?.id} onHero={setHeroId} busy={busy} action={action}/>}</section>}

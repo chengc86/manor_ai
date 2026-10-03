@@ -17,7 +17,7 @@ const DB={prepare(sql){return {bind(...values){return {async run(){return {meta:
 const original=Module._load;Module._load=function(id,...args){if(id==='cloudflare:workers')return{env:{DB}};return original.call(this,id,...args)};
 const req=m=>require(path.join(dir,m));
 const W=req('world.cjs'),GAME=req('game.cjs'),REVIEW=req('review.cjs'),HELP=req('help.cjs'),MASTERY=req('mastery-route.cjs'),TOPIC=req('topic-route.cjs'),TEACHER=req('teacher-route.cjs'),{questions,questionById,publicQuestion,toViewer,toCanonical}=req('questions.cjs'),{bankQuestions}=req('bank.cjs');
-const request=(url,uid,body,headers={})=>new Request('https://game.test'+url,{method:body?'POST':'GET',headers:{cookie:'qg_session='+uid,origin:'https://game.test',host:'game.test','content-type':'application/json','X-Quest-Questions':'3','X-Quest-Heroes':'6',...headers},...(body?{body:JSON.stringify(body)}:{})});
+const request=(url,uid,body,headers={})=>new Request('https://game.test'+url,{method:body?'POST':'GET',headers:{cookie:'qg_session='+uid,origin:'https://game.test',host:'game.test','content-type':'application/json','X-Quest-Questions':'3','X-Quest-Heroes':'7',...headers},...(body?{body:JSON.stringify(body)}:{})});
 const read=async r=>({status:r.status,body:await r.json()});
 const game=(uid,body)=>GAME.POST(request('/api/game',uid,{requestId:crypto.randomUUID(),...body})).then(read);
 const view=async uid=>(await read(await GAME.GET(request('/api/game',uid)))).body;
