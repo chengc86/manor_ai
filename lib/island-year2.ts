@@ -81,7 +81,13 @@ const fiction=pack('en-fiction','English',[
  ['Who drew the jar?','Rafi',['Rafi','Nora','Miss Adeyemi','the mallard'],'The passage says **Rafi** drew the jar in his book.',{passage:beans}],
 ]);
 
-const synonyms=pack('vr-synonyms','Verbal reasoning',[
+type PairSource=[string,string,string[],string[],string,Extra?];
+function fixPair(row:PairSource):Row{
+ return [row[0],row[2],row[3],row[4],row[5]];
+}
+function pairRows(rows:PairSource[]){return rows.map(fixPair);}
+
+const synonyms=pack('vr-synonyms','Verbal reasoning',pairRows([
  ['Select the **two** words, one from each group, that are closest in meaning.','',['big','huge'],['big','red','slow','huge','green','hop'],'**Big** and **huge** both mean large. None of the other words across the groups mean the same.',{stimulus:'big, red, slow | huge, green, hop'}],
  ['Select the **two** words, one from each group, that are closest in meaning.','',['start','begin'],['start','apple','chair','begin','bread','cloud'],'**Start** and **begin** both mean to get going.',{stimulus:'start, apple, chair | begin, bread, cloud'}],
  ['Select the **two** words, one from each group, that are closest in meaning.','',['happy','glad'],['happy','stone','pencil','glad','river','spoon'],'**Happy** and **glad** both mean pleased.',{stimulus:'happy, stone, pencil | glad, river, spoon'}],
@@ -92,14 +98,9 @@ const synonyms=pack('vr-synonyms','Verbal reasoning',[
  ['Select the **two** words, one from each group, that are closest in meaning.','',['close','shut'],['close','open','jump','shut','wide','run'],'**Close** and **shut** both mean to make something not open.',{stimulus:'close, open, jump | shut, wide, run'}],
  ['Select the **two** words, one from each group, that are closest in meaning.','',['tidy','neat'],['tidy','loud','cold','neat','quiet','hot'],'**Tidy** and **neat** both mean in good order. Loud and quiet are opposites, and so are cold and hot.',{stimulus:'tidy, loud, cold | neat, quiet, hot'}],
  ['Select the **two** words, one from each group, that are closest in meaning.','',['gift','present'],['gift','road','laugh','present','river','sleep'],'A **gift** and a **present** are both something you give.',{stimulus:'gift, road, laugh | present, river, sleep'}],
-].map(fixPair));
+]));
 
-function fixPair(row:Row):Row{
- const wide=row as unknown as [string,string,string[],string[],string,Extra?];
- return [wide[0],wide[2],wide[3],wide[4],wide[5]];
-}
-
-const antonyms=pack('vr-antonyms','Verbal reasoning',[
+const antonyms=pack('vr-antonyms','Verbal reasoning',pairRows([
  ['Select the **two** words, one from each group, that are opposites.','',['hot','cold'],['hot','red','up','cold','blue','over'],'**Hot** and **cold** are opposites. Up and over are not.',{stimulus:'hot, red, up | cold, blue, over'}],
  ['Select the **two** words, one from each group, that are opposites.','',['big','small'],['big','day','sit','small','sun','run'],'**Big** and **small** are opposites.',{stimulus:'big, day, sit | small, sun, run'}],
  ['Select the **two** words, one from each group, that are opposites.','',['open','shut'],['open','soft','early','shut','loud','soon'],'**Open** and **shut** are opposites.',{stimulus:'open, soft, early | shut, loud, soon'}],
@@ -110,7 +111,7 @@ const antonyms=pack('vr-antonyms','Verbal reasoning',[
  ['Select the **two** words, one from each group, that are opposites.','',['awake','asleep'],['awake','thick','push','asleep','wide','drop'],'**Awake** and **asleep** are opposites.',{stimulus:'awake, thick, push | asleep, wide, drop'}],
  ['Select the **two** words, one from each group, that are opposites.','',['above','below'],['above','brave','arrive','below','strong','stay'],'**Above** and **below** are opposites.',{stimulus:'above, brave, arrive | below, strong, stay'}],
  ['Select the **two** words, one from each group, that are opposites.','',['many','few'],['many','clean','begin','few','shiny','start'],'**Many** and **few** are opposites. Begin and start mean the same, so they are not the opposite pair.',{stimulus:'many, clean, begin | few, shiny, start'}],
-].map(fixPair));
+]));
 
 const definitions=pack('vr-definitions','Verbal reasoning',[
  ['What does **tiny** mean in this sentence?','very small',['very small','very loud','very old','very wet','very fast'],'A **tiny** ant is a **very small** one.',{stimulus:'The tiny ant crawled under the leaf.'}],
