@@ -210,7 +210,7 @@ function grpEqual(r:Rng):Made|null{return attempt(300,()=>{
 });}
 
 const GROUP_FAMILIES=[grpOddDots,grpDotMore,grpSymmetry,grpEqual];
-export const matchGroup=auditBuild(groupTopic,20,(r,i)=>GROUP_FAMILIES[i%GROUP_FAMILIES.length](r),{own:true});
+export const matchGroup=auditBuild(groupTopic,30,(r,i)=>GROUP_FAMILIES[i%GROUP_FAMILIES.length](r),{own:true});
 
 // ================================================================ match to a pair
 const pairTopic:Topic={id:'nv-match-pair',subject:NV,strand:'Similarities',title:'Match to a pair',helpsheet:{
@@ -334,4 +334,4 @@ function pairDiag(r:Rng):Made|null{return attempt(300,()=>{
 });}
 
 const PAIR_FAMILIES:((r:Rng,i:number)=>Made|null)[]=[pairFewer,pairRays,pairNest,pairDiag];
-export const matchPair=auditBuild(pairTopic,20,(r,i)=>PAIR_FAMILIES[i%PAIR_FAMILIES.length](r,i),{own:true});
+export const matchPair=auditBuild(pairTopic,30,(r,i)=>PAIR_FAMILIES[i%PAIR_FAMILIES.length](r,i),{own:true});

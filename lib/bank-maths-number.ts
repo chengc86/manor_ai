@@ -548,10 +548,10 @@ const nlJug:Template=(r,i)=>{
 };
 
 export const numberTopics:BuiltTopic[]=[
- topicSet(placeValue,20,[pvPartWhole,pvAddPower,pvDigit,pvMove,pvWords,pvCounters]),
- topicSet(orderCompare,20,[ocCards,ocPictures,ocOrder,ocBetween,ocDigitCards]),
- topicSet(rounding,20,[roundAdd,roundLengths,roundProduct,roundMoney,roundPlace,roundReverse]),
- topicSet(negatives,20,[negCalc,negTemp,negContext,negTable,negMissing]),
- topicSet(romans,20,[romanRead,romanWrite,romanSum,romanWrong,romanGap,romanBiggest]),
+ topicSet(placeValue,30,[pvPartWhole,pvAddPower,pvDigit,pvMove,pvWords,pvCounters]),
+ topicSet(orderCompare,30,[ocCards,ocPictures,ocOrder,ocBetween,ocDigitCards]),
+ topicSet(rounding,30,[roundAdd,roundLengths,roundProduct,roundMoney,roundPlace,roundReverse]),
+ topicSet(negatives,30,[negCalc,negTemp,negContext,negTable,negMissing]),
+ topicSet(romans,30,[romanRead,romanWrite,romanSum,romanWrong,romanGap,romanBiggest]),
  topicSet(numberLines,20,[nlWhole,nlDecimal,nlNegative,nlFraction,nlWhich,nlJug]),
 ];

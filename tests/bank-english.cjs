@@ -13,7 +13,7 @@ const single=(q)=>q.answers.length===1?q.answers[0]:null;
 
 // ---- Topics and counts --------------------------------------------------------------------------------------------
 const GRAMMAR=['en-nouns','en-verbs','en-adjectives','en-adverbs','en-pronouns','en-prepositions','en-conjunctions','en-determiners','en-clauses','en-tenses','en-active-passive','en-formality','en-sentence-punctuation','en-commas','en-apostrophes','en-speech','en-colons-semicolons','en-homophones','en-prefixes-suffixes','en-vocabulary'];
-const READING={'en-fiction':4,'en-non-fiction':3,'en-poetry':2};
+const READING={'en-fiction':5,'en-non-fiction':3,'en-poetry':2};
 // SATs-style topics (lib/bank-english-sats-*.ts): minimum questions per topic. Their passages follow the same page rules below.
 const SATS={'en-sats-grammar':20,'en-sats-punctuation':20,'en-sats-spelling':20,'en-sats-reading':24};
 for(const [id,min] of Object.entries(SATS)){const n=qs.filter(q=>q.topic===id).length;if(n<min)fail(id,`${n} questions, expected at least ${min}`);}

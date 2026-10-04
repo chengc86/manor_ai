@@ -2,6 +2,7 @@ import {type Topic} from './bank-kit';
 import {writer} from './bank-english-kit';
 import {storiesA} from './bank-english-stories-a';
 import {storiesB} from './bank-english-stories-b';
+import {storiesC} from './bank-english-stories-c';
 // Fiction comprehension: four original stories, eight questions each (retrieval, inference, vocabulary, feelings, character,
 // language, structure and summary). The passages live in bank-english-stories-a.ts and -b.ts; append new stories at the end.
 
@@ -21,4 +22,5 @@ const topic:Topic={id:'en-fiction',subject:'English',strand:'Reading',title:'Fic
 const w=writer(topic);
 storiesA(w);
 storiesB(w);
+storiesC(w);
 export const fiction=w.done();

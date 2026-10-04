@@ -535,7 +535,7 @@ const sqNext:Template=r=>{
 };
 
 export const calcTopics:BuiltTopic[]=[
- topicSet(mental,20,[mCompensate,mComplement,mCountOn,mDoubles,mDecimals]),
+ topicSet(mental,30,[mCompensate,mComplement,mCountOn,mDoubles,mDecimals]),
  topicSet(written,20,[wMissing,wAdd,wSub,wInverse,wTwoStep,wMissingNumber]),
  topicSet(multiplication,20,[mulLong,mulGrid,mulStory,mulTens,mulFact,mulMissingDigit]),
  topicSet(division,20,[divContext,divShort,divLong,divRemainder,divMissing,divRule]),

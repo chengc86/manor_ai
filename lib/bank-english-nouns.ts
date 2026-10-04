@@ -83,4 +83,41 @@ w.add({prompt:"Which word is the **abstract noun** formed from the adjective 'br
 w.add({prompt:'Select the **two** nouns in the sentence below.',stimulus:untag(t),answer:['hikers','stream'],wrong:['Quietly','tired','rested'],
  explanation:explain("**hikers** (people) and **stream** (a place) are the nouns: you can put 'the' in front of each.",'- **Quietly** is an adverb, **tired** is an adjective and **rested** is a verb.')},pick(t,'noun',true));}
 
+// Extra island-style items: short stems, five choices, and the same traps (a feeling word, a pronoun, a near-miss count).
+w.add({prompt:'Which of the words below is a **concrete** noun?',answer:'pebble',wrong:['honesty','fear','luck','pride'],rewardGroup:'quick',
+ explanation:explain('A **concrete** noun names something you can see or touch.','- A **pebble** is a small stone, so it is concrete.','- honesty, fear, luck and pride are feelings or qualities. You cannot hold them, so they are **abstract** nouns.')});
+
+w.add({prompt:'Which of the words below is an **abstract** noun?',answer:'silence',wrong:['bucket','ladder','market','cushion'],rewardGroup:'quick',
+ explanation:explain('An **abstract** noun names an idea, a feeling or a quality.','- **silence** is the quality of being quiet. You cannot pick it up, so it is abstract.','- A bucket, a ladder, a market and a cushion can all be seen, so they are **concrete** nouns.')});
+
+{const t='That/det basket/noun is/verb mine/pron.pos ,/ not/adv yours/pron.pos !/ shouted/verb Priya/noun.pr at/prep the/det stall/noun ./';
+w.add({prompt:'How many words in this sentence are nouns?',stimulus:untag(t),answer:'3',wrong:['1','2','4','5'],
+ explanation:explain('The nouns are **basket**, **Priya** and **stall**: 3 nouns.','- **mine** and **yours** stand in for nouns, so they are **pronouns**.','- **shouted** is a verb. Counting the pronouns as nouns gives 4 or 5.')},count(t,'noun'));}
+
+{const t='A/det swarm/noun.col of/prep bees/noun left/verb the/det hive/noun and/conj.co crossed/verb the/det meadow/noun ./';
+w.add({prompt:'How many words in this sentence are nouns?',stimulus:untag(t),answer:'4',wrong:['2','3','5','6'],
+ explanation:explain('The nouns are **swarm**, **bees**, **hive** and **meadow**: 4 nouns.','- **swarm** is a collective noun, and collective nouns still count.','- **left** and **crossed** are verbs.')},count(t,'noun'));}
+
+{const t='In/prep March/noun.pr ,/ Uncle/noun.pr Oscar/noun.pr took/verb a/det ferry/noun to/prep Skye/noun.pr ./';
+w.add({prompt:'How many **proper** nouns are in this sentence?',stimulus:untag(t),answer:'4',wrong:['2','3','5'],rewardGroup:'challenge',
+ explanation:explain('Proper nouns name a particular person, place or month.','- **March**, **Uncle**, **Oscar** and **Skye** are proper nouns: 4.','- **ferry** is a common noun.','- It is easy to miss **Uncle**, because it is a title used with a name.')},count(t,'noun.pr'));}
+
+{const t='The/det choir/noun.col sang/verb with/prep great/adj joy/noun.ab in/prep the/det chapel/noun ./';
+w.add({prompt:'Which word in the sentence below is a **collective** noun?',stimulus:untag(t),answer:'choir',wrong:['joy','chapel','sang','great'],
+ explanation:explain('A **collective** noun names a group. A **choir** is a group of singers.','- **joy** is an abstract noun and **chapel** is a common noun.','- **sang** is a verb and **great** is an adjective.')},pick(t,'noun.col'));}
+
+w.add({prompt:'Which collective noun best completes the sentence?',stimulus:'A ___ of wolves watched the herd from the ridge.',answer:'pack',wrong:['bouquet','flock','school','bunch'],
+ explanation:explain('A group of wolves is a **pack**.','- A **bouquet** is a group of flowers, a **flock** is a group of birds or sheep, a **school** is a group of fish and a **bunch** is a group of flowers or grapes.')});
+
+{const t='The/det tired/adj passengers/noun boarded/verb the/det steamship/noun.cmp before/prep dawn/noun ./';
+w.add({prompt:'Identify the **compound noun** used in the sentence below.',stimulus:untag(t),answer:'steamship',wrong:['passengers','dawn','tired','boarded'],
+ explanation:explain('A **compound noun** joins two words into one noun: steam + ship = **steamship**.','- **passengers** and **dawn** are nouns made from one word.','- **tired** is an adjective and **boarded** is a verb.')},pick(t,'noun.cmp'));}
+
+w.add({prompt:"In which sentence is the word 'plant' used as a **noun**?",answer:'The plant by the window needs water.',wrong:['We plant bulbs in October.','Please plant the seedlings deeper.','They will plant herbs along the path.'],
+ explanation:explain("In 'The **plant** by the window', plant names a living thing, so it is a **noun**.","- In the other sentences, plant is something people do, so it is a **verb**.")});
+
+{const t='On/prep Monday/noun.pr the/det class/noun.col visited/verb a/det museum/noun in/prep York/noun.pr ./';
+w.add({prompt:'Select the **two** proper nouns in the sentence below.',stimulus:untag(t),answer:['Monday','York'],wrong:['class','museum','visited'],
+ explanation:explain('**Monday** names a day and **York** names a city, so they are proper nouns.','- **class** is a collective noun and **museum** is a common noun.','- **visited** is a verb.')},pick(t,'noun.pr',true));}
+
 export const nouns=w.done();
