@@ -122,7 +122,7 @@ w.add({prompt:'Which of these sentences is punctuated INCORRECTLY?',...lettered(
 
 w.add({prompt:'Select the punctuation mark that is **missing** from the text below.',stimulus:'The pond froze overnight The ducks stood on the ice.',answer:"Full stop after 'overnight'",wrong:["Comma after 'overnight'","Question mark after 'overnight'","Full stop after 'froze'","Comma after 'ducks'"],
  explanation:explain("'The pond froze overnight' and 'The ducks stood on the ice' are two sentences. A **full stop** is missing after 'overnight'.",'- A comma is not strong enough to join them, and nobody is being asked a question.',"- A full stop after 'froze' or a comma after 'ducks' would split the words in the wrong place.")},
- {kind:'missing',full:'The pond froze overnight. The ducks stood on the ice.'});}
+ {kind:'missing',full:'The pond froze overnight. The ducks stood on the ice.'});
 
 w.add({prompt:'Select the punctuation mark that is **missing** from the text below.',stimulus:'The lantern flickered The wind had pushed the door open.',answer:"Full stop after 'flickered'",wrong:["Comma after 'flickered'","Full stop after 'wind'","Question mark after 'flickered'","Comma after 'door'"],
  explanation:explain("'The lantern flickered' is a complete sentence, and 'The wind had pushed the door open' is another. Put a **full stop** after 'flickered'.",'- A comma cannot separate two sentences that each make sense alone.',"- A question mark does not fit, because nobody is being asked anything.")},
