@@ -81,4 +81,40 @@ w.add({prompt:'Which sentence uses a modal verb to show that something is **nece
 w.add({prompt:"Which sentence uses 'have' as an **auxiliary** verb?",answer:'They have finished the jigsaw.',wrong:['We have three rabbits.','I have a question about the trip.',"You have lunch at twelve o'clock."],rewardGroup:'challenge',
  explanation:explain("In 'They **have** finished the jigsaw', have helps the main verb **finished**, so it is an auxiliary verb.",'- In the other sentences, have is the main verb: it means own or eat, and no other verb follows it.')});
 
+{const t='I/pron often/adv gather/verb pebbles/noun along/prep the/det shore/noun ./ Luckily/adv ,/ the/det tide/noun leaves/verb plenty/noun ./';
+w.add({prompt:'Select the **two** verbs used in the sentences below.',stimulus:untag(t),answer:['gather','leaves'],wrong:['pebbles','shore','tide'],
+ explanation:explain('The verbs are **gather** (what I do) and **leaves** (what the tide does).','- **pebbles**, **shore** and **tide** name things, so they are nouns.','- **leaves** can be a noun (leaves on a tree), but here it is an action.')},pick(t,'verb',true));}
+
+{const t='The/det baker/noun kneaded/verb the/det dough/noun ./ Then/adv she/pron shaped/verb each/det roll/noun ./';
+w.add({prompt:'Select the **two** verbs used in the sentences below.',stimulus:untag(t),answer:['kneaded','shaped'],wrong:['baker','dough','roll'],
+ explanation:explain('The verbs are **kneaded** and **shaped**: they tell us what the baker did.','- **baker**, **dough** and **roll** name a person or things, so they are nouns.','- **roll** can be a verb (the ball rolled), but here it follows "each", so it is a noun.')},pick(t,'verb',true));}
+
+{const t='Kofi/noun.pr mends/verb bikes/noun on/prep Saturdays/noun ./ His/det sister/noun polishes/verb the/det bells/noun ./';
+w.add({prompt:'Select the **two** verbs used in the sentences below.',stimulus:untag(t),answer:['mends','polishes'],wrong:['bikes','sister','bells'],rewardGroup:'quick',
+ explanation:explain('The verbs are **mends** and **polishes**: they are the actions.','- **bikes**, **sister** and **bells** name things or a person, so they are nouns.')},pick(t,'verb',true));}
+
+{const t='Please/other stir/verb the/det paint/noun and/conj.co then/adv rinse/verb the/det brush/noun ./';
+w.add({prompt:'Select the **two** verbs used in the sentence below.',stimulus:untag(t),answer:['stir','rinse'],wrong:['Please','paint','brush'],rewardGroup:'quick',
+ explanation:explain('The verbs are **stir** and **rinse**. A command can start with its verb.','- **paint** and **brush** can be verbs, but here they follow "the", so they are nouns.','- **Please** is not a verb.')},pick(t,'verb',true));}
+
+{const t='The/det choir/noun.col will/verb.mod perform/verb tonight/adv ./';
+w.add({prompt:'How many words in this sentence are verbs?',stimulus:untag(t),answer:'2',wrong:['1','3','4'],
+ explanation:explain('**will** is a modal verb and **perform** is the main verb: 2 verbs.','- **choir** is a noun and **tonight** is an adverb.','- Counting only the action word gives 1, which misses the helping verb.')},count(t,'verb'));}
+
+w.add({prompt:"In which sentence is the word 'cook' used as a **verb**?",answer:'We cook porridge on cold mornings.',wrong:['The cook rang the lunch bell.','A new cook starts on Monday.','Ask the cook for more bread.'],
+ explanation:explain("In 'We **cook** porridge', cook is an action, so it is a **verb**.","- In the other sentences, cook names a person, so it is a **noun**.")});
+
+w.add({prompt:'Which word is the **modal** verb in the sentence below?',stimulus:'The team might win if the rain stops.',answer:'might',wrong:['win','stops','team','rain'],
+ explanation:explain('**might** is a modal verb: it shows that winning is possible, not certain.','- **win** and **stops** are main verbs.','- **team** and **rain** are nouns.')});
+
+w.add({prompt:'Which sentence uses an **imperative** verb?',answer:'Check the gate before you leave.',wrong:['The gate was checked at dusk.','Who checked the gate?','The gate check takes two minutes.'],rewardGroup:'quick',
+ explanation:explain("'**Check** the gate' tells someone what to do, so **check** is an imperative verb.",'- The other sentences talk about a check, or ask a question. They do not give an instruction.')});
+
+{const t='Yesterday/adv the/det foal/noun trotted/verb across/prep the/det yard/noun and/conj.co neighed/verb ./';
+w.add({prompt:'How many words in this sentence are verbs?',stimulus:untag(t),answer:'2',wrong:['1','3','4'],
+ explanation:explain('The verbs are **trotted** and **neighed**: 2 verbs.','- **foal** and **yard** are nouns.','- **Yesterday** and **across** are not verbs.')},count(t,'verb'));}
+
+w.add({prompt:'Which verb best shows that the boat moved **with the wind behind it**?',answer:'sailed',wrong:['sank','anchored','leaked'],
+ explanation:explain('To **sail** is to travel on water, using the wind, so **sailed** fits.','- **sank** means went under, **anchored** means stayed in one place and **leaked** means let water in.')});
+
 export const verbs=w.done();

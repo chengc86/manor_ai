@@ -71,4 +71,37 @@ w.add({prompt:'Which sentence has **two main clauses**?',answer:'The sun rose an
 w.add({prompt:'Which question is formed correctly from the statement below?',stimulus:'Kofi has fed the rabbits.',answer:'Has Kofi fed the rabbits?',wrong:['Has Kofi feed the rabbits?','Did Kofi has fed the rabbits?','Fed Kofi has the rabbits?'],
  explanation:explain("To turn this statement into a question, move the auxiliary verb **has** to the front: 'Has Kofi fed the rabbits?'","- **feed** is the wrong form of the verb after has.","- 'Did … has fed' uses two auxiliary verbs.","- 'Fed Kofi has…' puts the words in the wrong order.")});
 
+w.add({prompt:'Which words are the **main clause** in the sentence below?',stimulus:'Before the ferry docked, Priya waved to her cousin.',answer:'Priya waved to her cousin',wrong:['Before the ferry docked','Before the ferry','to her cousin'],
+ explanation:explain("'**Priya waved to her cousin**' makes sense on its own, so it is the main clause.","- 'Before the ferry docked' begins with the subordinating conjunction before, so it is a subordinate clause.","- 'Before the ferry' and 'to her cousin' have no verb of their own, so they are phrases.")});
+
+w.add({prompt:'Which words are the **main clause** in the sentence below?',stimulus:'The lantern glowed although the wind was strong.',answer:'The lantern glowed',wrong:['although the wind was strong','although the wind','was strong'],
+ explanation:explain("'**The lantern glowed**' can stand alone, so it is the main clause.","- 'although the wind was strong' is a subordinate clause: it adds information but cannot stand alone.","- 'was strong' is only the end of that subordinate clause.")});
+
+w.add({prompt:'Which of these is **not** a complete sentence?',answer:'While the kettle boiled.',wrong:['The kettle boiled.','The kettle boiled and the toast burned.','We waited while the kettle boiled.'],
+ explanation:explain("'While the kettle boiled.' is a subordinate clause on its own. It needs a main clause, such as 'We waited', before it is a complete sentence.","- The other three each contain a main clause.")});
+
+w.add({prompt:'Which words complete the sentence with a **main clause**?',stimulus:'After the match ended, ___',answer:'the team shook hands.',wrong:['because the rain started.','and very muddy.','when the whistle blew.'],
+ explanation:explain("The sentence opens with a subordinate clause, so it needs a **main clause**: '**the team shook hands**' makes sense on its own.","- 'because the rain started' and 'when the whistle blew' are more subordinate clauses.","- 'and very muddy' has no verb.")});
+
+w.add({prompt:'What type of sentence is this?',stimulus:'Bring a coat for the river walk.',answer:'command',wrong:['statement','question','exclamation'],rewardGroup:'quick',
+ explanation:explain('It tells someone what to do and begins with the imperative verb **Bring**, so it is a **command**.','- It does not ask a question or begin with What or How.')},{kind:'sentenceType'});
+
+w.add({prompt:'What type of sentence is this?',stimulus:'What a steep path that was!',answer:'exclamation',wrong:['question','command','statement'],
+ explanation:explain('It begins with **What**, contains a verb (was) and ends with an exclamation mark, so it is an **exclamation**.','- It does not ask for an answer.')},{kind:'sentenceType'});
+
+w.add({prompt:'Which sentence has **two main clauses**?',answer:'The owl hooted and the fox trotted away.',wrong:['When the owl hooted, the fox trotted away.','The fox, which lived in the wood, trotted away.','The fox trotted away at dusk.'],
+ explanation:explain("'The owl hooted' and 'the fox trotted away' can each stand alone. The conjunction **and** joins two main clauses.","- 'When the owl hooted' is a subordinate clause.","- 'which lived in the wood' is a relative clause.","- 'The fox trotted away at dusk' has only one clause.")});
+
+w.add({prompt:'How many clauses are in this sentence?',stimulus:'After the curtain closed, the crowd clapped and the band played.',answer:'3',wrong:['1','2','4'],rewardGroup:'challenge',
+ explanation:explain('Each clause has its own verb: **closed**, **clapped** and **played**. So there are 3 clauses:',"- 'After the curtain closed' (subordinate clause)","- 'the crowd clapped' (main clause)","- 'the band played' (main clause, joined by and)")},
+ {kind:'clauses',clauses:['After the curtain closed','the crowd clapped','the band played']});
+
+{const correct='When the bell rang, the pupils lined up. They walked to the hall.';
+w.add({prompt:'This passage contains mistakes. Select the option which has corrected these mistakes.',stimulus:'when the bell rang the pupils lined up they walked to the hall',answer:correct,
+ wrong:['When the bell rang the pupils lined up. They walked to the hall.','When the bell rang, the pupils lined up they walked to the hall.','When the bell rang, the pupils lined up. They walked. To the hall.'],
+ explanation:explain("'When the bell rang' is a subordinate clause, so a comma follows **rang**. Then there are two main clauses, and each needs its own sentence.",'- Missing the comma after rang leaves the opening clause unmarked.','- Missing the full stop runs the two main clauses together.','- A full stop before "To the hall" leaves a fragment with no verb.')},{kind:'proof',correct});}
+
+w.add({prompt:'Which sentence contains a **subordinate clause**?',answer:'We stayed indoors until the thunder stopped.',wrong:['We stayed indoors and the thunder stopped.','We stayed indoors during the thunder.','Indoors, we stayed until late.'],
+ explanation:explain("'**until the thunder stopped**' has its own verb and begins with a subordinating conjunction, so it is a subordinate clause.","- 'and the thunder stopped' is a second main clause.","- 'during the thunder' and 'until late' are phrases: they have no verb.")});
+
 export const clauses=w.done();

@@ -51,14 +51,16 @@ sly sneaky cunning crafty|wealthy affluent rich prosperous|healthy well fit|need
 tranquil peaceful calm serene|tricky difficult hard awkward|noisy loud rowdy|precise exact accurate correct|precious valuable|concise brief short|rough coarse approximate|curious inquisitive nosy|reckless rash careless|wicked evil
 grateful thankful appreciative|graceful elegant|hateful spiteful nasty|awkward clumsy|hungry starving|gloomy dismal dreary miserable|glad happy cheerful merry|dizzy giddy|vacant empty unoccupied hollow|vague unclear hazy
 silent soundless mute|abundant plentiful ample|absent missing away|rare scarce uncommon|costly expensive dear|powerful strong mighty|stubborn obstinate|stuffy airless|obvious clear plain|observant watchful
-feeble weak frail|fearful afraid scared frightened|ponder consider contemplate think|wander roam stroll amble|powder dust|confuse puzzle bewilder|construct build make|commence begin start|commerce trade business|conclude finish end`.split(/[|\n]/).map(s=>s.trim().split(' '));
+feeble weak frail|fearful afraid scared frightened|ponder consider contemplate think|wander roam stroll amble|powder dust|confuse puzzle bewilder|construct build make|commence begin start|commerce trade business|conclude finish end
+assist help|purchase buy|locate find|remedy cure|imitate copy|slender slim|sorrow grief|halt stop|drowsy sleepy|foe enemy`.split(/[|\n]/).map(s=>s.trim().split(' '));
 const close=(a,b)=>a!==b&&SYN.some(s=>s.includes(a)&&s.includes(b));
 const ANT=`arrive come reach/depart leave go|entrance entry/exit|shiny glossy/dull matt|aloud/silently quietly|punctual/late|starry/cloudy|alive living/dead|argue quarrel/agree|shallow/deep|sharp pointed/blunt dull|clean/dirty|shadow dark/light|expand grow swell/shrink contract|explain/confuse|victory win triumph/defeat loss
 vicious fierce savage/gentle tame kind|visitor guest/host|permanent lasting/temporary brief|pleasant nice/unpleasant nasty|perfect/faulty flawed|typical ordinary usual/unusual|humble modest/proud arrogant boastful|humid damp moist wet/dry arid parched|hungry/full
 scarce rare few/plentiful abundant|scared afraid fearful/brave bold fearless|precious valuable/worthless|reveal show expose/conceal hide|remove/add insert|accept receive/refuse reject decline|accuse blame/defend|optimistic hopeful/pessimistic|organised tidy/messy
 rigid stiff/flexible bendy|rapid fast quick/slow sluggish|rural/urban|famous/unknown|frequent often common/rare seldom|friendly/hostile unfriendly|frozen icy cold/melted hot warm|rich wealthy/poor|vertical upright/horizontal|vital important/unimportant trivial
 vivid bright/dull faded|heavy/light|fresh new/stale old|steep/gentle gradual|guilty/innocent|greedy selfish/generous|thrifty/wasteful extravagant|thorough/careless sloppy|sturdy strong solid/flimsy weak fragile|steady stable/shaky wobbly
-stormy rough/calm|frosty/warm|praise compliment/criticise blame|prove/disprove|collect gather/scatter|capture catch/release free|float/sink|flat level/bumpy hilly|transparent clear/opaque cloudy|triumphant victorious/defeated|tolerant patient/intolerant|open/closed shut|obvious/hidden obscure`.split(/[|\n]/).map(s=>s.trim().split('/').map(x=>x.split(' ')));
+stormy rough/calm|frosty/warm|praise compliment/criticise blame|prove/disprove|collect gather/scatter|capture catch/release free|float/sink|flat level/bumpy hilly|transparent clear/opaque cloudy|triumphant victorious/defeated|tolerant patient/intolerant|open/closed shut|obvious/hidden obscure
+awake/asleep|borrow/lend|bitter/sweet|public/private|major/minor|interior/exterior|tighten/loosen|include/exclude|advance/retreat|fertile/barren`.split(/[|\n]/).map(s=>s.trim().split('/').map(x=>x.split(' ')));
 const opposite=(a,b)=>ANT.some(([x,y])=>x.includes(a)&&y.includes(b)||x.includes(b)&&y.includes(a));
 function twoGroups(q,test,label){
  const [g1,g2]=q.stimulus.split(' | ').map(s=>s.split(', '));
@@ -71,7 +73,7 @@ byTopic('synonyms').forEach(q=>twoGroups(q,close,'close-meaning'));
 byTopic('antonyms').forEach(q=>twoGroups(q,opposite,'opposite'));
 
 // ── Definitions: the answer is a meaning of the word, and the word is in the sentence ──
-const SENSES={bright:'clever shiny sunny colourful',moved:'touched shifted carried pushed travelled',stand:'tolerate bear rise place remain booth',sound:'sensible reasonable noise asleep deep',bank:'edge side row tilt store vault',fair:'fine just pale festival equal',present:'attending here gift current showing giving',cross:'annoyed angry mixed sign across travel',plain:'simple grassland obvious honest',content:'satisfied happy topic amount material',object:'protest thing aim item goal',tender:'soft sore loving offer young',spring:'source season jump coil bounce',leaves:'departs foliage pages forgets holidays',fine:'penalty thin well sunny excellent',rare:'uncommon undercooked thin',charge:'rush cost power accuse care',still:'calm yet even however photograph',row:'argument line paddle series tier',train:'teach carriage engine travel aim'};
+const SENSES={bright:'clever shiny sunny colourful',moved:'touched shifted carried pushed travelled',stand:'tolerate bear rise place remain booth',sound:'sensible reasonable noise asleep deep',bank:'edge side row tilt store vault',fair:'fine just pale festival equal',present:'attending here gift current showing giving',cross:'annoyed angry mixed sign across travel',plain:'simple grassland obvious honest',content:'satisfied happy topic amount material',object:'protest thing aim item goal',tender:'soft sore loving offer young',spring:'source season jump coil bounce',leaves:'departs foliage pages forgets holidays',fine:'penalty thin well sunny excellent',rare:'uncommon undercooked thin',charge:'rush cost power accuse care',still:'calm yet even however photograph',row:'argument line paddle series tier',train:'teach carriage engine travel aim',firm:'solid company strict certain business',season:'flavour spring summer weather episode',current:'flow present modern electric news',patient:'calm hospital customer doctor ill',match:'suit game stick contest final',mine:'pit belonging own coal explosive',seal:'close animal stamp mammal approve',yard:'courtyard metre measure length zero',volume:'loudness book amount space chapter',date:'day fruit meeting partner diary'};
 for(const q of byTopic('definitions')){
  const word=(q.prompt.match(/'([a-z]+)'/)||[])[1];
  if(!word||!SENSES[word]){fail(q,'unknown word');continue;}
@@ -100,7 +102,17 @@ lap:circuit round lick drink|sip:drink|slurp:drink|race:contest
 stable:steady secure barn stall|firm:steady secure|sturdy:steady secure|shed:barn stall|pen:stall
 lean:thin slim tilt slope|slender:thin slim|skinny:thin slim|tip:tilt|bend:curve
 jam:spread preserve squeeze cram|butter:spread|honey:spread|stuff:cram squeeze|force:cram squeeze push
-change:coins cash alter vary|money:coins cash|purse:bag|adjust:alter vary|modify:alter vary`.split(/[|\n]/).map(s=>{const [w,m]=s.trim().split(':');return [w,m.split(' ')];}));
+change:coins cash alter vary|money:coins cash|purse:bag|adjust:alter vary|modify:alter vary
+date:fruit crop meeting appointment|plum:fruit crop|diary:meeting appointment|calendar:meeting
+firm:company business solid hard|shop:company business|stiff:solid hard|office:company
+match:game contest suit pair|final:game contest|twin:suit pair|sport:game
+mine:pit shaft belonging possession|coal:pit shaft|yours:belonging possession|cave:pit
+seal:close fasten animal mammal|shut:close fasten|whale:animal mammal|glue:close fasten
+current:flow stream present modern|river:flow stream|today:present modern|tide:flow stream
+yard:courtyard enclosure length measure|lawn:courtyard enclosure|metre:length measure|patio:courtyard
+volume:loudness sound book tome|noise:loudness sound|novel:book tome|chapter:book
+season:flavour spice spring autumn|pepper:flavour spice|winter:spring autumn|salt:flavour spice
+bat:creature mammal stick club|mouse:creature mammal|racket:stick club|owl:creature mammal`.split(/[|\n]/).map(s=>{const [w,m]=s.trim().split(':');return [w,m.split(' ')];}));
 for(const q of byTopic('double-meanings')){
  const br=[...q.stimulus.matchAll(/\(([^)]*)\)/g)].map(m=>m[1].split(', '));
  if(br.length!==2){fail(q,'two brackets');continue;}
@@ -115,7 +127,8 @@ const TAGS=Object.fromEntries(`glad cheerful merry:happy|angry:cross|tired:sleep
 sparrow robin wren:bird|bee moth:insect|violin cello harp:strings|trumpet flute:wind|hammer saw drill:tool|spoon fork:cutlery|furious livid irate:very-angry|calm content:peaceful|soggy damp moist:wet|parched arid:dry
 brave bold daring:fearless|timid meek:shy|gallop trot canter:horse-gait|slither:snake-moves|hop:rabbit-moves|metre centimetre kilometre:length|kilogram:mass|litre:capacity|cautious careful wary:careful|reckless rash:careless
 copper iron silver:metal|wood glass:material|ask question enquire:ask|answer reply:respond|huge vast immense:big|tiny minute:small|lion tiger leopard:big-cat|wolf bear:wild-animal|noun verb adjective:word-class|comma colon:punctuation
-kettle toaster microwave:kitchen-appliance|pillow duvet:bedding|pentagon hexagon octagon:flat-shape|cube sphere:solid-shape|sapphire ruby emerald:gem|marble granite:rock|carp trout goldfish:fish|whale dolphin:sea-mammal`.split(/[|\n]/).flatMap(s=>{const [ws,t]=s.trim().split(':');return ws.split(' ').map(w=>[w,t]);}));
+kettle toaster microwave:kitchen-appliance|pillow duvet:bedding|pentagon hexagon octagon:flat-shape|cube sphere:solid-shape|sapphire ruby emerald:gem|marble granite:rock|carp trout goldfish:fish|whale dolphin:sea-mammal
+apple pear plum:fruit|bus tram:transport|red blue green:colour|seven nine:number|sock glove scarf:clothing|pencil ruler:stationery|rain snow hail:weather|bread cake:baked-food|circle square triangle:shape|Monday Friday:weekday|kick throw catch:ball-action|tulip daisy:flower|January March June:month|carrot onion:vegetable|piano drum guitar:instrument|shark eel:sea-animal|puppy kitten calf:young-animal|sycamore beech:tree-kind|river lake stream:water|chair stool:seat`.split(/[|\n]/).flatMap(s=>{const [ws,t]=s.trim().split(':');return ws.split(' ').map(w=>[w,t]);}));
 for(const q of byTopic('odd-ones-out')){
  const ws=q.stimulus.split(', ');if(ws.length!==5||!same(ws,q.options)){fail(q,'five words as options');continue;}
  const triples=[];for(let a=0;a<5;a++)for(let b=a+1;b<5;b++)for(let c=b+1;c<5;c++){const t=[ws[a],ws[b],ws[c]];if(t.every(w=>TAGS[w])&&t.every(w=>TAGS[w]===TAGS[t[0]]))triples.push(t);}

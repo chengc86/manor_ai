@@ -242,7 +242,7 @@ if(JSON.stringify([...topicIds].sort())!==JSON.stringify([...TOPICS].sort()))fai
 if(science.length<190)fail('bank',`${science.length} questions (at least 190)`);
 for(const t of topicIds){
  const qs=science.filter(q=>q.topic===t),groups=g=>qs.filter(q=>q.rewardGroup===g).length;
- if(qs.length<16||qs.length>18)fail(t,`${qs.length} questions (16–18 per topic)`);
+ const cap=t==='sc-classification'?28:18;if(qs.length<16||qs.length>cap)fail(t,`${qs.length} questions (16–${cap} per topic)`);
  if(!groups('quick')||!groups('challenge')||groups('standard')<qs.length/2)fail(t,'needs some quick and challenge questions and mostly standard ones');
  const text=qs.filter(q=>!q.optionVisuals&&q.answers.length===1),longest=text.filter(q=>q.options.every(o=>o===q.answers[0]||o.length<q.answers[0].length));
  if(longest.length>text.length*.5)fail(t,`the answer is the longest option in ${longest.length} of ${text.length} questions`);

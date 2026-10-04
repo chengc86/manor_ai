@@ -16,7 +16,8 @@ const byTopic=new Map<string,Question[]>();for(const q of questions)if(q.topic&&
 export function levelFor(correct:number,wrong:number):MasteryLevel{const n=correct+wrong,acc=n?correct/n:0;return n===0?'new':n<3?'started':acc<.5?'practise':acc<.75?'developing':correct>=8&&acc>=.85?'mastered':'secure';}
 /** Mastery of every topic (in curriculum order), optionally for one subject. */
 export function topicMastery(p:Player,subject?:string):TopicMastery[]{
- return bankTopics.filter(t=>!subject||t.subject===subject).map(t=>{const qs=byTopic.get(t.id)??[];let correct=0,wrong=0;
+ const year2=p.assignedYear===2;
+ return bankTopics.filter(t=>!subject||t.subject===subject).map(t=>{const qs=(byTopic.get(t.id)??[]).filter(q=>year2?q.difficulty==='Year 2':q.difficulty!=='Year 2');let correct=0,wrong=0;
   for(const q of qs){const h=p.history[q.id];if(h?.correct)correct++;const m=p.mistakes?.[q.id];wrong+=m?m.attempts:h&&!h.correct&&h.attempted!==false?1:0;}
   const n=correct+wrong;return {topic:t.id,title:t.title,strand:t.strand,subject:t.subject,total:qs.length,correct,wrong,accuracy:n?correct/n:null,level:levelFor(correct,wrong)};});
 }

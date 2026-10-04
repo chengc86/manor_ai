@@ -155,7 +155,7 @@ function anaCount(r:Rng):Made|null{return attempt(100,()=>{
   'Red herrings:',bullets('Options that change only the shape, or only the dots, or change the dots the wrong way, are traps.')),{rule:{ds,dd}});
 });}
 const ANA_PLAN:((r:Rng)=>Made|null)[]=[r=>anaTurnShade(r,false),anaSwap,anaCount,r=>anaTurnShade(r,true)];
-export const analogies=auditBuild(anaTopic,20,(r,i)=>ANA_PLAN[i%ANA_PLAN.length](r),{own:true});
+export const analogies=auditBuild(anaTopic,30,(r,i)=>ANA_PLAN[i%ANA_PLAN.length](r),{own:true});
 
 // ================================================================ transformations in a given order
 type Op='turnR'|'turnL'|'half'|'mirror'|'flip'|'shrink'|'shade'|'dotTop';

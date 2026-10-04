@@ -98,4 +98,43 @@ w.add({prompt:'This text contains mistakes. Select the option which has correcte
  wrong:['The fox crept closer, the hens began to squawk.','The fox crept. Closer the hens began to squawk.','The fox crept closer the hens. Began to squawk.'],
  explanation:explain("There are two sentences: 'The fox crept closer' and 'The hens began to squawk'. Each needs a capital letter at the start and a full stop at the end.",'- A comma cannot join two sentences like this.','- The other two options split the words in the wrong place, so the sentences do not make sense.')},{kind:'proof',correct});}
 
+w.add({prompt:'Which of these sentences is punctuated INCORRECTLY?',answer:'Who is knocking at this hour!',wrong:['Where did I leave the torch?','What a dark landing that was!','Please light the candle.','The stairs are steep.'],
+ explanation:explain("'Who is knocking at this hour' is a question, so it needs a **question mark**, not an exclamation mark.",'- The others are a direct question, an exclamation, a command and a statement, and each has the right end mark.')},
+ {kind:'fixes',want:'incorrect',fixes:{'Who is knocking at this hour!':'Who is knocking at this hour?','Where did I leave the torch?':'Where did I leave the torch?','What a dark landing that was!':'What a dark landing that was!','Please light the candle.':'Please light the candle.','The stairs are steep.':'The stairs are steep.'}});
+
+w.add({prompt:'Which of these sentences is punctuated INCORRECTLY?',answer:'We sail there every Spring.',wrong:['My uncle lives in Cardiff.','We visit him in April.','His dog is called Pepper.','Mrs Ahmed joined us once.'],
+ explanation:explain('Seasons are not proper nouns, so **spring** should not have a capital letter.','- Cardiff, April, Pepper and Mrs Ahmed are a place, a month, a pet and a title with a name, so they keep their capitals.')},
+ {kind:'fixes',want:'incorrect',fixes:{'We sail there every Spring.':'We sail there every spring.','My uncle lives in Cardiff.':'My uncle lives in Cardiff.','We visit him in April.':'We visit him in April.','His dog is called Pepper.':'His dog is called Pepper.','Mrs Ahmed joined us once.':'Mrs Ahmed joined us once.'}});
+
+{const cards=['i forgot the map in the hall.','I forgot the map in the hall.','Did you see the map?','What a useful map that was!','Please fetch the map.'];
+w.add({prompt:'Which of these sentences is punctuated INCORRECTLY?',...lettered(cards,0,'Five sentences about a map on cards labelled A to E'),
+ explanation:explain('The word **I** always needs a capital letter, and a sentence must start with a capital too.','Card **A** has a small i.','- The other cards start correctly, and their end marks match a statement, a question, an exclamation and a command.')},
+ {kind:'fixes',want:'incorrect',cards,fixed:['I forgot the map in the hall.','I forgot the map in the hall.','Did you see the map?','What a useful map that was!','Please fetch the map.']});}
+
+w.add({prompt:'Which of these sentences is punctuated INCORRECTLY?',answer:'Jonah asked if the tide was in?',wrong:['Is the tide in yet?','The tide is in.','What a high tide that was!','Check the tide before you swim.'],
+ explanation:explain("'Jonah asked if the tide was in' reports a question. It is an **indirect question**, so it ends with a full stop, not a question mark.",'- "Is the tide in yet?" is a direct question. The others are a statement, an exclamation and a command.')},
+ {kind:'fixes',want:'incorrect',fixes:{'Jonah asked if the tide was in?':'Jonah asked if the tide was in.','Is the tide in yet?':'Is the tide in yet?','The tide is in.':'The tide is in.','What a high tide that was!':'What a high tide that was!','Check the tide before you swim.':'Check the tide before you swim.'}});
+
+{const cards=['What a calm evening that was.','What a calm evening that was!','Was the evening calm?','The evening was calm.','Enjoy the calm evening.'];
+w.add({prompt:'Which of these sentences is punctuated INCORRECTLY?',...lettered(cards,0,'Five sentences about the evening on cards labelled A to E'),
+ explanation:explain("A sentence that begins with **What a** and has a verb is an exclamation, so it needs an **exclamation mark**.",'Card **A** ends with a full stop. Card **B** is the same sentence with the right mark.','- The others are a question, a statement and a command.')},
+ {kind:'fixes',want:'incorrect',cards,fixed:['What a calm evening that was!','What a calm evening that was!','Was the evening calm?','The evening was calm.','Enjoy the calm evening.']});}
+
+w.add({prompt:'Select the punctuation mark that is **missing** from the text below.',stimulus:'The pond froze overnight The ducks stood on the ice.',answer:"Full stop after 'overnight'",wrong:["Comma after 'overnight'","Question mark after 'overnight'","Full stop after 'froze'","Comma after 'ducks'"],
+ explanation:explain("'The pond froze overnight' and 'The ducks stood on the ice' are two sentences. A **full stop** is missing after 'overnight'.",'- A comma is not strong enough to join them, and nobody is being asked a question.',"- A full stop after 'froze' or a comma after 'ducks' would split the words in the wrong place.")},
+ {kind:'missing',full:'The pond froze overnight. The ducks stood on the ice.'});}
+
+w.add({prompt:'Select the punctuation mark that is **missing** from the text below.',stimulus:'The lantern flickered The wind had pushed the door open.',answer:"Full stop after 'flickered'",wrong:["Comma after 'flickered'","Full stop after 'wind'","Question mark after 'flickered'","Comma after 'door'"],
+ explanation:explain("'The lantern flickered' is a complete sentence, and 'The wind had pushed the door open' is another. Put a **full stop** after 'flickered'.",'- A comma cannot separate two sentences that each make sense alone.',"- A question mark does not fit, because nobody is being asked anything.")},
+ {kind:'missing',full:'The lantern flickered. The wind had pushed the door open.'});
+
+{const correct='On Wednesday, Priya and I planted beans.';
+const cards=[correct,'On wednesday, Priya and I planted beans.','On Wednesday, priya and I planted beans.','On Wednesday, Priya and i planted beans.','On Wednesday, Priya and I planted beans'];
+w.add({prompt:'This passage contains mistakes. Which card shows it with **all** the mistakes corrected?',stimulus:'on wednesday priya and i planted beans',...lettered(cards,0,'Five versions of the sentence on cards labelled A to E'),
+ explanation:explain('The sentence needs a capital at the start, capitals for **Wednesday**, **Priya** and **I**, a comma after the opening day, and a full stop.','Card **A** has all of these.',"- One card keeps 'wednesday' small, one keeps 'priya' small, one keeps 'i' small, and one has no full stop.")},{kind:'proof',correct});}
+
+w.add({prompt:'Which mark should end this sentence?',stimulus:'How quickly the fog lifted',answer:'exclamation mark',wrong:['full stop','question mark','comma'],
+ explanation:explain("The sentence begins with **How** and shows a strong feeling, so it is an exclamation: 'How quickly the fog lifted!'","- It does not ask for an answer, so a question mark does not fit. A comma cannot end a sentence.")},
+ {kind:'endMark',full:'How quickly the fog lifted!'});
+
 export const sentencePunctuation=w.done();
