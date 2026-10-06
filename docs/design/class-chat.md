@@ -45,7 +45,7 @@ Each pupil's weekly count is kept in `chatConduct`, and the latest 200 blocked m
 
 Pupils can chat without paying for a limited number of words each day. After that, extra words spend the same coins they earn by answering questions. There is no real-money price.
 
-- **Free allowance:** `FREE_WORDS_PER_DAY` in `lib/chat-rules.ts`, currently **200**. This is provisional until live class-chat medians are measured. Change that constant to retune it.
+- **Free allowance:** `FREE_WORDS_PER_DAY` in `lib/chat-rules.ts`, currently **50**. Change that constant to retune it.
 - **Paid rate:** `COINS_PER_WORD` is **1**, so 10 words cost 10 coins. A message that crosses the free balance is split: the remaining free words cost nothing, and only the words past that balance cost coins.
 - **Word count:** trim the message, then split on whitespace. Punctuation stays attached to its word (`wave!` is one word).
 - **Reset:** the count is stored on the pupil as `chatWords: {day, used}` inside the world JSON. `day` is the Europe/London calendar date. It resets at midnight there, not when the pupil refreshes or signs in again. Deleting a message does not refund words. A blocked message is not counted. Sending the same message id again does not charge twice.

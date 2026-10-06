@@ -1,7 +1,7 @@
 // Shared by the chat API and the browser. The word list stays server-side in chat-filter.ts.
 export const CHAT_WARNINGS=2,CHAT_FINE=10;
-// Provisional until live chat medians are in. One coin per word, so 10 words cost 10 coins.
-export const FREE_WORDS_PER_DAY=200,COINS_PER_WORD=1;
+// Daily free words per pupil. One coin per extra word, so 10 words cost 10 coins.
+export const FREE_WORDS_PER_DAY=50,COINS_PER_WORD=1;
 /** Words are whitespace-separated tokens in the trimmed message. Punctuation stays on its word. */
 export function countWords(text:string){const trimmed=text.trim();return trimmed?trimmed.split(/\s+/).length:0;}
 /** Calendar day in Europe/London (YYYY-MM-DD). Free words reset at midnight there. */
