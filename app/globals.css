@@ -210,3 +210,12 @@ button.battle-fighter{pointer-events:auto;cursor:pointer;border:0;background:tra
 .mock-history .mock-unfinished{color:#f5c16c;font-size:12px;font-weight:700}
 /* Picture choices: the letter sits on the white picture, so it gets a solid badge (gold once chosen) to stay readable. */
 .picture-options .option-letter{background:#12382c;border:1px solid #3d6250;color:#f5d77a;z-index:1;box-shadow:0 1px 3px #0006}.picture-options label.selected .option-letter{background:#f5c16c;border-color:#f5c16c;color:#1b2a22}
+.school-lock{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 18px;background:radial-gradient(ellipse at 50% 0%,#1c624c 0%,#062c25 58%)}
+.school-lock-card{width:min(560px,100%);background:#103b32;border:1px solid #d0a30077;border-radius:22px;padding:36px 32px 32px;text-align:center;box-shadow:0 18px 50px #0006}
+.school-lock-card .brand{justify-content:center;margin-bottom:22px}
+.school-lock-kicker{color:#e2c265;letter-spacing:1.8px;font-size:12px;font-weight:800;text-transform:uppercase}
+.school-lock-card h1{font-size:34px;line-height:1.15;margin:12px 0 14px;color:#fffaee}
+.school-lock-body{color:#d7e6d6;font-size:18px;line-height:1.5;margin:0 auto 18px;max-width:38ch}
+.school-lock-hours{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin:0 0 16px;padding:10px 14px;border-radius:999px;background:#d0a30018;border:1px solid #d0a30066;color:#ffe9a3;font-weight:800}
+.school-lock-note{color:#c6d2be;font-size:15px;line-height:1.55;margin:0 auto;max-width:46ch}
+@media(max-width:600px){.school-lock-card{padding:28px 18px}.school-lock-card h1{font-size:28px}.school-lock-body{font-size:17px}}
