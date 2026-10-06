@@ -41,8 +41,21 @@ Pupils' messages are checked on the server before they are posted. The teacher's
 
 Each pupil's weekly count is kept in `chatConduct`, and the latest 200 blocked messages in `chatFlags` in the world JSON. Neither is shown to other pupils.
 
+## Free words, then coins
+
+Pupils can chat without paying for a limited number of words each day. After that, extra words spend the same coins they earn by answering questions. There is no real-money price.
+
+- **Free allowance:** `FREE_WORDS_PER_DAY` in `lib/chat-rules.ts`, currently **200**. This is provisional until live class-chat medians are measured. Change that constant to retune it.
+- **Paid rate:** `COINS_PER_WORD` is **1**, so 10 words cost 10 coins. A message that crosses the free balance is split: the remaining free words cost nothing, and only the words past that balance cost coins.
+- **Word count:** trim the message, then split on whitespace. Punctuation stays attached to its word (`wave!` is one word).
+- **Reset:** the count is stored on the pupil as `chatWords: {day, used}` inside the world JSON. `day` is the Europe/London calendar date. It resets at midnight there, not when the pupil refreshes or signs in again. Deleting a message does not refund words. A blocked message is not counted. Sending the same message id again does not charge twice.
+- **If they cannot pay:** the server refuses the send (HTTP 402) and does not post it or use up words. The chat shows how many free words are left, the coin cost of this message, and that answering questions earns coins. Reading chat, questions, battles, the shop, and teacher tools are unchanged.
+- **Teacher:** not limited and not charged. A teacher test profile with `unlimitedCoins` is also not charged, matching every other coin spend.
+
+The composer shows free words left today, and the coin cost of the message being typed once it goes past the free balance.
+
 ## Server
 
 The world poll (every second) now carries a small `chatState` summary: message count and the last message's ID, time and sender, never its text. It goes only to signed-in class members and the teacher. The chat fetches messages only when that summary changes, plus a 15-second safety refresh while the page is visible, instead of polling every 2.5 seconds.
 
-Validation: `tests/persistence.cjs` covers sign-in, sharing, duplicate sends, the rate limit, moderation and the member-only summary. `tests/chat-safety.cjs` covers the filter (blocked, disguised and everyday messages), warnings, fines, the weekly reset, the teacher's list and teacher messages.
+Validation: `tests/persistence.cjs` covers sign-in, sharing, duplicate sends, the rate limit, moderation and the member-only summary. `tests/chat-safety.cjs` covers the filter (blocked, disguised and everyday messages), warnings, fines, the weekly reset, the teacher's list, teacher messages, the daily word allowance, split free/paid words, a refused send when coins are short, and the London midnight reset.
