@@ -41,3 +41,4 @@
 .board-3d.compact .school-goal-3d>span,.board-3d.compact .route-entry{font-size:8px;padding:4px 5px}
 .b3-level.b3-mine>span{outline:2px solid #fffaee;outline-offset:0}
 .board-3d.compact .camp-label span{font-size:10px}
+.b3-admin-trophy>span{color:#ffe99b;background:#483315;border:1px solid #e5ba42;font-size:10px;white-space:nowrap}
