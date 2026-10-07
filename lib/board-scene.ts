@@ -81,7 +81,7 @@ export class BoardScene{
   this.effects=new BattleEffects(this.scene,createCrown);
  }
  setTheme(theme:BoardTheme){
-  if(this.theme&&this.theme.index===theme.index&&this.theme.chapter===theme.chapter)return;
+  if(this.theme&&this.theme.index===theme.index&&this.theme.chapter===theme.chapter&&this.theme.goldEvent===theme.goldEvent)return;
   this.theme=theme;this.world?.group.removeFromParent();this.world?.dispose();this.world=buildWorld(theme);this.scene.add(this.world.group);
   const l=theme.lighting;this.hemi.color.set(l.hemiSky);this.hemi.groundColor.set(l.hemiGround);this.hemi.intensity=l.hemiIntensity;
   this.sun.color.set(l.sun);this.sun.intensity=l.sunIntensity;
@@ -107,7 +107,7 @@ export class BoardScene{
  private syncActors<T extends BoardHero|CampHero>(map:Map<string,HeroActor>,items:T[],spot:(item:T)=>THREE.Vector3,camp:boolean){
   const seen=new Set<string>();
   for(const item of items){
-   const look=JSON.stringify([item.type,item.clothing??null,item.uniform??null,item.gender??null,camp?'none':item.weapon??'none',item.ride??null]);seen.add(item.id);
+   const look=JSON.stringify([item.type,item.clothing??null,item.uniform??null,item.gender??null,camp?'none':item.weapon??'none',item.ride??null,!!item.adminAbuseTrophy]);seen.add(item.id);
    let actor=map.get(item.id);
    if(actor&&actor.look!==look){this.release(actor);map.delete(item.id);actor=undefined;}
    if(!actor){const {key,template}=acquireHeroTemplate({...item,weapon:camp?'none':item.weapon,ride:item.ride});actor=Object.assign(new Actor(key,template,this.characters,HERO_SCALE),{data:item,look});map.set(item.id,actor);actor.place(spot(item));actor.yaw=actor.targetYaw=camp?(actor.phase%1-.5)*.6:this.faceRoute(actor.position);}
@@ -188,6 +188,7 @@ export class BoardScene{
    shadow(a.position,hero.ride ? .52 : .36);
    if(ringCount<this.rings.instanceMatrix.count){this.rings.setMatrixAt(ringCount,shadowM.compose(new THREE.Vector3(a.position.x,.035,a.position.z),q,new THREE.Vector3(1,1,1)));this.rings.setColorAt(ringCount++,new THREE.Color(hero.colour??'#ffe396'));}
    if(o.labels){labels.push({key:'lv'+id,kind:'level',text:String(hero.level),position:a.position.clone().setY(a.top+.08),tone:[hero.level>=10?'legend':hero.level>=6?'master':'',hero.mine?'mine':''].filter(Boolean).join(' ')});
+    if(hero.adminAbuseTrophy)labels.push({key:'trophy'+id,kind:'status',text:'🏆 Admin Abuse',position:a.position.clone().setY(a.top+.3),tone:'admin-trophy'});
     if(hover)labels.push({key:'nm'+id,kind:'name',text:hero.name,position:a.position.clone().setY(a.top+.42)});}
   }
   for(const [id,a] of this.camp){const c=a.data as CampHero;a.turn(dt);a.inst.pose(o.time+a.phase,'idle',o.motion);setEmissive(a.materials,this.hovered===id?HOVER:NONE);shadow(a.position,.34);

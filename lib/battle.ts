@@ -17,7 +17,7 @@ export function isBuildable(cell:number,wave=1,routeFrom?:number){return Number.
 export function cellPoint(cell:number){return{x:cell%COLS+.5,y:Math.floor(cell/COLS)+.5}}
 export function percent(cell:number){const p=cellPoint(cell);return{x:p.x/COLS*100,y:p.y/ROWS*100}}
 export function pathPosition(progress:number,wave=1,version=4,route?:number[][]){const path=(route?routeLayout(route):mapLayout(wave,version)).path;const t=Math.max(0,Math.min(path.length-1,progress*(path.length-1))),i=Math.min(path.length-2,Math.floor(t)),f=t-i;return{x:path[i].x+(path[i+1].x-path[i].x)*f,y:path[i].y+(path[i+1].y-path[i].y)*f}}
-export type Fighter=ItemLoadout & {stats?:ReturnType<typeof buildStats>;id:string;type:number;level:number;weapon?:string;cell:number;name:string;gender?:'boy'|'girl';uniform?:string;clothing?:Wardrobe;outfit?:string;colour?:string;owner?:string};
+export type Fighter=ItemLoadout & {adminAbuseTrophy?:boolean;stats?:ReturnType<typeof buildStats>;id:string;type:number;level:number;weapon?:string;cell:number;name:string;gender?:'boy'|'girl';uniform?:string;clothing?:Wardrobe;outfit?:string;colour?:string;owner?:string};
 /** One order to ride a hero to a new square during a wave. `points` is the polyline, in the same form as a monster route. */
 export type RideMove={id:string;at:number;points:RoutePoint[];ride?:string};
 export type Battle={start:number;duration:number;wave:number;rulesVersion?:number;seed?:number;route?:number[][];power:number;target:number;contributors:number;fighters:Fighter[];rideMoves?:RideMove[]};

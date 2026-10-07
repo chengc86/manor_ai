@@ -1,3 +1,4 @@
+import {eventQuestionReward} from './admin-event';
 import {questions,questionById,publicQuestion,answerMatches,answerText,toCanonical,toViewer,type Question} from './questions';
 import {matchesYear,assignedYear,QUESTION_REST} from './question-policy';
 import {rewardHelpers} from './friend-help';
@@ -21,7 +22,7 @@ export function pickMock(p:Player,subject:string,count:number,now:number,random=
  const spread=(list:Question[])=>{const groups=new Map<string,Question[]>();for(const q of shuffle(list)){const k=q.topic??q.id;if(!groups.has(k))groups.set(k,[]);groups.get(k)!.push(q);}const order=shuffle([...groups.values()]),out:Question[]=[];while(order.some(g=>g.length))for(const g of order)if(g.length)out.push(g.pop()!);return out;};
  return [...spread(fresh),...spread(rested)].slice(0,count);
 }
-export function publicMock(m:MockState,viewer:string){return {id:m.id,subject:m.subject,startedAt:m.startedAt,endsAt:m.endsAt,answers:m.answers,flags:m.flags,questions:m.ids.map(id=>publicQuestion(questionById.get(id)!,undefined,viewer))};}
+export function publicMock(m:MockState,viewer:string){return {id:m.id,subject:m.subject,startedAt:m.startedAt,endsAt:m.endsAt,answers:m.answers,flags:m.flags,questions:m.ids.map(id=>publicQuestion(questionById.get(id)!,eventQuestionReward(questionById.get(id)!.reward??20),viewer))};}
 const hasAnswer=(given:string|string[]|undefined)=>given!==undefined&&(Array.isArray(given)?given.length>0:given!=='');
 /** Marks a mock (on time or late) and applies it to the pupil. Returns the result and the helpers to thank. */
 export function gradeMock(players:Record<string,Player>,p:Player,viewer:string,now=Date.now()){
@@ -33,7 +34,7 @@ export function gradeMock(players:Record<string,Player>,p:Player,viewer:string,n
   if(!answered){p.history[id]={correct:false,at:now,attempted:false};continue;}
   p.history[id]={correct,at:now,attempted:true};p.subjects[m.subject][correct?'correct':'incorrect']++;
   // Correct answers retire either way, but only a completed test pays (and counts towards the class wave).
-  if(correct){score++;p.correct++;if(complete){coins+=q.reward??20;p.waveAnswers++;}const mistake=p.mistakes[id];if(mistake&&!mistake.correctedAt){mistake.correctedAt=now;thanked.push(...rewardHelpers(players,mistake.help));}}
+  if(correct){score++;p.correct++;if(complete){coins+=eventQuestionReward(q.reward??20,now);p.waveAnswers++;}const mistake=p.mistakes[id];if(mistake&&!mistake.correctedAt){mistake.correctedAt=now;thanked.push(...rewardHelpers(players,mistake.help));}}
   else{p.incorrect++;const old=p.mistakes[id];p.mistakes[id]={...old,attempts:(old?.attempts??0)+1,lastWrongAt:now,lastAnswer:answerText(given!)};}
  }
  p.coins+=coins;
