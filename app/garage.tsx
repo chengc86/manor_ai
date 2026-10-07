@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
 import type {ComponentType} from 'react';
-import {Bike,Car,Tractor,Truck,IceCreamCone,Siren,Motorbike,Scooter,ArrowRight,Palette} from 'lucide-react';
+import {Bike,Car,Tractor,Truck,IceCreamCone,Siren,Motorbike,Scooter,Sailboat,ArrowRight,Palette} from 'lucide-react';
 import {VEHICLES,PAINTS,type Ride,type VehicleId} from '@/lib/vehicles';
 import type {Wardrobe} from '@/lib/clothing';
 import {HEROES} from '@/lib/heroes';
@@ -10,7 +10,7 @@ import {Price,Ribbon,canAfford,celebrate} from './shop-kit';
 import './garage.css';
 /** Line icons in the lucide style for the two boards, which lucide does not draw. */
 const Board=({glow=false}:{glow?:boolean})=><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 11c0 1.1.9 2 2 2h16a2 2 0 0 0 2-2"/>{glow?<path d="M7 17h2M11 18h2M15 17h2"/>:<><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></>}</svg>;
-const ICONS:Record<VehicleId,ComponentType>={skateboard:()=><Board/>,scooter:Scooter,tricycle:Bike,bicycle:Bike,hoverboard:()=><Board glow/>,'go-kart':Car,moped:Motorbike,tractor:Tractor,car:Car,'ice-cream-van':IceCreamCone,'fire-engine':Siren};
+const ICONS:Record<VehicleId,ComponentType>={skateboard:()=><Board/>,scooter:Scooter,tricycle:Bike,bicycle:Bike,hoverboard:()=><Board glow/>,'go-kart':Car,moped:Motorbike,tractor:Tractor,car:Car,'ice-cream-van':IceCreamCone,'fire-engine':Siren,'sailing-boat':Sailboat};
 /** A ride's picture: drawn in 3D once it scrolls into view, with a simple icon until then or without WebGL. */
 export function RidePicture({id,paint}:{id:VehicleId;paint?:string}){
  const element=useRef<HTMLSpanElement>(null),[src,setSrc]=useState<{key:string;url:string}|null>(null),key=`${id}:${paint??''}`,Icon=ICONS[id]??Truck;

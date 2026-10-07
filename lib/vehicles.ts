@@ -5,8 +5,8 @@
  * Damage, range and the other battle stats stay the same.
  * Stable ids: append only, never rename.
  */
-/** How the hero rides: standing on a board, holding a scooter's handlebar, pedalling, or sitting behind a wheel. */
-export type RidePose='board'|'scoot'|'pedal'|'seat';
+/** How the hero rides: standing on a board, holding a scooter's handlebar, pedalling, sitting behind a wheel, or sitting in a boat. */
+export type RidePose='board'|'scoot'|'pedal'|'seat'|'sail';
 export const VEHICLES=[
  {id:'skateboard',name:'Skateboard',price:150,pose:'board',paint:'blue',blurb:'Four wheels and a cool deck.'},
  {id:'scooter',name:'Kick scooter',price:200,pose:'scoot',paint:'red',blurb:'Push off and zoom along.'},
@@ -19,6 +19,7 @@ export const VEHICLES=[
  {id:'car',name:'Convertible car',price:950,pose:'seat',paint:'red',blurb:'Roof down, wind in your fur.'},
  {id:'ice-cream-van',name:'Ice cream van',price:1200,pose:'seat',paint:'pink',blurb:'Comes with a giant cone on top.'},
  {id:'fire-engine',name:'Fire engine',price:1500,pose:'seat',paint:'red',blurb:'Ladder, lights and a siren.'},
+ {id:'sailing-boat',name:'Sailing boat',price:1800,pose:'sail',paint:'blue',blurb:'A cloth sail and a wooden tiller.'},
 ] as const satisfies readonly {id:string;name:string;price:number;pose:RidePose;paint:string;blurb:string}[];
 export type VehicleId=typeof VEHICLES[number]['id'];
 /** Free paint colours for any ride a pupil owns. */

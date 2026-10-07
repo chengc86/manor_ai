@@ -10,8 +10,8 @@ import {HEADS} from './hero-heads';
 import type {RidePose} from './vehicles';
 export {outfitForWardrobe,type RigOutfit} from './hero-outfit';
 export type HeroMotion='idle'|'walk'|'attack';
-/** Riding poses: legs forward to sit or pedal, arms reaching for a handlebar or wheel, or held out to balance on a board. */
-const RIDE:Record<RidePose,{leg:number;arm:number;armOut:number;spread?:number}>={board:{leg:0,arm:-.1,armOut:1.05,spread:.1},scoot:{leg:0,arm:-1.15,armOut:.12},pedal:{leg:-1.05,arm:-1.05,armOut:.12},seat:{leg:-1.45,arm:-1.0,armOut:.12}};
+/** Riding poses: legs forward to sit, pedal or sail, arms reaching for a handlebar, wheel or tiller, or held out to balance on a board. */
+const RIDE:Record<RidePose,{leg:number;arm:number;armOut:number;spread?:number}>={board:{leg:0,arm:-.1,armOut:1.05,spread:.1},scoot:{leg:0,arm:-1.15,armOut:.12},pedal:{leg:-1.05,arm:-1.05,armOut:.12},seat:{leg:-1.45,arm:-1.0,armOut:.12},sail:{leg:-1.2,arm:-.75,armOut:.42}};
 /**
  * Chibi proportions shared by every hero, so any clothing fits any body: a big head (nearly half the height),
  * a soft pear-shaped body, short legs and round paws. Heights are in model units with the feet on y=0.
@@ -131,7 +131,7 @@ export function createHeroModel(skin:Hero3DSkin,outfit:RigOutfit,wardrobe?:Wardr
   setRide(pose?:RidePose){ride=pose;model.animate(0,'idle',false);},
   animate(t:number,motion:HeroMotion,enabled=true){
    const on=enabled,walk=on&&motion==='walk'&&!ride,riding=on&&motion==='walk'&&!!ride,attack=on&&motion==='attack',r=ride?RIDE[ride]:undefined;
-   body.position.y=lift+(walk?Math.abs(Math.sin(t*5))*.035:riding?.018*Math.abs(Math.sin(t*9)):on?.012*Math.sin(t*2):0);body.rotation.z=walk?.03*Math.sin(t*5):0;
+   body.position.y=lift+(walk?Math.abs(Math.sin(t*5))*.035:riding&&ride==='sail'?Math.sin(t*1.4)*.03:riding?.018*Math.abs(Math.sin(t*9)):on?.012*Math.sin(t*2):0);body.rotation.z=walk?.03*Math.sin(t*5):0;
    head.rotation.z=on&&!walk?.045*Math.sin(t*1.3):0;head.rotation.x=attack?.08:on?.025*Math.sin(t*2):0;
    legs.forEach((leg,i)=>{leg.rotation.x=(r?.leg??0)+(walk?Math.sin(t*5+i*Math.PI)*.5:riding&&ride==='pedal'?Math.sin(t*6+i*Math.PI)*.35:0);leg.rotation.z=(i?1:-1)*(r?.spread??0);});
    arms.forEach((arm,i)=>{arm.rotation.z=(i?1:-1)*(r?.armOut??.3);arm.rotation.x=attack&&i===1?-.9+Math.sin(t*5)*.75:(r?.arm??0)+(walk?Math.sin(t*5+i*Math.PI+Math.PI)*.45:on&&!r?.arm?.04*Math.sin(t*2+i):0);});

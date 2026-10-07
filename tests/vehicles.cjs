@@ -12,7 +12,7 @@ const finite=o=>{let ok=true;o.updateMatrixWorld(true);o.traverse(m=>{if(m.isMes
 
 // The catalogue: stable, distinct ids, sensible prices and poses, and every default paint exists.
 assert.equal(new Set(VEHICLES.map(v=>v.id)).size,VEHICLES.length);assert.equal(new Set(PAINTS.map(p=>p.id)).size,PAINTS.length);
-for(const v of VEHICLES){assert(v.price>=100&&v.price<=2000,v.id);assert(['board','scoot','pedal','seat'].includes(v.pose),v.id);assert(paint(v.paint),v.id);assert(v.blurb.length<=40,v.id);}
+for(const v of VEHICLES){assert(v.price>=100&&v.price<=2000,v.id);assert(['board','scoot','pedal','seat','sail'].includes(v.pose),v.id);assert(paint(v.paint),v.id);assert(v.blurb.length<=40,v.id);}
 assert.deepEqual(rideOf({}),undefined);assert.deepEqual(rideOf({vehicle:'car'}),{id:'car',paint:'red'});assert.deepEqual(rideOf({vehicle:'car',vehiclePaint:{car:'blue'}}),{id:'car',paint:'blue'});assert.deepEqual(rideOf({vehicle:'rocket-sled'}),undefined);assert.deepEqual(rideOf({vehicle:'car',vehiclePaint:{car:'gold'}}),{id:'car',paint:'red'});
 
 // Every ride builds in every paint, and heroes of every build can sit on it.
