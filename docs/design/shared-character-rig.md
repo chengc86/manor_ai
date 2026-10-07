@@ -94,7 +94,7 @@ On the battlefield the head and tail are bones too, and tapered or bent shapes s
 low-detail rebuild (`userData.simplify`, used by `lib/rig-bake.ts`). Bakes average about 4,800
 triangles (3,900 before); the heaviest look with a weapon stays under the 9,000 test budget.
 
-Rides (`lib/vehicles.ts`): eleven toy-sized vehicles from 150 to 1,500 coins, with eight free paints.
+Rides (`lib/vehicles.ts`): twelve toy-sized vehicles from 150 to 1,800 coins, with eight free paints. The dearest is a sailing boat: it still rides on the grass, and its sail leans in the breeze.
 They are cosmetic only and never change stats. `lib/vehicle-model.ts` builds them and says where the
 hero stands or sits and in which pose; `lib/hero-ride.ts` seats the hero. The game API has `vehicle`
 (buy once, then ride), `park` and `vehicle_paint`, all with receipts like other purchases. Rides show

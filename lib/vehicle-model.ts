@@ -7,7 +7,7 @@ import {vehicle,paint,type RidePose} from './vehicles';
  */
 export type VehicleModel={root:THREE.Group;mount:V3;pose:RidePose;animate(t:number,moving:boolean,enabled?:boolean):void;dispose():void};
 const TYRE=0x2c2d31,METAL=0xc8cdd2,CREAM=0xfbf3e4,DARK=0x3a3d44,SEAT=0x40363a;
-type Build={kit:Kit;root:THREE.Group;wheels:THREE.Object3D[];colour:number;light:number;dark:number};
+type Build={kit:Kit;root:THREE.Group;wheels:THREE.Object3D[];sails:THREE.Object3D[];colour:number;light:number;dark:number};
 const cyl=(kit:Kit,seg=20)=>kit.shared(`vcyl${seg}`,()=>new THREE.CylinderGeometry(1,1,1,seg));
 /** A wheel: tyre, hub and a little cap, spinning about x. */
 function wheel(b:Build,at:V3,r:number,width:number,hub=b.light,parent:THREE.Object3D=b.root){
@@ -126,13 +126,31 @@ const BUILDERS:Record<string,(b:Build)=>{mount:V3}>={
   box(b,[1.3,.1,.12],[0,.3,1.32],METAL,.04,'metal');box(b,[.5,.12,.4],[0,.56,.28],SEAT,.08,'cloth');box(b,[.5,.44,.1],[0,.8,.06],SEAT,.08,'cloth');steering(b,[0,1.0,.64],-1.1,.14);
   return {mount:[0,.12,.26]};
  },
+ 'sailing-boat':b=>{
+  // A dinghy on the grass: painted hull, wooden thwart, and a sail that leans in the breeze. No water to sail on.
+  const wood=0x8a5a33;
+  box(b,[1.12,.5,1.55],[0,.36,-.18],b.colour,.16);
+  b.kit.mesh(b.root,b.kit.own(new THREE.ConeGeometry(.58,.78,4)),b.colour,'plastic',[0,.36,.82],[1.05,.62,1],[Math.PI/2,Math.PI/4,0]);
+  box(b,[1.16,.07,1.48],[0,.62,-.2],b.light,.05);box(b,[1.14,.06,1.5],[0,.24,-.18],CREAM,.04);
+  box(b,[.86,.05,1.15],[0,.48,-.22],wood,.04);box(b,[.8,.07,.22],[0,.56,-.32],shade(wood,-.12),.04);
+  box(b,[.1,.14,.85],[0,.1,-.15],shade(b.colour,-.28),.04);
+  b.kit.mesh(b.root,cyl(b.kit,12),wood,'plastic',[0,1.15,.22],[.04,1.35,.04]);
+  b.kit.ball(b.root,0xf2c53d,[0,1.86,.22],[.05,.05,.05],'plastic',[0,0,0],.4);
+  const sail=new THREE.Group();sail.position.set(0,.55,.22);b.root.add(sail);b.sails.push(sail);
+  b.kit.twoSided(b.kit.mesh(sail,b.kit.shared('mainsail',()=>{const s=new THREE.Shape();s.moveTo(.04,.02);s.lineTo(.7,.16);s.quadraticCurveTo(.55,.7,.1,1.15);s.lineTo(.04,1.18);s.closePath();return slab(s,.025,.008,6,1);}),CREAM,'cloth',[.02,0,0]));
+  b.kit.mesh(sail,cyl(b.kit,8),wood,'plastic',[.32,.08,0],[.022,.62,.022],[0,0,Math.PI/2]);
+  b.kit.twoSided(b.kit.mesh(b.root,b.kit.shared('pennant',()=>{const s=new THREE.Shape();s.moveTo(0,0);s.lineTo(.22,.06);s.lineTo(0,.12);s.closePath();return slab(s,.012,.004,3,1);}),0xe0453f,'cloth',[.12,1.78,.22]));
+  box(b,[.08,.28,.16],[0,.28,-.98],shade(b.colour,-.2),.03);
+  rod(b,[[0,.4,-.92],[0,.55,-.7],[-.22,.72,-.46]],.03,wood,'plastic');
+  return {mount:[0,.1,-.32]};
+ },
 };
 export function createVehicleModel(id:string,paintId?:string):VehicleModel{
  const v=vehicle(id);if(!v)throw new Error(`Unknown ride ${id}`);
  const colour=paint(paintId??v.paint)?.hex??paint(v.paint)!.hex,kit=new Kit(),root=new THREE.Group();
- const b:Build={kit,root,wheels:[],colour,light:shade(colour,.55),dark:shade(colour,-.3)};
+ const b:Build={kit,root,wheels:[],sails:[],colour,light:shade(colour,.55),dark:shade(colour,-.3)};
  const {mount}=BUILDERS[v.id](b);
  return {root,mount,pose:v.pose,
-  animate(t,moving,enabled=true){const spin=enabled&&moving?t*9:0;for(const w of b.wheels)w.rotation.x=spin;},
+  animate(t,moving,enabled=true){const spin=enabled&&moving?t*9:0;for(const w of b.wheels)w.rotation.x=spin;const breeze=enabled?(moving?Math.sin(t*2.1)*.22:Math.sin(t)*.07):0;for(const sail of b.sails)sail.rotation.y=breeze;},
   dispose(){kit.dispose();}};
 }
