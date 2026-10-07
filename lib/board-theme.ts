@@ -47,10 +47,10 @@ const LIGHTING:Record<TimeOfDay,Lighting>={
  overcast:{sky:[0x8797a6,0xc9d2d6],fog:0xbfc9cc,sun:0xe9eef2,sunIntensity:1.45,sunElevation:1.05,sunAzimuth:-.4,hemiSky:0xdfe8ee,hemiGround:0x55664c,hemiIntensity:1.75,grass:[0x77a24c,0x6d9745],wild:0x61883f,glow:false},
 };
 const PATH_COLOURS:Record<PathStyle,[number,number]>={gravel:[0xd8c28e,0xf1e4bd],flagstone:[0xcdbd9e,0xece1c6],cobble:[0xa89f94,0xd9d2c4],tarmac:[0x5b6068,0xb8bcbf]};
-export type BoardTheme={goldEvent?:boolean;chapter:number;index:number;name:string;kit:SceneryKit;time:TimeOfDay;weather:Weather;pathStyle:PathStyle;landmark:Landmark;lighting:Lighting;path:number;kerb:number;seed:number};
-export function boardTheme(wave:number,goldEvent=false):BoardTheme{
+export type BoardTheme={chapter:number;index:number;name:string;kit:SceneryKit;time:TimeOfDay;weather:Weather;pathStyle:PathStyle;landmark:Landmark;lighting:Lighting;path:number;kerb:number;seed:number};
+export function boardTheme(wave:number):BoardTheme{
  const chapter=chapterFor(Math.max(1,wave)),index=(chapter.number-1)%CHAPTER_LOOKS.length,[kit,time,weather,pathStyle,landmark]=CHAPTER_LOOKS[index];
  const [path,kerb]=PATH_COLOURS[pathStyle];
- return {goldEvent,chapter:chapter.number,index,name:chapter.name,kit,time,weather,pathStyle,landmark,lighting:goldEvent?{...LIGHTING[time],grass:[0xe8c353,0xc89a2e],wild:0xc89a2e}:LIGHTING[time],path,kerb,seed:chapter.number*7919};
+ return {chapter:chapter.number,index,name:chapter.name,kit,time,weather,pathStyle,landmark,lighting:LIGHTING[time],path,kerb,seed:chapter.number*7919};
 }
 export const BOARD_THEME_COUNT=CHAPTER_LOOKS.length;

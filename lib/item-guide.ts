@@ -24,7 +24,6 @@ export const ITEM_BLURBS:Record<string,string>={
  flask:'Bubbling magic and stronger paint.',
  pennant:'Team spirit: longer freezes and bigger splashes.',
  gloves:'Better aim and extra damage against bosses.',
- 'golden-medal':'Your golden keepsake from Admin Abuse. A little extra strength, aim and magic for every hero.',
  medal:'The Manor’s finest: a little bit of everything.',
 };
 export const itemArt=(id:string)=>`/items/${id}.svg`;

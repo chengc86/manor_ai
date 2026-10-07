@@ -264,20 +264,6 @@ export function buildWorld(theme:BoardTheme):Built{
  const manorProps=new Props(night);manor(manorProps);const manorMeshes=meshes(manorProps,group);flowers(manorProps.flowers,group);
  const glow=glowTexture(),halos=[...props.halos,...manorProps.halos];if(halos.length)group.add(haloPoints(halos,glow));
  group.userData.manor=manorMeshes[0];
- if(theme.goldEvent)group.traverse(object=>{
-  if(!(object instanceof THREE.Mesh))return;
-  const gild=(material:THREE.Material)=>{
-   if(material instanceof THREE.MeshLambertMaterial){
-    const gold=new THREE.MeshStandardMaterial({color:0xe5ba42,map:material.map,metalness:.75,roughness:.28,side:material.side});material.dispose();return gold;
-   }
-   if('color' in material)(material as THREE.MeshStandardMaterial).color.set(0xe5ba42);
-   if('vertexColors' in material)(material as THREE.MeshStandardMaterial).vertexColors=false;
-   if(material instanceof THREE.MeshStandardMaterial){material.metalness=.8;material.roughness=.25;}
-   return material;
-  };
-  object.material=Array.isArray(object.material)?object.material.map(gild):gild(object.material);
-  if(object instanceof THREE.InstancedMesh&&object.instanceColor){for(let i=0;i<object.count;i++)object.setColorAt(i,new THREE.Color(0xffd76c));object.instanceColor.needsUpdate=true;}
- });
  return {group,update(time,motion){if(ripple&&motion){ripple.offset.set(time*.02,time*.035);}},dispose(){disposeGroup(group);grass.dispose();glow.dispose();ripple?.dispose();}};
 }
 /* ---------------------------------------------------------------- lawn, path and portal (route dependent) */

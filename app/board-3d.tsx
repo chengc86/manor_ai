@@ -12,10 +12,10 @@ import type {Ride} from '@/lib/vehicles';
 import {SCHOOL_MAX_HP,type Battle,type simulate} from '@/lib/battle';
 /** Camera commands for the board toolbar. */
 export type BoardCamera={zoom(factor:number):void;rotate(angle:number):void;reset():void};
-type Look={adminAbuseTrophy?:boolean;type:number;clothing?:Wardrobe;uniform?:string;gender?:string};
+type Look={type:number;clothing?:Wardrobe;uniform?:string;gender?:string};
 type Defender=Look&{id:string;cell:number;level:number;weapon?:string;colour?:string;name?:string;owner?:string;ride?:Ride};
 type Player={id:string;hero:number;clothing?:Wardrobe;uniform?:string;gender?:string;colour?:string;name:string;online?:boolean;ride?:Ride};
-export type BoardWorld={adminEvent?:{active:boolean};wave:number;defenders:Defender[];players:Player[];me?:{id:string;clothing?:Wardrobe;uniform?:string;gender?:string}|null};
+export type BoardWorld={wave:number;defenders:Defender[];players:Player[];me?:{id:string;clothing?:Wardrobe;uniform?:string;gender?:string}|null};
 type Props={world:BoardWorld;battle:Battle|null;sim:ReturnType<typeof simulate>|null;now:number;placement:{type:number;level?:number;weapon?:string;ride?:Ride}|null;range:number|null;hover:number|null;setHover:(cell:number|null)=>void;
  onPlace:(cell:number)=>void;onHero:(hero:Defender|(Player&{camp:true}))=>void;onFail:()=>void;motion:boolean;layout:RouteShape;schoolHp:number|null;ref?:Ref<BoardCamera>};
 type Engine={scene:BoardScene;pickAt(x:number,y:number):ReturnType<BoardScene['pick']>;camera:BoardCamera};
@@ -62,10 +62,10 @@ export default function Board3D({world,battle,sim,now,placement,range,hover,setH
  useEffect(()=>{live.current.motion=motion;failRef.current=onFail;},[motion,onFail]);
  useEffect(()=>{clock.current.target=now;clock.current.at=performance.now();},[now]);
  useImperativeHandle(ref,()=>({zoom:f=>engine.current?.camera.zoom(f),rotate:a=>engine.current?.camera.rotate(a),reset:()=>engine.current?.camera.reset()}),[]);
- const wave=battle?.wave??world.wave,goldEvent=!!world.adminEvent?.active,theme=useMemo(()=>boardTheme(wave,goldEvent),[wave,goldEvent]);
+ const wave=battle?.wave??world.wave,theme=useMemo(()=>boardTheme(wave),[wave]);
  const deployed:Defender[]=useMemo(()=>battle?battle.fighters:world.defenders.filter(d=>d.cell>=0),[battle,world.defenders]);
  const rideByHero=useMemo(()=>new Map(world.defenders.filter(d=>d.ride).map(d=>[d.id,d.ride!])),[world.defenders]);
- const heroes:BoardHero[]=useMemo(()=>deployed.map(d=>({id:d.id,adminAbuseTrophy:d.adminAbuseTrophy,type:d.type,cell:d.cell,level:d.level,weapon:d.weapon??(d.level?'standard':'none'),colour:d.colour??HEROES[d.type]?.colour,name:d.name??'',clothing:d.clothing,uniform:d.uniform,gender:d.gender,mine:d.owner===world.me?.id,ride:d.ride??rideByHero.get(d.id)})),[deployed,world.me?.id,rideByHero]);
+ const heroes:BoardHero[]=useMemo(()=>deployed.map(d=>({id:d.id,type:d.type,cell:d.cell,level:d.level,weapon:d.weapon??(d.level?'standard':'none'),colour:d.colour??HEROES[d.type]?.colour,name:d.name??'',clothing:d.clothing,uniform:d.uniform,gender:d.gender,mine:d.owner===world.me?.id,ride:d.ride??rideByHero.get(d.id)})),[deployed,world.me?.id,rideByHero]);
  const heroKey=JSON.stringify(heroes);
  const camp:CampHero[]=useMemo(()=>world.players.map((p,i)=>({id:p.id,slot:i,type:p.hero,clothing:p.clothing,uniform:p.uniform,gender:p.gender,colour:p.colour,name:p.name,online:!!p.online,ride:p.ride})),[world.players]);
  const campKey=JSON.stringify(camp);
