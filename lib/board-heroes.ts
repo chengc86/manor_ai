@@ -1,3 +1,4 @@
+import {createAdminTrophy} from './admin-trophy';
 import * as THREE from 'three';
 import {outfitForWardrobe} from './hero-model';
 import {createRidingHero} from './hero-ride';
@@ -8,19 +9,19 @@ import {bakeRig,type RigTemplate} from './rig-bake';
 import {createHeldWeapon} from './weapon-model';
 /** Battlefield heroes: the dressing-room model baked small, holding their weapon. One template per look. */
 /** How a hero looks on the battlefield. A ride shows in the camp and on that hero's defenders. */
-export type HeroLook={type:number;clothing?:Wardrobe;uniform?:string;gender?:string;weapon?:string;ride?:Ride};
+export type HeroLook={adminAbuseTrophy?:boolean;type:number;clothing?:Wardrobe;uniform?:string;gender?:string;weapon?:string;ride?:Ride};
 /** Arguments of a hero pose: time, motion and whether motion is allowed. */
 export type HeroPose=[time:number,motion:'idle'|'walk'|'attack',enabled?:boolean];
 export type HeroRig=RigTemplate<HeroPose>;
 export const HERO_DETAIL=.32;
 export function lookWardrobe(look:HeroLook):Wardrobe{return look.clothing??uniformPieces(look.uniform??'none',look.gender).reduce((w,id)=>wear(w,id),{} as Wardrobe);}
-export function heroKey(look:HeroLook){return JSON.stringify([look.type,Object.entries(lookWardrobe(look)).sort(([a],[b])=>a.localeCompare(b)),look.weapon??'none',look.ride?[look.ride.id,look.ride.paint]:null]);}
+export function heroKey(look:HeroLook){return JSON.stringify([look.type,Object.entries(lookWardrobe(look)).sort(([a],[b])=>a.localeCompare(b)),look.weapon??'none',look.ride?[look.ride.id,look.ride.paint]:null,!!look.adminAbuseTrophy]);}
 function part(parent:THREE.Object3D,geometry:THREE.BufferGeometry,colour:number,pos:[number,number,number],scale:[number,number,number]=[1,1,1],metal=false){
  const m=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial({color:colour,roughness:.6}));m.position.set(...pos);m.scale.set(...scale);if(metal)m.userData.metal=true;parent.add(m);return m;
 }
 /** Arrow and Crystal Towers (legacy IDs 7 and 8) have no animal model, so they stand as small 3D towers. */
-function towerTemplate(type:number,weapon:string):HeroRig{
- const root=new THREE.Group(),top=new THREE.Group();root.add(top);
+function towerTemplate(type:number,weapon:string,trophy=false):HeroRig{
+ const root=new THREE.Group(),top=new THREE.Group();root.add(top);if(trophy)root.add(createAdminTrophy().root);
  if(type===8){
   part(root,new THREE.CylinderGeometry(.55,.62,.3,10),0x8f8b99,[0,.15,0]);part(root,new THREE.CylinderGeometry(.34,.42,.95,10),0xb3aec4,[0,.77,0]);part(root,new THREE.CylinderGeometry(.46,.4,.14,10),0x8f8b99,[0,1.3,0]);
   top.position.y=1.95;part(top,new THREE.OctahedronGeometry(.32,0),0xb58cff,[0,0,0],[1,1.7,1]);for(let i=0;i<3;i++){const a=i/3*Math.PI*2;part(top,new THREE.OctahedronGeometry(.09,0),0xd9c2ff,[Math.cos(a)*.48,-.1,Math.sin(a)*.48],[1,1.6,1]);}
@@ -36,8 +37,9 @@ function towerTemplate(type:number,weapon:string):HeroRig{
 }
 function buildTemplate(look:HeroLook):HeroRig{
  const weapon=look.weapon??'none',hero=hero3D(look.type);
- if(!hero)return towerTemplate(look.type,weapon);
+ if(!hero)return towerTemplate(look.type,weapon,look.adminAbuseTrophy);
  const wardrobe=lookWardrobe(look),model=createRidingHero(hero.skin,outfitForWardrobe(wardrobe),wardrobe,look.ride);
+ if(look.adminAbuseTrophy)model.root.add(createAdminTrophy().root);
  if(weapon!=='none')model.grip.add(createHeldWeapon(weapon));
  // The head and tail are bones too, so heroes tilt their heads and wag their tails on the battlefield.
  return bakeRig<HeroPose>(model.root,[model.parts.body,model.parts.head,model.parts.tail,...model.parts.legs,...model.parts.arms],(t,motion,enabled=true)=>model.animate(t,motion,enabled),HERO_DETAIL);

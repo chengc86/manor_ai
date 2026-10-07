@@ -21,7 +21,7 @@ export const HERO_TRAITS:{role:string;mods:Mods;weapons:string}[]=[
 ];
 // Share the established balanced combat profiles; appearance never buys extra power.
 for(const hero of EXTRA_HEROES){const base=HERO_TRAITS[hero.traitBase];HERO_TRAITS.push({...base,mods:{...base.mods}});}
-export const ITEMS:{id:string;name:string;price:number;mods:Mods}[]=[
+export const ITEMS:{id:string;name:string;price:number;mods:Mods;eventOnly?:boolean}[]=[
 {id:'stopwatch',name:'Stopwatch',price:100,mods:{speed:.15,damage:-.05}},
 {id:'sharpener',name:'Pencil sharpener',price:100,mods:{aim:3,range:-.2}},
 {id:'glasses',name:'Reading glasses',price:100,mods:{range:.6,speed:-.05}},
@@ -45,6 +45,7 @@ export const ITEMS:{id:string;name:string;price:number;mods:Mods}[]=[
 {id:'flask',name:'Lab flask',price:160,mods:{magic:3,dot:.15,aim:-2}},
 {id:'pennant',name:'Team pennant',price:180,mods:{control:.2,area:.1,damage:-.1}},
 {id:'gloves',name:'Cricket gloves',price:180,mods:{aim:3,boss:.1,speed:-.08}},
+{id:'golden-medal',name:'Golden Manor Medal',price:240,eventOnly:true,mods:{str:2,aim:2,magic:2,damage:.08}},
 {id:'medal',name:'Manor merit medal',price:240,mods:{str:2,aim:2,magic:2,damage:.08}},
 ];
 export type ItemLoadout={itemInventory?:Record<string,number>;equippedItems?:string[];itemSlots?:number};
